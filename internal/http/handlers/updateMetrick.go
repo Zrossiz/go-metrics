@@ -53,6 +53,7 @@ func UpdateMetricHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := fmt.Sprintf("Type: %s, Name: %s, Value: %s", typeMetric, nameMetric, valueMetric)
+	fmt.Println(response)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(response))
 }
