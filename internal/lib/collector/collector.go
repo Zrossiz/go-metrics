@@ -1,6 +1,11 @@
 package collector
 
-import "runtime"
+import (
+	"runtime"
+	"time"
+
+	"golang.org/x/exp/rand"
+)
 
 type MetricType string
 
@@ -17,6 +22,8 @@ const (
 
 func CollectMetrics() []Metric {
 	var metrics []Metric
+	rand.Seed(time.Now().UnixNano())
+	randomValue := rand.Float64()
 
 	var memStats runtime.MemStats
 	runtime.ReadMemStats(&memStats)
@@ -145,6 +152,11 @@ func CollectMetrics() []Metric {
 		Type:  Gauge,
 		Name:  "TotalAlloc",
 		Value: float64(memStats.TotalAlloc),
+	})
+	metrics = append(metrics, Metric{
+		Type:  Gauge,
+		Name:  "RandomValue",
+		Value: randomValue,
 	})
 
 	return metrics
