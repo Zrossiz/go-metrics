@@ -1,10 +1,9 @@
 package collector
 
 import (
+	"math/rand"
 	"runtime"
 	"time"
-
-	"golang.org/x/exp/rand"
 )
 
 type MetricType string
