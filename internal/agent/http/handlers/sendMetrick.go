@@ -12,7 +12,7 @@ const serverAddress = "localhost:8080"
 func SendMetrics(metrics []collector.Metric) {
 	for i := 0; i < len(metrics); i++ {
 		reqURL := fmt.Sprintf("http://%s/update/%s/%s/%f", serverAddress, metrics[i].Type, metrics[i].Name, metrics[i].Value)
-		resp, err := http.Post(reqUrl, "text/plain", nil)
+		resp, err := http.Post(reqURL, "text/plain", nil)
 		if err != nil {
 			fmt.Println("Request: %s failed, err: %v", reqURL, err)
 			continue
