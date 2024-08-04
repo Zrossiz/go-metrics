@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Zrossiz/go-metrics/internal/http/handlers"
-	"github.com/Zrossiz/go-metrics/internal/lib/collector"
+	"github.com/Zrossiz/go-metrics/internal/agent/http/handlers"
+	"github.com/Zrossiz/go-metrics/internal/agent/lib/collector"
 )
 
 const (

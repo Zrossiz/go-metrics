@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/Zrossiz/go-metrics/internal/http/handlers"
+	"github.com/Zrossiz/go-metrics/internal/server/http/handlers"
 )
 
 func main() {
