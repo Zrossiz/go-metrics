@@ -21,7 +21,7 @@ func UpdateMetricHandler(w http.ResponseWriter, r *http.Request) {
 	pathArr := strings.Split(r.URL.Path, "/")
 
 	if len(pathArr) != 5 {
-		http.Error(w, "invalid url format", http.StatusBadRequest)
+		http.Error(w, "invalid url format", http.StatusNotFound)
 		return
 	}
 
@@ -42,6 +42,7 @@ func UpdateMetricHandler(w http.ResponseWriter, r *http.Request) {
 		_, err := strconv.Atoi(valueMetric)
 		if err != nil {
 			http.Error(w, "value metric is invalid", http.StatusBadRequest)
+			return
 		}
 	}
 
@@ -49,11 +50,11 @@ func UpdateMetricHandler(w http.ResponseWriter, r *http.Request) {
 		_, err := strconv.ParseFloat(valueMetric, 64)
 		if err != nil {
 			http.Error(w, "value metric is invalid", http.StatusBadRequest)
+			return
 		}
 	}
 
 	response := fmt.Sprintf("Type: %s, Name: %s, Value: %s", typeMetric, nameMetric, valueMetric)
-	fmt.Println(response)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(response))
 }
