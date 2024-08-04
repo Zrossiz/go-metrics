@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/Zrossiz/go-metrics/internal/lib/collector"
+	"github.com/Zrossiz/go-metrics/internal/agent/lib/collector"
 )
 
 const serverAddress = "localhost:8080"
