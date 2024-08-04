@@ -21,8 +21,9 @@ const (
 
 func CollectMetrics() []Metric {
 	var metrics []Metric
-	rand.Seed(time.Now().UnixNano())
-	randomValue := rand.Float64()
+	seed := time.Now().UnixNano()
+    localRand := rand.New(rand.NewSource(seed))
+    randomValue := localRand.Float64()
 
 	var memStats runtime.MemStats
 	runtime.ReadMemStats(&memStats)
