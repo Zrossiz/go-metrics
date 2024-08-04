@@ -42,6 +42,7 @@ func UpdateMetricHandler(w http.ResponseWriter, r *http.Request) {
 		_, err := strconv.Atoi(valueMetric)
 		if err != nil {
 			http.Error(w, "value metric is invalid", http.StatusBadRequest)
+			return
 		}
 	}
 
@@ -49,6 +50,7 @@ func UpdateMetricHandler(w http.ResponseWriter, r *http.Request) {
 		_, err := strconv.ParseFloat(valueMetric, 64)
 		if err != nil {
 			http.Error(w, "value metric is invalid", http.StatusBadRequest)
+			return
 		}
 	}
 
