@@ -14,7 +14,7 @@ func SendMetrics(metrics []collector.Metric) {
 		reqURL := fmt.Sprintf("http://%s/update/%s/%s/%f", serverAddress, metrics[i].Type, metrics[i].Name, metrics[i].Value)
 		resp, err := http.Post(reqURL, "text/plain", nil)
 		if err != nil {
-			fmt.Println("Request: %s failed, err: %v", reqURL, err)
+			fmt.Println("Request:", reqURL, "failed, err:", err)
 			continue
 		}
 		defer resp.Body.Close()
