@@ -19,13 +19,20 @@ func startMonitoring() {
 	defer tickerPoll.Stop()
 	defer tickerReport.Stop()
 	var metrics []collector.Metric
+	counter := 0.0
 
 	for {
 		select {
 		case <-tickerPoll.C:
 			metrics = collector.CollectMetrics()
+			counter += 1
 			fmt.Println("tick")
 		case <-tickerReport.C:
+			metrics = append(metrics, collector.Metric{
+				Type:  collector.Counter,
+				Name:  "PollCount",
+				Value: counter,
+			})
 			handlers.SendMetrics(metrics)
 			fmt.Println("report")
 		}
