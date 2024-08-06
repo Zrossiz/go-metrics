@@ -1,4 +1,4 @@
-package collector
+package agent
 
 import (
 	"math/rand"
@@ -22,8 +22,8 @@ const (
 func CollectMetrics() []Metric {
 	var metrics []Metric
 	seed := time.Now().UnixNano()
-    localRand := rand.New(rand.NewSource(seed))
-    randomValue := localRand.Float64()
+	localRand := rand.New(rand.NewSource(seed))
+	randomValue := localRand.Float64()
 
 	var memStats runtime.MemStats
 	runtime.ReadMemStats(&memStats)
