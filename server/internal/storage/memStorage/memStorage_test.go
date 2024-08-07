@@ -30,3 +30,34 @@ func TestSetGauge(t *testing.T) {
 		t.Fatalf("expected value 0.6, got %v", Metrics[0].Value)
 	}
 }
+
+func TestGetMetric(t *testing.T) {
+	Metrics = []storage.Metric{}
+
+	emptyMetric := GetMetric("TestEmpty")
+	if emptyMetric.Name != "" {
+		t.Fatalf("expected empty value, got %v", emptyMetric.Name)
+	}
+
+	Metrics = append(Metrics, storage.Metric{
+		Type:  storage.CounterType,
+		Name:  "TestCounter",
+		Value: 1,
+	})
+
+	metricCounter := GetMetric("TestCounter")
+	if metricCounter.Value != 1 {
+		t.Fatalf("expected value 1, got %v", metricCounter.Value)
+	}
+
+	Metrics = append(Metrics, storage.Metric{
+		Type:  storage.GaugeType,
+		Name:  "TestGauge",
+		Value: 0.1,
+	})
+
+	metricGauge := GetMetric("TestGauge")
+	if metricGauge.Value != 0.1 {
+		t.Fatalf("expected value 0.1, got %v", metricGauge.Value)
+	}
+}
