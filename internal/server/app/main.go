@@ -11,7 +11,7 @@ import (
 func StartServer() {
 	r := chi.NewRouter()
 
-	r.Get("/", services.GetHtmlPageMetric)
+	r.Get("/", services.GetHTMLPageMetric)
 
 	r.Route("/update", func(r chi.Router) {
 		r.Post("/{type}/{name}/{value}", services.UpdateMetric)

@@ -23,7 +23,7 @@ func GetMetric(rw http.ResponseWriter, r *http.Request) {
 	io.WriteString(rw, fmt.Sprintf("Type: %s, Name: %s, Value: %s", typeMetric, nameMetric, metric.Value))
 }
 
-func GetHtmlPageMetric(rw http.ResponseWriter, r *http.Request) {
+func GetHTMLPageMetric(rw http.ResponseWriter, r *http.Request) {
 	metrics := memstorage.Metrics
 	tmpl := `
 		<!DOCTYPE html>
