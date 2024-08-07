@@ -11,7 +11,6 @@ import (
 )
 
 func GetMetric(rw http.ResponseWriter, r *http.Request) {
-	typeMetric := chi.URLParam(r, "type")
 	nameMetric := chi.URLParam(r, "name")
 	metric := memstorage.GetMetric(nameMetric)
 
@@ -20,7 +19,7 @@ func GetMetric(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	io.WriteString(rw, fmt.Sprintf("Type: %s, Name: %s, Value: %s", typeMetric, nameMetric, metric.Value))
+	io.WriteString(rw, fmt.Sprintf("%v", metric.Value))
 }
 
 func GetHTMLPageMetric(rw http.ResponseWriter, r *http.Request) {
