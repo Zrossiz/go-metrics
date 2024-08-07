@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/Zrossiz/go-metrics/server/internal/storage"
-	memstorage "github.com/Zrossiz/go-metrics/server/internal/storage/memStorage"
+	"github.com/Zrossiz/go-metrics/internal/server/storage"
+	memstorage "github.com/Zrossiz/go-metrics/internal/server/storage/memStorage"
 	"github.com/go-chi/chi/v5"
 )
 

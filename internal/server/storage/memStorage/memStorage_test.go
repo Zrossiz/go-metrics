@@ -3,7 +3,7 @@ package memstorage
 import (
 	"testing"
 
-	"github.com/Zrossiz/go-metrics/server/internal/storage"
+	"github.com/Zrossiz/go-metrics/internal/server/storage"
 )
 
 func TestSetCounter(t *testing.T) {

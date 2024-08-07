@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/Zrossiz/go-metrics/agent/internal/constants"
-	"github.com/Zrossiz/go-metrics/agent/internal/types"
+	"github.com/Zrossiz/go-metrics/internal/agent/constants"
+	"github.com/Zrossiz/go-metrics/internal/agent/constants/types"
 )
 
 func SendMetrics(metrics []types.Metric) {

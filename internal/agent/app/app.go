@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Zrossiz/go-metrics/agent/internal/constants"
-	"github.com/Zrossiz/go-metrics/agent/internal/http"
-	"github.com/Zrossiz/go-metrics/agent/internal/services/collector"
-	"github.com/Zrossiz/go-metrics/agent/internal/types"
+	"github.com/Zrossiz/go-metrics/internal/agent/constants"
+	"github.com/Zrossiz/go-metrics/internal/agent/constants/types"
+	"github.com/Zrossiz/go-metrics/internal/agent/http"
+	"github.com/Zrossiz/go-metrics/internal/agent/services/collector"
 )
 
 func StartAgent() {

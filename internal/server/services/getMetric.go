@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"text/template"
 
-	memstorage "github.com/Zrossiz/go-metrics/server/internal/storage/memStorage"
+	memstorage "github.com/Zrossiz/go-metrics/internal/server/storage/memStorage"
 	"github.com/go-chi/chi/v5"
 )
 

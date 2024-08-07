@@ -5,8 +5,8 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/Zrossiz/go-metrics/agent/internal/constants"
-	"github.com/Zrossiz/go-metrics/agent/internal/types"
+	"github.com/Zrossiz/go-metrics/internal/agent/constants"
+	"github.com/Zrossiz/go-metrics/internal/agent/constants/types"
 )
 
 func CollectMetrics() []types.Metric {

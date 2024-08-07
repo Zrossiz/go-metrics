@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/Zrossiz/go-metrics/server/internal/services"
+	"github.com/Zrossiz/go-metrics/internal/server/services"
 	"github.com/go-chi/chi/v5"
 )
 

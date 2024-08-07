@@ -1,6 +1,6 @@
 package memstorage
 
-import "github.com/Zrossiz/go-metrics/server/internal/storage"
+import "github.com/Zrossiz/go-metrics/internal/server/storage"
 
 var Metrics []storage.Metric
 
