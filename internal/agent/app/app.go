@@ -1,6 +1,7 @@
 package app
 
 import (
+	"flag"
 	"fmt"
 	"time"
 
@@ -10,9 +11,15 @@ import (
 	"github.com/Zrossiz/go-metrics/internal/agent/services/collector"
 )
 
+var ServerAddress = flag.String("a", "localhost:8080", "Server address")
+var PollInterval = flag.Int("p", 2, "Poll interval")
+var ReportInterval = flag.Int("r", 10, "Report interval")
+
 func StartAgent() {
-	tickerPoll := time.NewTicker(constants.PollInterval)
-	tickerReport := time.NewTicker(constants.ReportInterval)
+	flag.Parse()
+
+	tickerPoll := time.NewTicker(time.Duration(*PollInterval) * time.Second)
+	tickerReport := time.NewTicker(time.Duration(*ReportInterval) * time.Second)
 	defer tickerPoll.Stop()
 	defer tickerReport.Stop()
 	var metrics []types.Metric
@@ -30,7 +37,8 @@ func StartAgent() {
 				Name:  "PollCount",
 				Value: counter,
 			})
-			http.SendMetrics(metrics)
+			addr := fmt.Sprintf("%v", *ServerAddress)
+			http.SendMetrics(metrics, addr)
 			fmt.Println("report")
 		}
 	}
