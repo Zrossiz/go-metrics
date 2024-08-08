@@ -1,6 +1,7 @@
 package app
 
 import (
+	"flag"
 	"fmt"
 	"net/http"
 
@@ -9,6 +10,11 @@ import (
 )
 
 func StartServer() {
+	PORT := flag.String("a", "8080", "Port to run the server on")
+	flag.Parse()
+
+	addr := fmt.Sprintf(":%s", *PORT)
+
 	r := chi.NewRouter()
 
 	r.Get("/", services.GetHTMLPageMetric)
@@ -21,8 +27,8 @@ func StartServer() {
 		r.Get("/{type}/{name}", services.GetMetric)
 	})
 
-	fmt.Println("Starting server on port: 8080")
-	if err := http.ListenAndServe(":8080", r); err != nil {
+	fmt.Printf("Starting server on port: %s", *PORT)
+	if err := http.ListenAndServe(addr, r); err != nil {
 		fmt.Println(err)
 	}
 }
