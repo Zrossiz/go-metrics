@@ -13,10 +13,7 @@ var PollInterval int64
 var ReportInterval int64
 
 func FlagParse() {
-	err := godotenv.Load()
-	if err != nil {
-	} else {
-	}
+	_ = godotenv.Load()
 
 	flag.StringVar(&RunAddr, "a", "localhost:8080", "address and port to run server")
 	flag.Int64Var(&PollInterval, "p", 2, "interval for get metrics")

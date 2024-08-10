@@ -10,10 +10,7 @@ import (
 var RunAddr string
 
 func FlagParse() {
-	err := godotenv.Load()
-	if err != nil {
-	} else {
-	}
+	_ = godotenv.Load()
 
 	if envRunAddr := os.Getenv("ADDRESS"); envRunAddr != "" {
 		RunAddr = envRunAddr
