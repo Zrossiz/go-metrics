@@ -2,6 +2,7 @@ package send
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/Zrossiz/go-metrics/internal/agent/constants/types"
@@ -14,7 +15,7 @@ func SendMetrics(metrics []types.Metric, addr string) []types.Metric {
 		reqURL := fmt.Sprintf("http://%s/update/%s/%s/%v", addr, metrics[i].Type, metrics[i].Name, metrics[i].Value)
 		resp, err := http.Post(reqURL, "text/plain", nil)
 		if err != nil {
-			fmt.Println("Request:", reqURL, "failed, err:", err)
+			log.Println("Request:", reqURL, "failed, err:", err)
 			continue
 		}
 
