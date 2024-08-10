@@ -7,7 +7,7 @@ import (
 	"github.com/Zrossiz/go-metrics/internal/agent/config"
 	"github.com/Zrossiz/go-metrics/internal/agent/constants"
 	"github.com/Zrossiz/go-metrics/internal/agent/constants/types"
-	"github.com/Zrossiz/go-metrics/internal/agent/http"
+	"github.com/Zrossiz/go-metrics/internal/agent/http/send"
 	"github.com/Zrossiz/go-metrics/internal/agent/services/collector"
 )
 
@@ -33,8 +33,7 @@ func StartAgent() {
 				Name:  "PollCount",
 				Value: counter,
 			})
-			addr := fmt.Sprintf("%v", config.RunAddr)
-			http.SendMetrics(metrics, addr)
+			send.SendMetrics(metrics, config.RunAddr)
 			fmt.Println("report")
 		}
 	}

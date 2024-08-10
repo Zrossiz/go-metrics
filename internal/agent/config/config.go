@@ -2,7 +2,6 @@ package config
 
 import (
 	"flag"
-	"log"
 	"os"
 	"strconv"
 
@@ -16,9 +15,7 @@ var ReportInterval int64
 func FlagParse() {
 	err := godotenv.Load()
 	if err != nil {
-		log.Println("Ошибка при загрузке файла .env:", err)
 	} else {
-		log.Println("Файл .env загружен успешно")
 	}
 
 	flag.StringVar(&RunAddr, "a", "localhost:8080", "address and port to run server")
