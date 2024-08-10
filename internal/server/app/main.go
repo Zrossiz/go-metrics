@@ -1,17 +1,16 @@
 package app
 
 import (
-	"flag"
 	"fmt"
 	"net/http"
 
+	"github.com/Zrossiz/go-metrics/internal/server/config"
 	"github.com/Zrossiz/go-metrics/internal/server/services"
 	"github.com/go-chi/chi/v5"
 )
 
 func StartServer() {
-	ADDRESS := flag.String("a", "localhost:8080", "Port to run the server on")
-	flag.Parse()
+	config.FlagParse()
 
 	r := chi.NewRouter()
 
@@ -25,8 +24,8 @@ func StartServer() {
 		r.Get("/{type}/{name}", services.GetMetric)
 	})
 
-	fmt.Printf("Starting server on %s", *ADDRESS)
-	if err := http.ListenAndServe(*ADDRESS, r); err != nil {
+	fmt.Printf("Starting server on %v", config.RunAddr)
+	if err := http.ListenAndServe(config.RunAddr, r); err != nil {
 		fmt.Println(err)
 	}
 }
