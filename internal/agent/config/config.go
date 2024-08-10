@@ -27,7 +27,7 @@ func FlagParse() {
 
 	flag.Parse()
 
-	if envRunAddr := os.Getenv("ADDRESS_SERVER"); envRunAddr != "" {
+	if envRunAddr := os.Getenv("ADDRESS"); envRunAddr != "" {
 		RunAddr = envRunAddr
 	}
 

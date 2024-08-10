@@ -18,7 +18,7 @@ func FlagParse() {
 		log.Println("Файл .env загружен успешно")
 	}
 
-	if envRunAddr := os.Getenv("ADDRESS_SERVER"); envRunAddr != "" {
+	if envRunAddr := os.Getenv("ADDRESS"); envRunAddr != "" {
 		RunAddr = envRunAddr
 	} else {
 		flag.StringVar(&RunAddr, "a", "localhost:8080", "address and port to run server")
