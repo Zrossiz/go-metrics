@@ -5,7 +5,8 @@ import (
 	"net/http"
 
 	"github.com/Zrossiz/go-metrics/internal/server/config"
-	"github.com/Zrossiz/go-metrics/internal/server/services"
+	"github.com/Zrossiz/go-metrics/internal/server/services/get"
+	"github.com/Zrossiz/go-metrics/internal/server/services/update"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -14,14 +15,14 @@ func StartServer() {
 
 	r := chi.NewRouter()
 
-	r.Get("/", services.GetHTMLPageMetric)
+	r.Get("/", get.GetHTMLPageMetric)
 
 	r.Route("/update", func(r chi.Router) {
-		r.Post("/{type}/{name}/{value}", services.UpdateMetric)
+		r.Post("/{type}/{name}/{value}", update.UpdateMetric)
 	})
 
 	r.Route("/value", func(r chi.Router) {
-		r.Get("/{type}/{name}", services.GetMetric)
+		r.Get("/{type}/{name}", get.GetMetric)
 	})
 
 	fmt.Printf("Starting server on %v", config.RunAddr)
