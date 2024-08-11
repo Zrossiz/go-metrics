@@ -9,28 +9,25 @@ import (
 )
 
 func TestSendMetrics(t *testing.T) {
-    metrics := []types.Metric{
-        {Type: "gauge", Name: "metric1", Value: 1.23},
-        {Type: "counter", Name: "metric2", Value: 42},
-    }
+	metrics := []types.Metric{
+		{Type: "gauge", Name: "metric1", Value: 1.23},
+		{Type: "counter", Name: "metric2", Value: 42},
+	}
 
-    // Создаем тестовый HTTP-сервер, который всегда возвращает 200 OK
-    server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        w.WriteHeader(http.StatusOK)
-    }))
-    defer server.Close()
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
 
-    // Вызываем функцию SendMetrics с тестовыми данными
-    sendedMetrics := SendMetrics(metrics, server.Listener.Addr().String())
+	sendedMetrics := SendMetrics(metrics, server.Listener.Addr().String())
 
-    // Проверяем, что все метрики были отправлены
-    if len(sendedMetrics) != len(metrics) {
-        t.Errorf("Expected %d metrics to be sent, but got %d", len(metrics), len(sendedMetrics))
-    }
+	if len(sendedMetrics) != len(metrics) {
+		t.Errorf("Expected %d metrics to be sent, but got %d", len(metrics), len(sendedMetrics))
+	}
 
-    for i, metric := range sendedMetrics {
-        if metric != metrics[i] {
-            t.Errorf("Expected metric %v, but got %v", metrics[i], metric)
-        }
-    }
+	for i, metric := range sendedMetrics {
+		if metric != metrics[i] {
+			t.Errorf("Expected metric %v, but got %v", metrics[i], metric)
+		}
+	}
 }
