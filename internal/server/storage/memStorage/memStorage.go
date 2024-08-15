@@ -2,17 +2,25 @@ package memstorage
 
 import "github.com/Zrossiz/go-metrics/internal/server/storage"
 
-var Metrics []storage.Metric
+type MemStorage struct {
+	metrics []storage.Metric
+}
 
-func SetGauge(name string, value float64) bool {
-	for i := 0; i < len(Metrics); i++ {
-		if Metrics[i].Name == name {
-			Metrics[i].Value = value
+func NewMemStorage() *MemStorage {
+	return &MemStorage{
+		metrics: []storage.Metric{},
+	}
+}
+
+func (m *MemStorage) SetGauge(name string, value float64) bool {
+	for i := 0; i < len(m.metrics); i++ {
+		if m.metrics[i].Name == name {
+			m.metrics[i].Value = value
 			return true
 		}
 	}
 
-	Metrics = append(Metrics, storage.Metric{
+	m.metrics = append(m.metrics, storage.Metric{
 		Type:  storage.GaugeType,
 		Name:  name,
 		Value: value,
@@ -21,19 +29,19 @@ func SetGauge(name string, value float64) bool {
 	return true
 }
 
-func SetCounter(name string, value int64) bool {
-	for i := 0; i < len(Metrics); i++ {
-		if Metrics[i].Name == name {
-			currentValue, ok := Metrics[i].Value.(int64)
+func (m *MemStorage) SetCounter(name string, value int64) bool {
+	for i := 0; i < len(m.metrics); i++ {
+		if m.metrics[i].Name == name {
+			currentValue, ok := m.metrics[i].Value.(int64)
 			if !ok {
 				return false
 			}
-			Metrics[i].Value = currentValue + value
+			m.metrics[i].Value = currentValue + value
 			return true
 		}
 	}
 
-	Metrics = append(Metrics, storage.Metric{
+	m.metrics = append(m.metrics, storage.Metric{
 		Type:  storage.CounterType,
 		Name:  name,
 		Value: value,
@@ -42,10 +50,10 @@ func SetCounter(name string, value int64) bool {
 	return true
 }
 
-func GetMetric(name string) storage.Metric {
-	for i := 0; i < len(Metrics); i++ {
-		if Metrics[i].Name == name {
-			return Metrics[i]
+func (m *MemStorage) GetMetric(name string) storage.Metric {
+	for i := 0; i < len(m.metrics); i++ {
+		if m.metrics[i].Name == name {
+			return m.metrics[i]
 		}
 	}
 	return storage.Metric{}

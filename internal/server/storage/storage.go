@@ -10,3 +10,9 @@ type Metric struct {
 	Type  string
 	Value interface{}
 }
+
+type MetricsStorage interface {
+	SetGauge(name string, value float64) bool
+	SetCounter(name string, value int64) bool
+	GetMetric(name string) Metric
+}
