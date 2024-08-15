@@ -11,7 +11,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func UpdateMetric(rw http.ResponseWriter, r *http.Request) {
+func UpdateMetric(rw http.ResponseWriter, r *http.Request, store *memstorage.MemStorage) {
 	typeMetric := chi.URLParam(r, "type")
 	nameMetric := chi.URLParam(r, "name")
 	valueMetric := chi.URLParam(r, "value")
@@ -23,14 +23,14 @@ func UpdateMetric(rw http.ResponseWriter, r *http.Request) {
 			http.Error(rw, "parsing float value error", http.StatusBadRequest)
 			return
 		}
-		memstorage.SetGauge(nameMetric, float64MetricValue)
+		store.SetGauge(nameMetric, float64MetricValue)
 	case storage.CounterType:
 		int64MetricValue, err := strconv.ParseInt(valueMetric, 10, 64)
 		if err != nil {
 			http.Error(rw, "parsing int value error", http.StatusBadRequest)
 			return
 		}
-		memstorage.SetCounter(nameMetric, int64MetricValue)
+		store.SetCounter(nameMetric, int64MetricValue)
 	default:
 		http.Error(rw, "unknown metric type", http.StatusBadRequest)
 		return

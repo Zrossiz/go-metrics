@@ -12,6 +12,9 @@ import (
 )
 
 func TestUpdateMetricGauge(t *testing.T) {
+
+	store := memstorage.NewMemStorage()
+
 	req := httptest.NewRequest(http.MethodPost, "/update/gauge/testGauge/42.42", nil)
 
 	rctx := chi.NewRouteContext()
@@ -22,18 +25,21 @@ func TestUpdateMetricGauge(t *testing.T) {
 
 	rr := httptest.NewRecorder()
 
-	UpdateMetric(rr, req)
+	UpdateMetric(rr, req, store)
 
 	if status := rr.Code; status != http.StatusOK {
 		t.Errorf("expected status code %d, got %d", http.StatusOK, status)
 	}
 
-	if metric := memstorage.GetMetric("testGauge"); metric.Value != 42.42 {
+	if metric := store.GetMetric("testGauge"); metric.Value != 42.42 {
 		t.Errorf("expected Gauge value 42.42, got %v", metric.Value)
 	}
 }
 
 func TestUpdateMetricCounter(t *testing.T) {
+
+	store := memstorage.NewMemStorage()
+
 	req := httptest.NewRequest(http.MethodPost, "/update/counter/testCounter/42", nil)
 
 	rctx := chi.NewRouteContext()
@@ -44,13 +50,13 @@ func TestUpdateMetricCounter(t *testing.T) {
 
 	rr := httptest.NewRecorder()
 
-	UpdateMetric(rr, req)
+	UpdateMetric(rr, req, store)
 
 	if status := rr.Code; status != http.StatusOK {
 		t.Errorf("expected status code %d, got %d", http.StatusOK, status)
 	}
 
-	metric := memstorage.GetMetric("testCounter")
+	metric := store.GetMetric("testCounter")
 
 	if value, ok := metric.Value.(int64); !ok || value != 42 {
 		t.Errorf("expected Counter value 42, got %v", metric.Value)

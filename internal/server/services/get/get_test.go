@@ -13,7 +13,10 @@ import (
 )
 
 func TestGetMetric(t *testing.T) {
-	memstorage.Metrics = []storage.Metric{
+
+	store := memstorage.NewMemStorage()
+
+	store.Metrics = []storage.Metric{
 		{Name: "testMetric", Type: storage.GaugeType, Value: 42},
 	}
 
@@ -26,7 +29,7 @@ func TestGetMetric(t *testing.T) {
 
 	rr := httptest.NewRecorder()
 
-	GetMetric(rr, req)
+	GetMetric(rr, req, *store)
 
 	if status := rr.Code; status != http.StatusOK {
 		t.Errorf("expected status code %d, got %d", http.StatusOK, status)
