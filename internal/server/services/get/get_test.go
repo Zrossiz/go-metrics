@@ -12,7 +12,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func TestGetMetric(t *testing.T) {
+func TestMetric(t *testing.T) {
 
 	store := memstorage.NewMemStorage()
 
@@ -29,7 +29,7 @@ func TestGetMetric(t *testing.T) {
 
 	rr := httptest.NewRecorder()
 
-	GetMetric(rr, req, *store)
+	Metric(rr, req, *store)
 
 	if status := rr.Code; status != http.StatusOK {
 		t.Errorf("expected status code %d, got %d", http.StatusOK, status)

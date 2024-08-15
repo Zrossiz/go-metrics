@@ -8,7 +8,7 @@ import (
 	"github.com/Zrossiz/go-metrics/internal/agent/constants/types"
 )
 
-func TestSendMetrics(t *testing.T) {
+func TestMetrics(t *testing.T) {
 	metrics := []types.Metric{
 		{Type: "gauge", Name: "metric1", Value: 1.23},
 		{Type: "counter", Name: "metric2", Value: 42},
@@ -19,7 +19,7 @@ func TestSendMetrics(t *testing.T) {
 	}))
 	defer server.Close()
 
-	sendedMetrics := SendMetrics(metrics, server.Listener.Addr().String())
+	sendedMetrics := Metrics(metrics, server.Listener.Addr().String())
 
 	if len(sendedMetrics) != len(metrics) {
 		t.Errorf("Expected %d metrics to be sent, but got %d", len(metrics), len(sendedMetrics))

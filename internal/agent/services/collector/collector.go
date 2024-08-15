@@ -9,7 +9,7 @@ import (
 	"github.com/Zrossiz/go-metrics/internal/agent/constants/types"
 )
 
-func CollectMetrics() []types.Metric {
+func GetMetrics() []types.Metric {
 	var metrics []types.Metric
 	var memStats runtime.MemStats
 	runtime.ReadMemStats(&memStats)

@@ -4,8 +4,8 @@ import (
 	"testing"
 )
 
-func TestCollectMetrics(t *testing.T) {
-	metrics := CollectMetrics()
+func TestGettMetrics(t *testing.T) {
+	metrics := GetMetrics()
 
 	if len(metrics) == 0 {
 		t.Fatal("Expected non empty slice")

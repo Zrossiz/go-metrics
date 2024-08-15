@@ -19,18 +19,18 @@ func StartServer() {
 	store := memstorage.NewMemStorage()
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		get.GetHTMLPageMetric(w, r, *store)
+		get.HTMLPageMetric(w, r, *store)
 	})
 
 	r.Route("/update", func(r chi.Router) {
 		r.Post("/{type}/{name}/{value}", func(w http.ResponseWriter, r *http.Request) {
-			update.UpdateMetric(w, r, store)
+			update.Metric(w, r, store)
 		})
 	})
 
 	r.Route("/value", func(r chi.Router) {
 		r.Get("/{type}/{name}", func(w http.ResponseWriter, r *http.Request) {
-			get.GetMetric(w, r, *store)
+			get.Metric(w, r, *store)
 		})
 	})
 

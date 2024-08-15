@@ -11,7 +11,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func TestUpdateMetricGauge(t *testing.T) {
+func TestMetricGauge(t *testing.T) {
 
 	store := memstorage.NewMemStorage()
 
@@ -25,7 +25,7 @@ func TestUpdateMetricGauge(t *testing.T) {
 
 	rr := httptest.NewRecorder()
 
-	UpdateMetric(rr, req, store)
+	Metric(rr, req, store)
 
 	if status := rr.Code; status != http.StatusOK {
 		t.Errorf("expected status code %d, got %d", http.StatusOK, status)
@@ -36,7 +36,7 @@ func TestUpdateMetricGauge(t *testing.T) {
 	}
 }
 
-func TestUpdateMetricCounter(t *testing.T) {
+func TestMetricCounter(t *testing.T) {
 
 	store := memstorage.NewMemStorage()
 
@@ -50,7 +50,7 @@ func TestUpdateMetricCounter(t *testing.T) {
 
 	rr := httptest.NewRecorder()
 
-	UpdateMetric(rr, req, store)
+	Metric(rr, req, store)
 
 	if status := rr.Code; status != http.StatusOK {
 		t.Errorf("expected status code %d, got %d", http.StatusOK, status)

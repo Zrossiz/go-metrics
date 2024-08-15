@@ -8,7 +8,7 @@ import (
 	"github.com/Zrossiz/go-metrics/internal/agent/constants/types"
 )
 
-func SendMetrics(metrics []types.Metric, addr string) []types.Metric {
+func Metrics(metrics []types.Metric, addr string) []types.Metric {
 	var sendedMetrics []types.Metric
 
 	for i := 0; i < len(metrics); i++ {

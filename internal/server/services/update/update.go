@@ -11,7 +11,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func UpdateMetric(rw http.ResponseWriter, r *http.Request, store *memstorage.MemStorage) {
+func Metric(rw http.ResponseWriter, r *http.Request, store *memstorage.MemStorage) {
 	typeMetric := chi.URLParam(r, "type")
 	nameMetric := chi.URLParam(r, "name")
 	valueMetric := chi.URLParam(r, "value")

@@ -10,7 +10,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func GetMetric(rw http.ResponseWriter, r *http.Request, store memstorage.MemStorage) {
+func Metric(rw http.ResponseWriter, r *http.Request, store memstorage.MemStorage) {
 	nameMetric := chi.URLParam(r, "name")
 	metric := store.GetMetric(nameMetric)
 
@@ -22,7 +22,7 @@ func GetMetric(rw http.ResponseWriter, r *http.Request, store memstorage.MemStor
 	io.WriteString(rw, fmt.Sprintf("%v", metric.Value))
 }
 
-func GetHTMLPageMetric(rw http.ResponseWriter, r *http.Request, store memstorage.MemStorage) {
+func HTMLPageMetric(rw http.ResponseWriter, r *http.Request, store memstorage.MemStorage) {
 	metrics := store.Metrics
 	tmpl := `
 		<!DOCTYPE html>

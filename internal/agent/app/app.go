@@ -24,7 +24,7 @@ func StartAgent() {
 	for {
 		select {
 		case <-tickerPoll.C:
-			metrics = collector.CollectMetrics()
+			metrics = collector.GetMetrics()
 			counter++
 			fmt.Println("tick")
 		case <-tickerReport.C:
@@ -33,7 +33,7 @@ func StartAgent() {
 				Name:  "PollCount",
 				Value: counter,
 			})
-			send.SendMetrics(metrics, config.RunAddr)
+			send.Metrics(metrics, config.RunAddr)
 			fmt.Println("report")
 		}
 	}
