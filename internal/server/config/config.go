@@ -5,9 +5,13 @@ import (
 	"os"
 
 	"github.com/joho/godotenv"
+	"go.uber.org/zap/zapcore"
 )
 
-var RunAddr string
+var (
+	RunAddr      string
+	FlagLogLevel string
+)
 
 func FlagParse() {
 	_ = godotenv.Load()
@@ -19,4 +23,10 @@ func FlagParse() {
 	}
 
 	flag.Parse()
+
+	if envLogLevel := os.Getenv("LOG_LEVEL"); envLogLevel != "" {
+		FlagLogLevel = envLogLevel
+	} else {
+		FlagLogLevel = zapcore.ErrorLevel.String()
+	}
 }
