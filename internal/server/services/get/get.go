@@ -1,25 +1,36 @@
 package get
 
 import (
-	"fmt"
-	"io"
+	"encoding/json"
 	"net/http"
 	"text/template"
 
+	"github.com/Zrossiz/go-metrics/internal/server/dto"
 	memstorage "github.com/Zrossiz/go-metrics/internal/server/storage/memStorage"
-	"github.com/go-chi/chi/v5"
 )
 
 func Metric(rw http.ResponseWriter, r *http.Request, store memstorage.MemStorage) {
-	nameMetric := chi.URLParam(r, "name")
-	metric := store.GetMetric(nameMetric)
+	var body dto.GetMetricDto
 
-	if metric.Name == "" {
-		http.Error(rw, "metric not found", 404)
-		return
+	err := json.NewDecoder(r.Body).Decode(&body)
+	if err != nil {
+		http.Error(rw, "invalid request body", http.StatusBadRequest)
+	}
+	defer r.Body.Close()
+
+	metric := store.GetMetric(body.ID)
+	if metric == nil {
+		http.Error(rw, "metric not found", http.StatusNotFound)
 	}
 
-	io.WriteString(rw, fmt.Sprintf("%v", metric.Value))
+	response, err := json.Marshal(metric)
+	if err != nil {
+		http.Error(rw, "failed to marshal response", http.StatusInternalServerError)
+	}
+
+	rw.Header().Set("Content-Type", "application/json")
+	rw.WriteHeader(http.StatusCreated)
+	rw.Write(response)
 }
 
 func HTMLPageMetric(rw http.ResponseWriter, r *http.Request, store memstorage.MemStorage) {
