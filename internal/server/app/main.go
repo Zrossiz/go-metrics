@@ -35,10 +35,8 @@ func StartServer() error {
 		get.HTMLPageMetric(w, r, *store)
 	})
 
-	r.Route("/update", func(r chi.Router) {
-		r.Post("/{type}/{name}/{value}", func(w http.ResponseWriter, r *http.Request) {
-			update.Metric(w, r, store)
-		})
+	r.Post("/update", func(w http.ResponseWriter, r *http.Request) {
+		update.Metric(w, r, store)
 	})
 
 	r.Route("/value", func(r chi.Router) {
