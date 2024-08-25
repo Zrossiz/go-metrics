@@ -38,7 +38,8 @@ func TestGetMetric(t *testing.T) {
 	store := NewMemStorage()
 
 	emptyMetric := store.GetMetric("TestEmpty")
-	if emptyMetric.Name != "" {
+
+	if emptyMetric != nil {
 		t.Fatalf("expected empty value, got %v", emptyMetric.Name)
 	}
 

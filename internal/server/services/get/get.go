@@ -29,7 +29,7 @@ func Metric(rw http.ResponseWriter, r *http.Request, store memstorage.MemStorage
 	}
 
 	rw.Header().Set("Content-Type", "application/json")
-	rw.WriteHeader(http.StatusCreated)
+	rw.WriteHeader(http.StatusOK)
 	rw.Write(response)
 }
 

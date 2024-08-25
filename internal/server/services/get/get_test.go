@@ -1,31 +1,37 @@
 package get
 
 import (
-	"context"
+	"bytes"
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 
+	"github.com/Zrossiz/go-metrics/internal/server/dto"
 	"github.com/Zrossiz/go-metrics/internal/server/storage"
 	memstorage "github.com/Zrossiz/go-metrics/internal/server/storage/memStorage"
-	"github.com/go-chi/chi/v5"
 )
 
 func TestMetric(t *testing.T) {
-
 	store := memstorage.NewMemStorage()
+	expectedValue := 42.42
 
 	store.Metrics = []storage.Metric{
-		{Name: "testMetric", Type: storage.GaugeType, Value: 42},
+		{Name: "testMetric", Type: storage.GaugeType, Value: expectedValue},
 	}
 
-	req := httptest.NewRequest(http.MethodGet, "/value/testMetric", nil)
+	mockMetric := dto.GetMetricDto{
+		ID:    "testMetric",
+		MType: "gauge",
+	}
 
-	rctx := chi.NewRouteContext()
-	rctx.URLParams.Add("name", "testMetric")
+	jsonMetric, err := json.Marshal(mockMetric)
+	if err != nil {
+		fmt.Println("json metric parsing error")
+	}
 
-	req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
+	req := httptest.NewRequest(http.MethodPost, "/value/", bytes.NewBuffer(jsonMetric))
 
 	rr := httptest.NewRecorder()
 
@@ -35,8 +41,14 @@ func TestMetric(t *testing.T) {
 		t.Errorf("expected status code %d, got %d", http.StatusOK, status)
 	}
 
-	expected := "42"
-	if strings.TrimSpace(rr.Body.String()) != expected {
-		t.Errorf("expected body %s, got %s", expected, rr.Body.String())
+	var body dto.MetricDTO
+
+	err = json.NewDecoder(rr.Body).Decode(&body)
+	if err != nil {
+		t.Errorf("parsing response error")
+	}
+
+	if *body.Value != expectedValue {
+		t.Errorf("expected value metric %v, got %v", expectedValue, body.Value)
 	}
 }

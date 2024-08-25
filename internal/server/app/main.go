@@ -35,14 +35,12 @@ func StartServer() error {
 		get.HTMLPageMetric(w, r, *store)
 	})
 
-	r.Post("/update", func(w http.ResponseWriter, r *http.Request) {
+	r.Post("/update/", func(w http.ResponseWriter, r *http.Request) {
 		update.Metric(w, r, store)
 	})
 
-	r.Route("/value", func(r chi.Router) {
-		r.Get("/{type}/{name}", func(w http.ResponseWriter, r *http.Request) {
-			get.Metric(w, r, *store)
-		})
+	r.Post("/value/", func(w http.ResponseWriter, r *http.Request) {
+		get.Metric(w, r, *store)
 	})
 
 	shugar.Info("Starting server",
