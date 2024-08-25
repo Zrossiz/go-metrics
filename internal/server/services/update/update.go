@@ -1,40 +1,45 @@
 package update
 
 import (
-	"fmt"
-	"io"
+	"encoding/json"
 	"net/http"
-	"strconv"
 
+	"github.com/Zrossiz/go-metrics/internal/server/dto"
 	"github.com/Zrossiz/go-metrics/internal/server/storage"
 	memstorage "github.com/Zrossiz/go-metrics/internal/server/storage/memStorage"
-	"github.com/go-chi/chi/v5"
 )
 
 func Metric(rw http.ResponseWriter, r *http.Request, store *memstorage.MemStorage) {
-	typeMetric := chi.URLParam(r, "type")
-	nameMetric := chi.URLParam(r, "name")
-	valueMetric := chi.URLParam(r, "value")
+	var body dto.MetricDTO
 
-	switch typeMetric {
+	err := json.NewDecoder(r.Body).Decode(&body)
+	if err != nil {
+		http.Error(rw, "invalid request body", http.StatusBadRequest)
+	}
+	defer r.Body.Close()
+
+	var updatedMetric *storage.Metric
+
+	switch body.MType {
 	case storage.GaugeType:
-		float64MetricValue, err := strconv.ParseFloat(valueMetric, 64)
-		if err != nil {
-			http.Error(rw, "parsing float value error", http.StatusBadRequest)
-			return
-		}
-		store.SetGauge(nameMetric, float64MetricValue)
+		updatedMetric = store.SetGauge(body.ID, *body.Value)
 	case storage.CounterType:
-		int64MetricValue, err := strconv.ParseInt(valueMetric, 10, 64)
-		if err != nil {
-			http.Error(rw, "parsing int value error", http.StatusBadRequest)
-			return
-		}
-		store.SetCounter(nameMetric, int64MetricValue)
+		updatedMetric = store.SetCounter(body.ID, *body.Delta)
 	default:
 		http.Error(rw, "unknown metric type", http.StatusBadRequest)
 		return
 	}
 
-	io.WriteString(rw, fmt.Sprintf("Type: %s, Name: %s, Value: %s", typeMetric, nameMetric, valueMetric))
+	if updatedMetric == nil {
+		http.Error(rw, "invalid request", http.StatusBadRequest)
+	}
+
+	response, err := json.Marshal(updatedMetric)
+	if err != nil {
+		http.Error(rw, "failed to marshal response", http.StatusInternalServerError)
+	}
+
+	rw.Header().Set("Content-Type", "application/json")
+	rw.WriteHeader(http.StatusCreated)
+	rw.Write(response)
 }
