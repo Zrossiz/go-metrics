@@ -33,7 +33,7 @@ func TestMetricGauge(t *testing.T) {
 
 	rr := httptest.NewRecorder()
 
-	Metric(rr, req, store)
+	JSONMetric(rr, req, store)
 
 	if status := rr.Code; status != http.StatusOK {
 		t.Errorf("expected status code %d, got %d", http.StatusOK, status)
@@ -72,7 +72,7 @@ func TestMetricCounter(t *testing.T) {
 
 	rr := httptest.NewRecorder()
 
-	Metric(rr, req, store)
+	JSONMetric(rr, req, store)
 
 	if status := rr.Code; status != http.StatusOK {
 		t.Errorf("expected status code %d, got %d", http.StatusOK, status)

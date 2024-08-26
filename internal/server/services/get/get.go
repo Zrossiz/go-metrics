@@ -2,14 +2,17 @@ package get
 
 import (
 	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
 	"text/template"
 
 	"github.com/Zrossiz/go-metrics/internal/server/dto"
 	memstorage "github.com/Zrossiz/go-metrics/internal/server/storage/memStorage"
+	"github.com/go-chi/chi"
 )
 
-func Metric(rw http.ResponseWriter, r *http.Request, store memstorage.MemStorage) {
+func JSONMetric(rw http.ResponseWriter, r *http.Request, store memstorage.MemStorage) {
 	var body dto.GetMetricDto
 
 	err := json.NewDecoder(r.Body).Decode(&body)
@@ -31,6 +34,18 @@ func Metric(rw http.ResponseWriter, r *http.Request, store memstorage.MemStorage
 	rw.Header().Set("Content-Type", "application/json")
 	rw.WriteHeader(http.StatusOK)
 	rw.Write(response)
+}
+
+func Metric(rw http.ResponseWriter, r *http.Request, store memstorage.MemStorage) {
+	nameMetric := chi.URLParam(r, "name")
+	metric := store.GetMetric(nameMetric)
+
+	if metric.Name == "" {
+		http.Error(rw, "metric not found", 404)
+		return
+	}
+
+	io.WriteString(rw, fmt.Sprintf("%v", metric.Value))
 }
 
 func HTMLPageMetric(rw http.ResponseWriter, r *http.Request, store memstorage.MemStorage) {
