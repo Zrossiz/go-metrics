@@ -18,17 +18,33 @@ func JSONMetric(rw http.ResponseWriter, r *http.Request, store memstorage.MemSto
 	err := json.NewDecoder(r.Body).Decode(&body)
 	if err != nil {
 		http.Error(rw, "invalid request body", http.StatusBadRequest)
+		return
 	}
 	defer r.Body.Close()
 
 	metric := store.GetMetric(body.ID)
 	if metric == nil {
 		http.Error(rw, "metric not found", http.StatusNotFound)
+		return
 	}
 
-	response, err := json.Marshal(metric)
+	responseMetric := dto.MetricDTO{
+		ID:    metric.Name,
+		MType: metric.Type,
+	}
+
+	if v, ok := metric.Value.(float64); ok {
+		responseMetric.Value = &v
+	}
+
+	if d, ok := metric.Value.(int64); ok {
+		responseMetric.Delta = &d
+	}
+
+	response, err := json.Marshal(responseMetric)
 	if err != nil {
 		http.Error(rw, "failed to marshal response", http.StatusInternalServerError)
+		return
 	}
 
 	rw.Header().Set("Content-Type", "application/json")

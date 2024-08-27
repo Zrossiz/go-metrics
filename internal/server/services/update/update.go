@@ -48,7 +48,20 @@ func JSONMetric(rw http.ResponseWriter, r *http.Request, store *memstorage.MemSt
 		return
 	}
 
-	response, err := json.Marshal(updatedMetric)
+	responseMetric := dto.MetricDTO{
+		ID:    updatedMetric.Name,
+		MType: updatedMetric.Type,
+	}
+
+	if v, ok := updatedMetric.Value.(float64); ok {
+		responseMetric.Value = &v
+	}
+
+	if d, ok := updatedMetric.Value.(int64); ok {
+		responseMetric.Delta = &d
+	}
+
+	response, err := json.Marshal(responseMetric)
 	if err != nil {
 		http.Error(rw, "failed to marshal response", http.StatusInternalServerError)
 		return
