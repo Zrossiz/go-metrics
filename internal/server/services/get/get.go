@@ -40,7 +40,7 @@ func Metric(rw http.ResponseWriter, r *http.Request, store memstorage.MemStorage
 	nameMetric := chi.URLParam(r, "name")
 	metric := store.GetMetric(nameMetric)
 
-	if metric.Name == "" {
+	if metric == nil {
 		http.Error(rw, "metric not found", 404)
 		return
 	}
