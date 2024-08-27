@@ -1,7 +1,6 @@
 package app
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/Zrossiz/go-metrics/internal/agent/config"
@@ -26,7 +25,6 @@ func StartAgent() {
 		case <-tickerPoll.C:
 			metrics = collector.GetMetrics()
 			counter++
-			fmt.Println("tick")
 		case <-tickerReport.C:
 			metrics = append(metrics, types.Metric{
 				Type:  constants.Counter,
@@ -34,7 +32,6 @@ func StartAgent() {
 				Value: counter,
 			})
 			send.Metrics(metrics, config.RunAddr)
-			fmt.Println("report")
 		}
 	}
 }
