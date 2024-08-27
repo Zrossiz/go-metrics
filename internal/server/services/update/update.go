@@ -10,7 +10,7 @@ import (
 	"github.com/Zrossiz/go-metrics/internal/server/dto"
 	"github.com/Zrossiz/go-metrics/internal/server/storage"
 	memstorage "github.com/Zrossiz/go-metrics/internal/server/storage/memStorage"
-	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/v5"
 )
 
 func JSONMetric(rw http.ResponseWriter, r *http.Request, store *memstorage.MemStorage) {
