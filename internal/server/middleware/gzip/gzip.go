@@ -4,13 +4,13 @@ import (
 	"compress/gzip"
 	"io"
 	"net/http"
+	"strings"
 )
 
 func CompressMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		encoding := r.Header.Get("Content-Encoding")
-
-		if encoding == "" || encoding != "gzip" {
+		encoding := r.Header.Get("Accept-Encoding")
+		if !strings.Contains(encoding, "gzip") {
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -20,35 +20,30 @@ func CompressMiddleware(next http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 			return
 		}
-
 		defer zw.Close()
 
 		w.Header().Set("Content-Encoding", "gzip")
 
-		next.ServeHTTP(compressWriter{ResponseWriter: w, Writer: zw}, r)
+		next.ServeHTTP(&compressWriter{ResponseWriter: w, Writer: zw}, r)
 	})
-
 }
 
 func DecompressMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		encoding := r.Header.Get("Content-Encoding")
-
-		if encoding == "" || encoding != "gzip" {
+		if !strings.Contains(encoding, "gzip") {
 			next.ServeHTTP(w, r)
 			return
 		}
 
 		cr, err := newCompressReader(r.Body)
 		if err != nil {
-			next.ServeHTTP(w, r)
+			http.Error(w, "failed to decompress request", http.StatusBadRequest)
 			return
 		}
-
 		defer cr.Close()
 
 		r.Body = cr
-
 		next.ServeHTTP(w, r)
 	})
 }
@@ -70,7 +65,7 @@ func newCompressReader(r io.ReadCloser) (*compressReader, error) {
 	}, nil
 }
 
-func (c *compressReader) Read(p []byte) (n int, err error) {
+func (c *compressReader) Read(p []byte) (int, error) {
 	return c.zr.Read(p)
 }
 
@@ -86,15 +81,13 @@ type compressWriter struct {
 	Writer io.Writer
 }
 
-func (c compressWriter) Write(p []byte) (int, error) {
-	if c.Writer == nil {
-		zw, err := gzip.NewWriterLevel(c.ResponseWriter, gzip.BestSpeed)
-		if err != nil {
-			return 0, err
-		}
-
-		c.Writer = zw
-	}
-
+func (c *compressWriter) Write(p []byte) (int, error) {
 	return c.Writer.Write(p)
+}
+
+func (c *compressWriter) Close() error {
+	if writer, ok := c.Writer.(*gzip.Writer); ok {
+		return writer.Close()
+	}
+	return nil
 }
