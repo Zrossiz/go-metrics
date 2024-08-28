@@ -1,8 +1,8 @@
 package parser
 
 import (
+	"bufio"
 	"encoding/json"
-	"io/ioutil"
 	"os"
 
 	"github.com/Zrossiz/go-metrics/internal/server/storage"
@@ -10,39 +10,70 @@ import (
 	"go.uber.org/zap"
 )
 
-func CollectMetricsFromFile(filePath string, logger *zap.Logger, store *memstorage.MemStorage) []storage.Metric {
+func CollectMetricsFromFile(filePath string, store *memstorage.MemStorage) ([]storage.Metric, error) {
 	var collectedMetrics []storage.Metric
 
 	file, err := os.Open(filePath)
 	if err != nil {
-		logger.Fatal("file not exist")
+		return nil, err
 	}
 	defer file.Close()
 
-	byteValue, err := ioutil.ReadAll(file)
-	if err != nil {
-		logger.Fatal("failed to read file")
-	}
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		var metric storage.Metric
+		line := scanner.Text()
 
-	err = json.Unmarshal(byteValue, &collectedMetrics)
-	if err != nil {
-		logger.Fatal("failed to unmarshal json")
-	}
-
-	for i := 0; i < len(collectedMetrics); i++ {
-		curMetric := collectedMetrics[i]
-		if curMetric.Type == storage.CounterType {
-			store.SetCounter(curMetric.Name, curMetric.Value.(int64))
+		if err := json.Unmarshal([]byte(line), &metric); err != nil {
+			continue
 		}
-		if curMetric.Type == storage.GaugeType {
-			store.SetGauge(curMetric.Name, curMetric.Value.(float64))
+
+		collectedMetrics = append(collectedMetrics, metric)
+	}
+
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+
+	for _, curMetric := range collectedMetrics {
+		switch curMetric.Type {
+		case storage.CounterType:
+			if value, ok := curMetric.Value.(float64); ok {
+				store.SetCounter(curMetric.Name, int64(value))
+			}
+		case storage.GaugeType:
+			if value, ok := curMetric.Value.(float64); ok {
+				store.SetGauge(curMetric.Name, value)
+			}
 		}
 	}
 
-	return collectedMetrics
+	return collectedMetrics, nil
 }
 
-// TODO: сделать обновление метрики
-// func UpdateMetrics(filePath string) error {
+func UpdateMetrics(filePath string, logger *zap.Logger, store *memstorage.MemStorage) error {
+	file, err := os.OpenFile(filePath, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
 
-// }
+	var newMetrics string
+
+	for _, s := range store.Metrics {
+		str, err := json.Marshal(s)
+		if err != nil {
+			logger.Sugar().Warnf("error to parse metric: %s", s.Name)
+			continue
+		}
+		newMetrics += string(str)
+		newMetrics += "\n"
+	}
+
+	_, err = file.WriteString(newMetrics)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
