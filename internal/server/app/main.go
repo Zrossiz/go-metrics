@@ -6,6 +6,7 @@ import (
 
 	"github.com/Zrossiz/go-metrics/internal/server/config"
 	"github.com/Zrossiz/go-metrics/internal/server/libs/logger"
+	"github.com/Zrossiz/go-metrics/internal/server/libs/parser"
 	"github.com/Zrossiz/go-metrics/internal/server/middleware/gzip"
 	"github.com/Zrossiz/go-metrics/internal/server/middleware/logger/request"
 	"github.com/Zrossiz/go-metrics/internal/server/services/get"
@@ -27,6 +28,10 @@ func StartServer() error {
 	}
 
 	zLogger := logger.Log
+
+	if config.Restore {
+		parser.CollectMetricsFromFile(config.FileStoragePath, zLogger, store)
+	}
 
 	r.Use(func(next http.Handler) http.Handler {
 		return request.WithLogs(next)
