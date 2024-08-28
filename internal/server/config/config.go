@@ -35,7 +35,7 @@ func FlagParse() {
 		}
 		StoreInterval = value
 	} else {
-		flag.IntVar(&StoreInterval, "-i", 30, "interval for save metrics")
+		flag.IntVar(&StoreInterval, "i", 10, "interval for save metrics")
 	}
 
 	if envRestore := os.Getenv("RESTORE"); envRestore != "" {
@@ -45,13 +45,13 @@ func FlagParse() {
 		}
 		Restore = value
 	} else {
-		flag.BoolVar(&Restore, "-r", true, "get metrics from file")
+		flag.BoolVar(&Restore, "r", true, "get metrics from file")
 	}
 
 	if envFileStoragePath := os.Getenv("FILE_STORAGE_PATH"); envFileStoragePath != "" {
 		FileStoragePath = envFileStoragePath
 	} else {
-		flag.StringVar(&FileStoragePath, "-f", "", "path to storage file")
+		flag.StringVar(&FileStoragePath, "f", "/Users/zrossiz/Desktop/GoProjects/praktikum/projects/go-metrics/storage/storage.txt", "path to storage file")
 	}
 
 	flag.Parse()

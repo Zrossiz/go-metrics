@@ -3,6 +3,7 @@ package app
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/Zrossiz/go-metrics/internal/server/config"
 	"github.com/Zrossiz/go-metrics/internal/server/libs/logger"
@@ -30,8 +31,28 @@ func StartServer() error {
 	zLogger := logger.Log
 
 	if config.Restore {
-		parser.CollectMetricsFromFile(config.FileStoragePath, zLogger, store)
+		_, err := parser.CollectMetricsFromFile(config.FileStoragePath, store)
+		if err != nil {
+			zLogger.Sugar().Fatalf("Error collect metrics %v", err)
+		}
 	}
+
+	ticker := time.NewTicker(time.Duration(config.StoreInterval * int(time.Second)))
+	defer ticker.Stop()
+	stop := make(chan bool)
+
+	go func() {
+		for {
+			select {
+			case <-ticker.C:
+				zLogger.Info("save metrics...")
+				parser.UpdateMetrics(config.FileStoragePath, zLogger, store)
+			case <-stop:
+				fmt.Println("Stopping task execution")
+				return
+			}
+		}
+	}()
 
 	r.Use(func(next http.Handler) http.Handler {
 		return request.WithLogs(next)
