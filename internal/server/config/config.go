@@ -51,7 +51,7 @@ func FlagParse() {
 	if envFileStoragePath := os.Getenv("FILE_STORAGE_PATH"); envFileStoragePath != "" {
 		FileStoragePath = envFileStoragePath
 	} else {
-		flag.StringVar(&FileStoragePath, "f", "/Users/zrossiz/Desktop/GoProjects/praktikum/projects/go-metrics/storage/storage.txt", "path to storage file")
+		flag.StringVar(&FileStoragePath, "f", "storage/storage.txt", "path to storage file")
 	}
 
 	flag.Parse()
