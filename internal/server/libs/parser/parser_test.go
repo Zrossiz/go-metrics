@@ -5,6 +5,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/Zrossiz/go-metrics/internal/server/libs/logger"
+	"github.com/Zrossiz/go-metrics/internal/server/storage"
 	memstorage "github.com/Zrossiz/go-metrics/internal/server/storage/memStorage"
 )
 
@@ -41,5 +43,23 @@ func TestCollectMetricsFromFile(t *testing.T) {
 
 	if len(store.Metrics) != 3 {
 		t.Errorf("epxpected 3 metrics, got %v", len(store.Metrics))
+	}
+}
+
+func TestUpdateMetrics(t *testing.T) {
+	store := memstorage.NewMemStorage()
+	filePath := "storage/storage.txt"
+
+	store.SetCounter("testCounter", 1)
+	store.SetGauge("testGauge", 2.00)
+
+	UpdateMetrics(filePath, logger.Log, store)
+
+	store.Metrics = []storage.Metric{}
+
+	CollectMetricsFromFile(filePath, store)
+
+	if len(store.Metrics) != 2 {
+		t.Errorf("expected 2 metrics, got %v", len(store.Metrics))
 	}
 }
