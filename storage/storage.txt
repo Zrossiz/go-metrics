@@ -1,31 +1,5 @@
-{"Name":"Alloc","Type":"gauge","Value":2942224}
-{"Name":"BuckHashSys","Type":"gauge","Value":7544}
-{"Name":"Frees","Type":"gauge","Value":25251}
-{"Name":"GCCPUFraction","Type":"gauge","Value":0.0003836463164436296}
-{"Name":"GCSys","Type":"gauge","Value":2445728}
-{"Name":"HeapAlloc","Type":"gauge","Value":2942224}
-{"Name":"HeapIdle","Type":"gauge","Value":3833856}
-{"Name":"HeapInuse","Type":"gauge","Value":3850240}
-{"Name":"HeapObjects","Type":"gauge","Value":1530}
-{"Name":"HeapReleased","Type":"gauge","Value":2760704}
-{"Name":"HeapSys","Type":"gauge","Value":7684096}
-{"Name":"LastGC","Type":"gauge","Value":1724918963880565000}
-{"Name":"Lookups","Type":"gauge","Value":0}
-{"Name":"MCacheInuse","Type":"gauge","Value":9600}
-{"Name":"MCacheSys","Type":"gauge","Value":15600}
-{"Name":"MSpanInuse","Type":"gauge","Value":116800}
-{"Name":"MSpanSys","Type":"gauge","Value":130560}
-{"Name":"Mallocs","Type":"gauge","Value":26781}
-{"Name":"NextGC","Type":"gauge","Value":4194304}
-{"Name":"NumForcedGC","Type":"gauge","Value":0}
-{"Name":"NumGC","Type":"gauge","Value":47}
-{"Name":"OtherSys","Type":"gauge","Value":1401352}
-{"Name":"PauseTotalNs","Type":"gauge","Value":5402383}
-{"Name":"StackInuse","Type":"gauge","Value":655360}
-{"Name":"StackSys","Type":"gauge","Value":655360}
-{"Name":"Sys","Type":"gauge","Value":12340240}
-{"Name":"TotalAlloc","Type":"gauge","Value":123484240}
-{"Name":"RandomValue","Type":"gauge","Value":0.40251346532727816}
-{"Name":"PollCount","Type":"counter","Value":287}
-{"Name":"testGauge","Type":"gauge","Value":42.42}
-{"Name":"testCounter","Type":"counter","Value":42}
+
+		{"Name":"Alloc","Type":"gauge","Value":2942224}
+		{"Name":"BuckHashSys","Type":"gauge","Value":7544}
+		{"Name":"Frees","Type":"gauge","Value":25251}
+	

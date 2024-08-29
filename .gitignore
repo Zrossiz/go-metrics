@@ -27,4 +27,5 @@ vendor/
 # Env variables
 .env
 
-storage/
+storage/storage.txt
+internal/server/libs/parser/storage
