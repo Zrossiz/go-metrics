@@ -77,6 +77,9 @@ func Metric(rw http.ResponseWriter, r *http.Request, store *memstorage.MemStorag
 	nameMetric := chi.URLParam(r, "name")
 	valueMetric := chi.URLParam(r, "value")
 
+	fmt.Println("TYPE: ", typeMetric)
+	fmt.Println("NAME: ", nameMetric)
+
 	switch typeMetric {
 	case storage.GaugeType:
 		float64MetricValue, err := strconv.ParseFloat(valueMetric, 64)

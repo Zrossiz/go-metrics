@@ -10,9 +10,72 @@ import (
 
 	"github.com/Zrossiz/go-metrics/internal/agent/dto"
 	memstorage "github.com/Zrossiz/go-metrics/internal/server/storage/memStorage"
+	"github.com/go-chi/chi/v5"
 )
 
+func TestMetricCounter(t *testing.T) {
+
+	store := memstorage.NewMemStorage()
+
+	r := chi.NewRouter()
+
+	r.Post("/update/{type}/{name}/{value}", func(w http.ResponseWriter, r *http.Request) {
+		Metric(w, r, store)
+	})
+
+	req := httptest.NewRequest(http.MethodPost, "/update/counter/testCounter/42", nil)
+	rr := httptest.NewRecorder()
+
+	r.ServeHTTP(rr, req)
+
+	if status := rr.Code; status != http.StatusOK {
+		t.Errorf("expected status code %d, got %d", http.StatusOK, status)
+	}
+
+	metric := store.GetMetric("testCounter")
+
+	if metric == nil {
+		t.Errorf("expected metric to be created, got nil")
+		return
+	}
+
+	if value, ok := metric.Value.(int64); !ok || value != 42 {
+		t.Errorf("expected Counter value 42, got %v", metric.Value)
+	}
+}
+
 func TestMetricGauge(t *testing.T) {
+
+	store := memstorage.NewMemStorage()
+
+	r := chi.NewRouter()
+
+	r.Post("/update/{type}/{name}/{value}", func(w http.ResponseWriter, r *http.Request) {
+		Metric(w, r, store)
+	})
+
+	req := httptest.NewRequest(http.MethodPost, "/update/gauge/testGauge/42.42", nil)
+	rr := httptest.NewRecorder()
+
+	r.ServeHTTP(rr, req)
+
+	if status := rr.Code; status != http.StatusOK {
+		t.Errorf("expected status code %d, got %d", http.StatusOK, status)
+	}
+
+	metric := store.GetMetric("testGauge")
+
+	if metric == nil {
+		t.Errorf("expected metric to be created, got nil")
+		return
+	}
+
+	if value, ok := metric.Value.(float64); !ok || value != 42.42 {
+		t.Errorf("expected Counter value 42.42, got %v", metric.Value)
+	}
+}
+
+func TestJSONMetricGauge(t *testing.T) {
 
 	store := memstorage.NewMemStorage()
 
@@ -51,7 +114,7 @@ func TestMetricGauge(t *testing.T) {
 	}
 }
 
-func TestMetricCounter(t *testing.T) {
+func TestJSONMetricCounter(t *testing.T) {
 
 	store := memstorage.NewMemStorage()
 

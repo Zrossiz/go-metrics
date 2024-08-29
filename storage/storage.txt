@@ -27,3 +27,5 @@
 {"Name":"TotalAlloc","Type":"gauge","Value":123484240}
 {"Name":"RandomValue","Type":"gauge","Value":0.40251346532727816}
 {"Name":"PollCount","Type":"counter","Value":287}
+{"Name":"testGauge","Type":"gauge","Value":42.42}
+{"Name":"testCounter","Type":"counter","Value":42}
