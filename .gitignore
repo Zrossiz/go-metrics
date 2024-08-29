@@ -26,3 +26,5 @@ vendor/
 
 # Env variables
 .env
+
+storage/

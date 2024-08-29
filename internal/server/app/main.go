@@ -2,7 +2,6 @@ package app
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -52,7 +51,7 @@ func StartServer() error {
 				zLogger.Info("save metrics...")
 				parser.UpdateMetrics(config.FileStoragePath, zLogger, store)
 			case <-stop:
-				fmt.Println("Stopping task execution")
+				zLogger.Info("stopping task execution")
 				return
 			}
 		}
@@ -94,9 +93,6 @@ func StartServer() error {
 		})
 	})
 
-	zLogger.Info("Starting server",
-		zap.String("address", config.RunAddr),
-	)
 	srv := &http.Server{
 		Addr:    config.RunAddr,
 		Handler: r,
