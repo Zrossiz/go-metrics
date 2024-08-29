@@ -1,8 +1,12 @@
 package app
 
 import (
+	"context"
 	"fmt"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/Zrossiz/go-metrics/internal/server/config"
@@ -93,8 +97,46 @@ func StartServer() error {
 	zLogger.Info("Starting server",
 		zap.String("address", config.RunAddr),
 	)
-	if err := http.ListenAndServe(config.RunAddr, r); err != nil {
-		fmt.Println(err)
+	srv := &http.Server{
+		Addr:    config.RunAddr,
+		Handler: r,
+	}
+
+	go func() {
+		zLogger.Info("Starting server", zap.String("address", config.RunAddr))
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			zLogger.Fatal("ListenAndServe():", zap.Error(err))
+		}
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+	zLogger.Info("Shutting down server...")
+
+	zLogger.Info("Collect metrics...")
+
+	err := shutdownServer(store)
+	if err != nil {
+		zLogger.Error("Failed to save metrics on shutdown:", zap.Error(err))
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		zLogger.Fatal("Server forced to shutdown:", zap.Error(err))
+	}
+
+	zLogger.Info("Server exiting")
+	return nil
+}
+
+func shutdownServer(store *memstorage.MemStorage) error {
+	err := parser.UpdateMetrics(config.FileStoragePath, logger.Log, store)
+	if err != nil {
+		return err
 	}
 
 	return nil
