@@ -1,5 +1,3 @@
-
-		{"Name":"Alloc","Type":"gauge","Value":2942224}
-		{"Name":"BuckHashSys","Type":"gauge","Value":7544}
-		{"Name":"Frees","Type":"gauge","Value":25251}
-	
+{"Name":"Alloc","Type":"gauge","Value":2942224}
+{"Name":"BuckHashSys","Type":"gauge","Value":7544}
+{"Name":"Frees","Type":"gauge","Value":25251}
