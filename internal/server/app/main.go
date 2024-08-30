@@ -14,7 +14,7 @@ import (
 	"github.com/Zrossiz/go-metrics/internal/server/middleware/logger/request"
 	"github.com/Zrossiz/go-metrics/internal/server/services/get"
 	"github.com/Zrossiz/go-metrics/internal/server/services/update"
-	"github.com/Zrossiz/go-metrics/internal/server/storage/fileStorage"
+	filestorage "github.com/Zrossiz/go-metrics/internal/server/storage/fileStorage"
 	memstorage "github.com/Zrossiz/go-metrics/internal/server/storage/memStorage"
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
@@ -34,7 +34,7 @@ func StartServer() error {
 	zLogger := logger.Log
 
 	if config.Restore {
-		_, err := fileStorage.CollectMetricsFromFile(config.FileStoragePath, store)
+		_, err := filestorage.CollectMetricsFromFile(config.FileStoragePath, store)
 		if err != nil {
 			zLogger.Sugar().Fatalf("Error collect metrics %v", err)
 		}
@@ -49,7 +49,7 @@ func StartServer() error {
 			select {
 			case <-ticker.C:
 				zLogger.Info("save metrics...")
-				fileStorage.UpdateMetrics(config.FileStoragePath, zLogger, store)
+				filestorage.UpdateMetrics(config.FileStoragePath, zLogger, store)
 			case <-stop:
 				zLogger.Info("stopping task execution")
 				return
@@ -130,7 +130,7 @@ func StartServer() error {
 }
 
 func shutdownServer(store *memstorage.MemStorage) error {
-	err := fileStorage.UpdateMetrics(config.FileStoragePath, logger.Log, store)
+	err := filestorage.UpdateMetrics(config.FileStoragePath, logger.Log, store)
 	if err != nil {
 		return err
 	}
