@@ -45,7 +45,7 @@ func FlagParse() {
 		}
 		Restore = value
 	} else {
-		flag.BoolVar(&Restore, "r", true, "get metrics from file")
+		flag.BoolVar(&Restore, "r", false, "get metrics from file")
 	}
 
 	if envFileStoragePath := os.Getenv("FILE_STORAGE_PATH"); envFileStoragePath != "" {

@@ -42,7 +42,7 @@ func TestCollectMetricsFromFile(t *testing.T) {
 	fmt.Print(store.Metrics)
 
 	if len(store.Metrics) != 3 {
-		t.Errorf("epxpected 3 metrics, got %v", len(store.Metrics))
+		t.Errorf("expected 3 metrics, got %v", len(store.Metrics))
 	}
 }
 
