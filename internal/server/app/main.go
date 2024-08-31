@@ -52,7 +52,6 @@ func StartServer() error {
 				filestorage.UpdateMetrics(config.FileStoragePath, zLogger, store)
 			case <-stop:
 				zLogger.Info("stopping task execution")
-				return
 			}
 		}
 	}()
