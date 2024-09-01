@@ -29,3 +29,5 @@ vendor/
 
 storage/storage.txt
 internal/server/storage/fileStorage/storage
+Makefile
+metricstest
