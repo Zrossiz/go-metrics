@@ -8,6 +8,7 @@ import (
 	"strconv"
 
 	"github.com/Zrossiz/go-metrics/internal/server/dto"
+	"github.com/Zrossiz/go-metrics/internal/server/libs/logger"
 	"github.com/Zrossiz/go-metrics/internal/server/storage"
 	memstorage "github.com/Zrossiz/go-metrics/internal/server/storage/memStorage"
 	"github.com/go-chi/chi/v5"
@@ -77,8 +78,8 @@ func Metric(rw http.ResponseWriter, r *http.Request, store *memstorage.MemStorag
 	nameMetric := chi.URLParam(r, "name")
 	valueMetric := chi.URLParam(r, "value")
 
-	fmt.Println("TYPE: ", typeMetric)
-	fmt.Println("NAME: ", nameMetric)
+	logger.Log.Sugar().Infoln("TYPE: ", typeMetric)
+	logger.Log.Sugar().Infoln("NAME: ", nameMetric)
 
 	switch typeMetric {
 	case storage.GaugeType:

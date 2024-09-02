@@ -7,7 +7,6 @@ import (
 )
 
 type MemStorage struct {
-	mu      sync.RWMutex
 	Metrics []storage.Metric
 }
 
@@ -18,7 +17,10 @@ func NewMemStorage() *MemStorage {
 }
 
 func (m *MemStorage) SetGauge(name string, value float64) *storage.Metric {
-	m.mu.Lock()
+	var mu sync.Mutex
+	mu.Lock()
+	defer mu.Unlock()
+
 	for i := 0; i < len(m.Metrics); i++ {
 		if m.Metrics[i].Name == name {
 			m.Metrics[i].Value = value
@@ -38,7 +40,10 @@ func (m *MemStorage) SetGauge(name string, value float64) *storage.Metric {
 }
 
 func (m *MemStorage) SetCounter(name string, value int64) *storage.Metric {
-	m.mu.Lock()
+	var mu sync.Mutex
+	mu.Lock()
+	defer mu.Unlock()
+
 	for i := 0; i < len(m.Metrics); i++ {
 		if m.Metrics[i].Name == name {
 			currentValue, ok := m.Metrics[i].Value.(int64)
@@ -62,7 +67,9 @@ func (m *MemStorage) SetCounter(name string, value int64) *storage.Metric {
 }
 
 func (m *MemStorage) GetMetric(name string) *storage.Metric {
-	m.mu.RLock()
+	var mu sync.Mutex
+	mu.Lock()
+	defer mu.Unlock()
 	for i := 0; i < len(m.Metrics); i++ {
 		if m.Metrics[i].Name == name {
 			return &m.Metrics[i]

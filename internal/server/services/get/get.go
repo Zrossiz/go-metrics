@@ -57,7 +57,7 @@ func Metric(rw http.ResponseWriter, r *http.Request, store memstorage.MemStorage
 	metric := store.GetMetric(nameMetric)
 
 	if metric == nil {
-		http.Error(rw, "metric not found", 404)
+		http.Error(rw, "metric not found", http.StatusNotFound)
 		return
 	}
 
