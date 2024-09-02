@@ -5,7 +5,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/Zrossiz/go-metrics/internal/server/libs/logger"
 	"github.com/Zrossiz/go-metrics/internal/server/storage"
 	memstorage "github.com/Zrossiz/go-metrics/internal/server/storage/memStorage"
 )
@@ -53,7 +52,7 @@ func TestUpdateMetrics(t *testing.T) {
 	store.SetCounter("testCounter", 1)
 	store.SetGauge("testGauge", 2.00)
 
-	UpdateMetrics(filePath, logger.Log, store)
+	UpdateMetrics(filePath, store)
 
 	store.Metrics = []storage.Metric{}
 

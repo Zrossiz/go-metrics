@@ -59,7 +59,7 @@ func StartServer() error {
 			select {
 			case <-ticker.C:
 				zLogger.Info("Saving metrics to file", zap.String("file", config.FileStoragePath))
-				if err := filestorage.UpdateMetrics(config.FileStoragePath, zLogger, store); err != nil {
+				if err := filestorage.UpdateMetrics(config.FileStoragePath, store); err != nil {
 					zLogger.Error("Failed to save metrics to file", zap.Error(err))
 				}
 			case <-stop:
@@ -150,7 +150,7 @@ func shutdownServer(store *memstorage.MemStorage) error {
 	zLogger := logger.Log
 
 	zLogger.Info("Saving metrics to file during shutdown", zap.String("file", config.FileStoragePath))
-	err := filestorage.UpdateMetrics(config.FileStoragePath, zLogger, store)
+	err := filestorage.UpdateMetrics(config.FileStoragePath, store)
 	if err != nil {
 		zLogger.Error("Failed to save metrics to file", zap.Error(err))
 		return err

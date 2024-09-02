@@ -7,7 +7,6 @@ import (
 
 	"github.com/Zrossiz/go-metrics/internal/server/storage"
 	memstorage "github.com/Zrossiz/go-metrics/internal/server/storage/memStorage"
-	"go.uber.org/zap"
 )
 
 func CollectMetricsFromFile(relativePath string, store *memstorage.MemStorage) ([]storage.Metric, error) {
@@ -56,7 +55,7 @@ func CollectMetricsFromFile(relativePath string, store *memstorage.MemStorage) (
 	return collectedMetrics, nil
 }
 
-func UpdateMetrics(relativePath string, logger *zap.Logger, store *memstorage.MemStorage) error {
+func UpdateMetrics(relativePath string, store *memstorage.MemStorage) error {
 	file, err := os.OpenFile(relativePath, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return err
@@ -68,8 +67,7 @@ func UpdateMetrics(relativePath string, logger *zap.Logger, store *memstorage.Me
 	for _, s := range store.Metrics {
 		str, err := json.Marshal(s)
 		if err != nil {
-			logger.Sugar().Warnf("error to parse metric: %s", s.Name)
-			continue
+			return err
 		}
 		newMetrics += string(str)
 		newMetrics += "\n"
