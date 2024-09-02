@@ -38,13 +38,13 @@ func StartServer() error {
 	zLogger := logger.Log
 
 	// Восстановление метрик из файла, если включена опция Restore
-	if config.Restore {
-		zLogger.Info("Restoring metrics from file", zap.String("file", config.FileStoragePath))
-		_, err := filestorage.CollectMetricsFromFile(config.FileStoragePath, store)
-		if err != nil {
-			zLogger.Sugar().Fatalf("Failed to collect metrics from file: %v", err)
-		}
-	}
+	// if config.Restore {
+	// 	zLogger.Info("Restoring metrics from file", zap.String("file", config.FileStoragePath))
+	// 	_, err := filestorage.CollectMetricsFromFile(config.FileStoragePath, store)
+	// 	if err != nil {
+	// 		zLogger.Sugar().Fatalf("Failed to collect metrics from file: %v", err)
+	// 	}
+	// }
 
 	// Настройка тикера для сохранения метрик
 	// ticker := time.NewTicker(time.Duration(config.StoreInterval) * time.Second)
