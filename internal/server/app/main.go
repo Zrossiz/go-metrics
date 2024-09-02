@@ -38,35 +38,35 @@ func StartServer() error {
 	zLogger := logger.Log
 
 	// Восстановление метрик из файла, если включена опция Restore
-	// if config.Restore {
-	// 	zLogger.Info("Restoring metrics from file", zap.String("file", config.FileStoragePath))
-	// 	_, err := filestorage.CollectMetricsFromFile(config.FileStoragePath, store)
-	// 	if err != nil {
-	// 		zLogger.Sugar().Fatalf("Failed to collect metrics from file: %v", err)
-	// 	}
-	// }
+	if config.Restore {
+		zLogger.Info("Restoring metrics from file", zap.String("file", config.FileStoragePath))
+		_, err := filestorage.CollectMetricsFromFile(config.FileStoragePath, store)
+		if err != nil {
+			zLogger.Sugar().Fatalf("Failed to collect metrics from file: %v", err)
+		}
+	}
 
 	// Настройка тикера для сохранения метрик
-	// ticker := time.NewTicker(time.Duration(config.StoreInterval) * time.Second)
-	// defer func() {
-	// 	zLogger.Info("Stopping ticker")
-	// 	ticker.Stop()
-	// }()
-	// stop := make(chan bool)
+	ticker := time.NewTicker(time.Duration(config.StoreInterval) * time.Second)
+	defer func() {
+		zLogger.Info("Stopping ticker")
+		ticker.Stop()
+	}()
+	stop := make(chan bool)
 
-	// go func() {
-	// 	for {
-	// 		select {
-	// 		case <-ticker.C:
-	// 			zLogger.Info("Saving metrics to file", zap.String("file", config.FileStoragePath))
-	// 			if err := filestorage.UpdateMetrics(config.FileStoragePath, zLogger, store); err != nil {
-	// 				zLogger.Error("Failed to save metrics to file", zap.Error(err))
-	// 			}
-	// 		case <-stop:
-	// 			zLogger.Info("Stopping task execution")
-	// 		}
-	// 	}
-	// }()
+	go func() {
+		for {
+			select {
+			case <-ticker.C:
+				zLogger.Info("Saving metrics to file", zap.String("file", config.FileStoragePath))
+				if err := filestorage.UpdateMetrics(config.FileStoragePath, zLogger, store); err != nil {
+					zLogger.Error("Failed to save metrics to file", zap.Error(err))
+				}
+			case <-stop:
+				zLogger.Info("Stopping task execution")
+			}
+		}
+	}()
 
 	// Применение middleware для логирования запросов
 	r.Use(func(next http.Handler) http.Handler {

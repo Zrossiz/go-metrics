@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"encoding/json"
 	"os"
-	"path/filepath"
 
 	"github.com/Zrossiz/go-metrics/internal/server/storage"
 	memstorage "github.com/Zrossiz/go-metrics/internal/server/storage/memStorage"
@@ -14,14 +13,7 @@ import (
 func CollectMetricsFromFile(relativePath string, store *memstorage.MemStorage) ([]storage.Metric, error) {
 	var collectedMetrics []storage.Metric
 
-	workingDir, err := os.Getwd()
-	if err != nil {
-		return nil, err
-	}
-
-	filePath := filepath.Join(workingDir, relativePath)
-
-	file, err := os.Open(filePath)
+	file, err := os.Open(relativePath)
 	if err != nil {
 		return nil, err
 	}
@@ -60,15 +52,7 @@ func CollectMetricsFromFile(relativePath string, store *memstorage.MemStorage) (
 }
 
 func UpdateMetrics(relativePath string, logger *zap.Logger, store *memstorage.MemStorage) error {
-	workingDir, err := os.Getwd()
-	if err != nil {
-		logger.Error("error getting working directory:")
-		return err
-	}
-
-	filePath := filepath.Join(workingDir, relativePath)
-
-	file, err := os.OpenFile(filePath, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0644)
+	file, err := os.OpenFile(relativePath, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return err
 	}

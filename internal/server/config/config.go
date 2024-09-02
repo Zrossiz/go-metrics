@@ -2,6 +2,7 @@ package config
 
 import (
 	"flag"
+	"fmt"
 	"os"
 	"strconv"
 
@@ -35,7 +36,7 @@ func FlagParse() {
 		}
 		StoreInterval = value
 	} else {
-		flag.IntVar(&StoreInterval, "i", 10, "interval for save metrics")
+		flag.IntVar(&StoreInterval, "i", 2, "interval for save metrics")
 	}
 
 	if envRestore := os.Getenv("RESTORE"); envRestore != "" {
@@ -61,4 +62,9 @@ func FlagParse() {
 	} else {
 		FlagLogLevel = zapcore.ErrorLevel.String()
 	}
+
+	fmt.Println("addr: ", RunAddr)
+	fmt.Println("restore: ", Restore)
+	fmt.Println("store interval: ", StoreInterval)
+	fmt.Println("path: ", FileStoragePath)
 }
