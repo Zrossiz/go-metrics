@@ -14,7 +14,12 @@ func CollectMetricsFromFile(relativePath string, store *memstorage.MemStorage) (
 	var collectedMetrics []storage.Metric
 
 	file, err := os.Open(relativePath)
-	if err != nil {
+	if os.IsNotExist(err) {
+		file, err = os.Create(relativePath)
+		if err != nil {
+			return nil, err
+		}
+	} else if err != nil {
 		return nil, err
 	}
 	defer file.Close()
