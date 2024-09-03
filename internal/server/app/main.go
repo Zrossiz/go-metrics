@@ -21,9 +21,6 @@ import (
 )
 
 func StartServer() error {
-	// Разбор флагов конфигурации
-	config.FlagParse()
-
 	r := chi.NewRouter()
 
 	// Инициализация хранилища в памяти
@@ -36,6 +33,11 @@ func StartServer() error {
 	}
 
 	zLogger := logger.Log
+
+	err := config.FlagParse()
+	if err != nil {
+		zLogger.Sugar().Panicf("error parse config: ", err)
+	}
 
 	// Восстановление метрик из файла, если включена опция Restore
 	if config.Restore {

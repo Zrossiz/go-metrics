@@ -5,7 +5,6 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/Zrossiz/go-metrics/internal/server/libs/logger"
 	"github.com/joho/godotenv"
 	"go.uber.org/zap/zapcore"
 )
@@ -18,8 +17,7 @@ var (
 	FlagLogLevel    string
 )
 
-func FlagParse() {
-	sugar := logger.Log
+func FlagParse() error {
 	_ = godotenv.Load()
 
 	if envRunAddr := os.Getenv("ADDRESS"); envRunAddr != "" {
@@ -31,7 +29,7 @@ func FlagParse() {
 	if envStoreInterval := os.Getenv("STORE_INTERVAL"); envStoreInterval != "" {
 		value, err := strconv.Atoi(envStoreInterval)
 		if err != nil {
-			sugar.Panic("env store interval have invalid value")
+			return err
 		}
 		StoreInterval = value
 	} else {
@@ -41,7 +39,7 @@ func FlagParse() {
 	if envRestore := os.Getenv("RESTORE"); envRestore != "" {
 		value, err := strconv.ParseBool(envRestore)
 		if err != nil {
-			sugar.Panic("env restore have invalid value")
+			return err
 		}
 		Restore = value
 	} else {
@@ -61,4 +59,6 @@ func FlagParse() {
 	} else {
 		FlagLogLevel = zapcore.ErrorLevel.String()
 	}
+
+	return nil
 }
