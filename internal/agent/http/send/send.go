@@ -62,6 +62,7 @@ func GzipMetrics(metrics []types.Metric, addr string) []types.Metric {
 		bytesData, err := getBytesMetricDTO(metrics[i])
 		if err != nil {
 			log.Println("failed get bytes from metric: ", err)
+			continue
 		}
 
 		_, err = gzipWriter.Write(bytesData)
@@ -73,22 +74,13 @@ func GzipMetrics(metrics []types.Metric, addr string) []types.Metric {
 
 		gzipWriter.Close()
 
-		req, err := http.NewRequest("POST", reqURL, &gzippedData)
+		_, err = sendMetric("POST", reqURL, gzippedData)
 		if err != nil {
-			log.Println("failed to create HTTP request:", err)
-		}
-		req.Header.Set("Content-Encoding", "gzip")
-		req.Header.Set("Content-Type", "application/json")
-
-		client := &http.Client{}
-		resp, err := client.Do(req)
-		if err != nil {
-			log.Println("Request failed:", err)
+			log.Println("error send metric")
 			continue
 		}
 
 		sendedMetrics = append(sendedMetrics, metrics[i])
-		resp.Body.Close()
 	}
 	return sendedMetrics
 }
@@ -110,8 +102,27 @@ func getBytesMetricDTO(metric types.Metric) ([]byte, error) {
 
 	jsonData, err := json.Marshal(jsonBody)
 	if err != nil {
-		log.Println("failed to marshall jsonBody:", err)
+		return nil, err
 	}
 
 	return jsonData, nil
+}
+
+func sendMetric(method string, reqURL string, data bytes.Buffer) (bool, error) {
+	req, err := http.NewRequest(method, reqURL, &data)
+	if err != nil {
+		return false, err
+	}
+	req.Header.Set("Content-Encoding", "gzip")
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return false, err
+	}
+
+	resp.Body.Close()
+
+	return true, nil
 }
