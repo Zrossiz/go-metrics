@@ -2,7 +2,6 @@ package config
 
 import (
 	"flag"
-	"fmt"
 	"os"
 	"strconv"
 
@@ -62,9 +61,4 @@ func FlagParse() {
 	} else {
 		FlagLogLevel = zapcore.ErrorLevel.String()
 	}
-
-	fmt.Println("addr: ", RunAddr)
-	fmt.Println("restore: ", Restore)
-	fmt.Println("store interval: ", StoreInterval)
-	fmt.Println("path: ", FileStoragePath)
 }
