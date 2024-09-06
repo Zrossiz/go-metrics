@@ -10,22 +10,17 @@ import (
 
 	"github.com/Zrossiz/go-metrics/internal/server/config"
 	"github.com/Zrossiz/go-metrics/internal/server/libs/logger"
-	"github.com/Zrossiz/go-metrics/internal/server/middleware/gzip"
-	"github.com/Zrossiz/go-metrics/internal/server/middleware/logger/request"
-	"github.com/Zrossiz/go-metrics/internal/server/services/get"
-	"github.com/Zrossiz/go-metrics/internal/server/services/update"
+	"github.com/Zrossiz/go-metrics/internal/server/router"
 	filestorage "github.com/Zrossiz/go-metrics/internal/server/storage/fileStorage"
 	memstorage "github.com/Zrossiz/go-metrics/internal/server/storage/memStorage"
 	"github.com/Zrossiz/go-metrics/internal/server/storage/postgres"
-	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
 )
 
 func StartServer() error {
-	r := chi.NewRouter()
-
 	// Инициализация хранилища в памяти
-	store := memstorage.NewMemStorage()
+	memstorage.NewMemStorage()
+	store := memstorage.MemStore
 
 	// Инициализация логгера
 	if err := logger.Initialize(config.FlagLogLevel); err != nil {
@@ -33,11 +28,13 @@ func StartServer() error {
 		return err
 	}
 
+	// Парсим флаги и переменный окружения
 	err := config.FlagParse()
 	if err != nil {
 		logger.Log.Sugar().Panicf("error parse config: ", err)
 	}
 
+	// Создаем подключение к базе данных
 	logger.Log.Info("connect to db...")
 	if err := postgres.InitConnect(config.DbConnString); err != nil {
 		logger.Log.Sugar().Panicf("error connect to db", err)
@@ -75,50 +72,12 @@ func StartServer() error {
 		}
 	}()
 
-	// Применение middleware для логирования запросов
-	r.Use(func(next http.Handler) http.Handler {
-		return request.WithLogs(next)
-	})
-
-	// Применение middleware для декомпрессии запросов
-	r.Use(func(next http.Handler) http.Handler {
-		return gzip.DecompressMiddleware(next)
-	})
-
-	// Применение middleware для компрессии ответов
-	r.Use(func(next http.Handler) http.Handler {
-		return gzip.CompressMiddleware(next)
-	})
-
-	// Определение маршрутов
-	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		get.HTMLPageMetric(w, r, *store)
-	})
-
-	r.Route("/update", func(r chi.Router) {
-		r.Post("/{type}/{name}/{value}", func(w http.ResponseWriter, r *http.Request) {
-			update.Metric(w, r, store)
-		})
-
-		r.Post("/", func(w http.ResponseWriter, r *http.Request) {
-			update.JSONMetric(w, r, store)
-		})
-	})
-
-	r.Route("/value", func(r chi.Router) {
-		r.Get("/{type}/{name}", func(w http.ResponseWriter, r *http.Request) {
-			get.Metric(w, r, *store)
-		})
-
-		r.Post("/", func(w http.ResponseWriter, r *http.Request) {
-			get.JSONMetric(w, r, *store)
-		})
-	})
+	router.InitRouter()
 
 	// Инициализация HTTP сервера
 	srv := &http.Server{
 		Addr:    config.RunAddr,
-		Handler: r,
+		Handler: router.ChiRouter,
 	}
 
 	// Запуск сервера в отдельной горутине

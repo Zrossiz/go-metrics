@@ -10,8 +10,10 @@ type MemStorage struct {
 	Metrics []storage.Metric
 }
 
-func NewMemStorage() *MemStorage {
-	return &MemStorage{
+var MemStore *MemStorage
+
+func NewMemStorage() {
+	MemStore = &MemStorage{
 		Metrics: []storage.Metric{},
 	}
 }

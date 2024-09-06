@@ -18,11 +18,6 @@ var (
 	DbConnString    string
 )
 
-// connStr := fmt.Sprintf(
-// 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-// 		dbHost, dbPort, dbUser, dbPassword, dbName,
-// 	)
-
 func FlagParse() error {
 	_ = godotenv.Load()
 
@@ -39,7 +34,7 @@ func FlagParse() error {
 		}
 		StoreInterval = value
 	} else {
-		flag.IntVar(&StoreInterval, "i", 2, "interval for save metrics")
+		flag.IntVar(&StoreInterval, "i", 20, "interval for save metrics")
 	}
 
 	if envRestore := os.Getenv("RESTORE"); envRestore != "" {

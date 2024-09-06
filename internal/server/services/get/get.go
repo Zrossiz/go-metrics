@@ -12,7 +12,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func JSONMetric(rw http.ResponseWriter, r *http.Request, store memstorage.MemStorage) {
+func JSONMetric(rw http.ResponseWriter, r *http.Request) {
 	var body dto.GetMetricDto
 
 	err := json.NewDecoder(r.Body).Decode(&body)
@@ -22,7 +22,7 @@ func JSONMetric(rw http.ResponseWriter, r *http.Request, store memstorage.MemSto
 	}
 	defer r.Body.Close()
 
-	metric := store.GetMetric(body.ID)
+	metric := memstorage.MemStore.GetMetric(body.ID)
 	if metric == nil {
 		http.Error(rw, "metric not found", http.StatusNotFound)
 		return
@@ -52,9 +52,9 @@ func JSONMetric(rw http.ResponseWriter, r *http.Request, store memstorage.MemSto
 	rw.Write(response)
 }
 
-func Metric(rw http.ResponseWriter, r *http.Request, store memstorage.MemStorage) {
+func Metric(rw http.ResponseWriter, r *http.Request) {
 	nameMetric := chi.URLParam(r, "name")
-	metric := store.GetMetric(nameMetric)
+	metric := memstorage.MemStore.GetMetric(nameMetric)
 
 	if metric == nil {
 		http.Error(rw, "metric not found", http.StatusNotFound)
@@ -64,8 +64,8 @@ func Metric(rw http.ResponseWriter, r *http.Request, store memstorage.MemStorage
 	io.WriteString(rw, fmt.Sprintf("%v", metric.Value))
 }
 
-func HTMLPageMetric(rw http.ResponseWriter, r *http.Request, store memstorage.MemStorage) {
-	metrics := store.Metrics
+func HTMLPageMetric(rw http.ResponseWriter, r *http.Request) {
+	metrics := memstorage.MemStore.Metrics
 	tmpl := `
 		<!DOCTYPE html>
 		<html>

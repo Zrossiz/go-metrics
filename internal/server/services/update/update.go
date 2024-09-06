@@ -14,7 +14,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func JSONMetric(rw http.ResponseWriter, r *http.Request, store *memstorage.MemStorage) {
+func JSONMetric(rw http.ResponseWriter, r *http.Request) {
 	var body dto.MetricDTO
 
 	err := json.NewDecoder(r.Body).Decode(&body)
@@ -32,13 +32,13 @@ func JSONMetric(rw http.ResponseWriter, r *http.Request, store *memstorage.MemSt
 			http.Error(rw, "missing value for gauge", http.StatusBadRequest)
 			return
 		}
-		updatedMetric = store.SetGauge(body.ID, *body.Value)
+		updatedMetric = memstorage.MemStore.SetGauge(body.ID, *body.Value)
 	case storage.CounterType:
 		if body.Delta == nil {
 			http.Error(rw, "missing delta for counter", http.StatusBadRequest)
 			return
 		}
-		updatedMetric = store.SetCounter(body.ID, *body.Delta)
+		updatedMetric = memstorage.MemStore.SetCounter(body.ID, *body.Delta)
 	default:
 		http.Error(rw, "unknown metric type", http.StatusBadRequest)
 		return
@@ -73,7 +73,7 @@ func JSONMetric(rw http.ResponseWriter, r *http.Request, store *memstorage.MemSt
 	rw.Write(response)
 }
 
-func Metric(rw http.ResponseWriter, r *http.Request, store *memstorage.MemStorage) {
+func Metric(rw http.ResponseWriter, r *http.Request) {
 	typeMetric := chi.URLParam(r, "type")
 	nameMetric := chi.URLParam(r, "name")
 	valueMetric := chi.URLParam(r, "value")
@@ -88,14 +88,14 @@ func Metric(rw http.ResponseWriter, r *http.Request, store *memstorage.MemStorag
 			http.Error(rw, "parsing float value error", http.StatusBadRequest)
 			return
 		}
-		store.SetGauge(nameMetric, float64MetricValue)
+		memstorage.MemStore.SetGauge(nameMetric, float64MetricValue)
 	case storage.CounterType:
 		int64MetricValue, err := strconv.ParseInt(valueMetric, 10, 64)
 		if err != nil {
 			http.Error(rw, "parsing int value error", http.StatusBadRequest)
 			return
 		}
-		store.SetCounter(nameMetric, int64MetricValue)
+		memstorage.MemStore.SetCounter(nameMetric, int64MetricValue)
 	default:
 		http.Error(rw, "unknown metric type", http.StatusBadRequest)
 		return

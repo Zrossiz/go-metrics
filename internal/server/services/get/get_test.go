@@ -14,10 +14,10 @@ import (
 )
 
 func TestMetric(t *testing.T) {
-	store := memstorage.NewMemStorage()
+	memstorage.NewMemStorage()
 	expectedValue := 42.42
 
-	store.Metrics = []storage.Metric{
+	memstorage.MemStore.Metrics = []storage.Metric{
 		{Name: "testMetric", Type: storage.GaugeType, Value: expectedValue},
 	}
 
@@ -35,7 +35,7 @@ func TestMetric(t *testing.T) {
 
 	rr := httptest.NewRecorder()
 
-	JSONMetric(rr, req, *store)
+	JSONMetric(rr, req)
 
 	if status := rr.Code; status != http.StatusOK {
 		t.Errorf("expected status code %d, got %d", http.StatusOK, status)
