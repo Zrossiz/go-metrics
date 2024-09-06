@@ -23,7 +23,8 @@ func TestCollectMetricsFromFile(t *testing.T) {
 		t.Fatalf("failed to create directory: %v", err)
 	}
 
-	store := memstorage.NewMemStorage()
+	memstorage.NewMemStorage()
+	store := memstorage.MemStore
 
 	file, err := os.Create(filePath)
 	if err != nil {
@@ -46,7 +47,9 @@ func TestCollectMetricsFromFile(t *testing.T) {
 }
 
 func TestUpdateMetrics(t *testing.T) {
-	store := memstorage.NewMemStorage()
+	memstorage.NewMemStorage()
+	store := memstorage.MemStore
+
 	filePath := "storage/storage.txt"
 
 	store.SetCounter("testCounter", 1)

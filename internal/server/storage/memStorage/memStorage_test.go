@@ -7,7 +7,9 @@ import (
 )
 
 func TestSetCounter(t *testing.T) {
-	store := NewMemStorage()
+	NewMemStorage()
+
+	store := MemStore
 
 	store.SetCounter("TestCounter", 5)
 	if val, ok := store.Metrics[0].Value.(int64); !ok || val != 5 {
@@ -21,7 +23,8 @@ func TestSetCounter(t *testing.T) {
 }
 
 func TestSetGauge(t *testing.T) {
-	store := NewMemStorage()
+	NewMemStorage()
+	store := MemStore
 
 	store.SetGauge("TestGauge", 0.5)
 	if store.Metrics[0].Value != 0.5 {
@@ -35,7 +38,8 @@ func TestSetGauge(t *testing.T) {
 }
 
 func TestGetMetric(t *testing.T) {
-	store := NewMemStorage()
+	NewMemStorage()
+	store := MemStore
 
 	emptyMetric := store.GetMetric("TestEmpty")
 

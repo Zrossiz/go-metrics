@@ -14,13 +14,13 @@ import (
 )
 
 func TestMetricCounter(t *testing.T) {
-
-	store := memstorage.NewMemStorage()
+	memstorage.NewMemStorage()
+	store := memstorage.MemStore
 
 	r := chi.NewRouter()
 
 	r.Post("/update/{type}/{name}/{value}", func(w http.ResponseWriter, r *http.Request) {
-		Metric(w, r, store)
+		Metric(w, r)
 	})
 
 	req := httptest.NewRequest(http.MethodPost, "/update/counter/testCounter/42", nil)
@@ -45,13 +45,13 @@ func TestMetricCounter(t *testing.T) {
 }
 
 func TestMetricGauge(t *testing.T) {
-
-	store := memstorage.NewMemStorage()
+	memstorage.NewMemStorage()
+	store := memstorage.MemStore
 
 	r := chi.NewRouter()
 
 	r.Post("/update/{type}/{name}/{value}", func(w http.ResponseWriter, r *http.Request) {
-		Metric(w, r, store)
+		Metric(w, r)
 	})
 
 	req := httptest.NewRequest(http.MethodPost, "/update/gauge/testGauge/42.42", nil)
@@ -76,8 +76,8 @@ func TestMetricGauge(t *testing.T) {
 }
 
 func TestJSONMetricGauge(t *testing.T) {
-
-	store := memstorage.NewMemStorage()
+	memstorage.NewMemStorage()
+	store := memstorage.MemStore
 
 	mockMetricValue := 42.42
 
@@ -96,7 +96,7 @@ func TestJSONMetricGauge(t *testing.T) {
 
 	rr := httptest.NewRecorder()
 
-	JSONMetric(rr, req, store)
+	JSONMetric(rr, req)
 
 	if status := rr.Code; status != http.StatusOK {
 		t.Errorf("expected status code %d, got %d", http.StatusOK, status)
@@ -115,8 +115,8 @@ func TestJSONMetricGauge(t *testing.T) {
 }
 
 func TestJSONMetricCounter(t *testing.T) {
-
-	store := memstorage.NewMemStorage()
+	memstorage.NewMemStorage()
+	store := memstorage.MemStore
 
 	var mockMetricValue int64 = 42
 
@@ -135,7 +135,7 @@ func TestJSONMetricCounter(t *testing.T) {
 
 	rr := httptest.NewRecorder()
 
-	JSONMetric(rr, req, store)
+	JSONMetric(rr, req)
 
 	if status := rr.Code; status != http.StatusOK {
 		t.Errorf("expected status code %d, got %d", http.StatusOK, status)
