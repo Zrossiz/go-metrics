@@ -30,27 +30,19 @@ func InitRouter() {
 		return gzip.CompressMiddleware(next)
 	})
 
-	ChiRouter.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		get.HTMLPageMetric(w, r)
-	})
+	ChiRouter.Get("/", get.HTMLPageMetric)
+
+	ChiRouter.Get("/ping", get.Ping)
 
 	ChiRouter.Route("/update", func(r chi.Router) {
-		r.Post("/{type}/{name}/{value}", func(w http.ResponseWriter, r *http.Request) {
-			update.Metric(w, r)
-		})
+		r.Post("/{type}/{name}/{value}", update.Metric)
 
-		r.Post("/", func(w http.ResponseWriter, r *http.Request) {
-			update.JSONMetric(w, r)
-		})
+		r.Post("/", update.JSONMetric)
 	})
 
 	ChiRouter.Route("/value", func(r chi.Router) {
-		r.Get("/{type}/{name}", func(w http.ResponseWriter, r *http.Request) {
-			get.Metric(w, r)
-		})
+		r.Get("/{type}/{name}", get.Metric)
 
-		r.Post("/", func(w http.ResponseWriter, r *http.Request) {
-			get.JSONMetric(w, r)
-		})
+		r.Post("/", get.JSONMetric)
 	})
 }

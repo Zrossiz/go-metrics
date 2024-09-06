@@ -9,6 +9,7 @@ import (
 
 	"github.com/Zrossiz/go-metrics/internal/server/dto"
 	memstorage "github.com/Zrossiz/go-metrics/internal/server/storage/memStorage"
+	"github.com/Zrossiz/go-metrics/internal/server/storage/postgres"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -102,4 +103,14 @@ func HTMLPageMetric(rw http.ResponseWriter, r *http.Request) {
 	if err := t.Execute(rw, metrics); err != nil {
 		http.Error(rw, "Internal Server Error", http.StatusInternalServerError)
 	}
+}
+
+func Ping(rw http.ResponseWriter, r *http.Request) {
+	err := postgres.Ping(postgres.PgConn)
+	if err != nil {
+		http.Error(rw, "db not available", http.StatusInternalServerError)
+		return
+	}
+
+	rw.WriteHeader(http.StatusOK)
 }

@@ -13,6 +13,17 @@ func InitConnect(connStr string) error {
 		return err
 	}
 
+	err = Ping(db)
+	if err != nil {
+		return err
+	}
+
+	PgConn = db
+
+	return nil
+}
+
+func Ping(db *gorm.DB) error {
 	sqlDB, err := db.DB()
 	if err != nil {
 		return err
@@ -22,8 +33,6 @@ func InitConnect(connStr string) error {
 	if err != nil {
 		return err
 	}
-
-	PgConn = db
 
 	return nil
 }
