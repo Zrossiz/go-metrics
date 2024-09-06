@@ -16,6 +16,7 @@ import (
 	"github.com/Zrossiz/go-metrics/internal/server/services/update"
 	filestorage "github.com/Zrossiz/go-metrics/internal/server/storage/fileStorage"
 	memstorage "github.com/Zrossiz/go-metrics/internal/server/storage/memStorage"
+	"github.com/Zrossiz/go-metrics/internal/server/storage/postgres"
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
 )
@@ -32,26 +33,30 @@ func StartServer() error {
 		return err
 	}
 
-	zLogger := logger.Log
-
 	err := config.FlagParse()
 	if err != nil {
-		zLogger.Sugar().Panicf("error parse config: ", err)
+		logger.Log.Sugar().Panicf("error parse config: ", err)
 	}
+
+	logger.Log.Info("connect to db...")
+	if err := postgres.InitConnect(config.DbConnString); err != nil {
+		logger.Log.Sugar().Panicf("error connect to db", err)
+	}
+	logger.Log.Info("db connected")
 
 	// Восстановление метрик из файла, если включена опция Restore
 	if config.Restore {
-		zLogger.Info("Restoring metrics from file", zap.String("file", config.FileStoragePath))
+		logger.Log.Info("Restoring metrics from file", zap.String("file", config.FileStoragePath))
 		_, err := filestorage.CollectMetricsFromFile(config.FileStoragePath, store)
 		if err != nil {
-			zLogger.Sugar().Fatalf("Failed to collect metrics from file: %v", err)
+			logger.Log.Sugar().Fatalf("Failed to collect metrics from file: %v", err)
 		}
 	}
 
 	// Настройка тикера для сохранения метрик
 	ticker := time.NewTicker(time.Duration(config.StoreInterval) * time.Second)
 	defer func() {
-		zLogger.Info("Stopping ticker")
+		logger.Log.Info("Stopping ticker")
 		ticker.Stop()
 	}()
 	stop := make(chan bool)
@@ -60,12 +65,12 @@ func StartServer() error {
 		for {
 			select {
 			case <-ticker.C:
-				zLogger.Info("Saving metrics to file", zap.String("file", config.FileStoragePath))
+				logger.Log.Info("Saving metrics to file", zap.String("file", config.FileStoragePath))
 				if err := filestorage.UpdateMetrics(config.FileStoragePath, store); err != nil {
-					zLogger.Error("Failed to save metrics to file", zap.Error(err))
+					logger.Log.Error("Failed to save metrics to file", zap.Error(err))
 				}
 			case <-stop:
-				zLogger.Info("Stopping task execution")
+				logger.Log.Info("Stopping task execution")
 			}
 		}
 	}()
@@ -118,9 +123,9 @@ func StartServer() error {
 
 	// Запуск сервера в отдельной горутине
 	go func() {
-		zLogger.Info("Starting server", zap.String("address", config.RunAddr))
+		logger.Log.Info("Starting server", zap.String("address", config.RunAddr))
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			zLogger.Fatal("Failed to start server", zap.Error(err))
+			logger.Log.Fatal("Failed to start server", zap.Error(err))
 		}
 	}()
 
@@ -129,11 +134,11 @@ func StartServer() error {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	zLogger.Info("Shutting down server...")
+	logger.Log.Info("Shutting down server...")
 
 	// Сохранение метрик при завершении работы сервера
 	if err := shutdownServer(store); err != nil {
-		zLogger.Error("Failed to save metrics on shutdown", zap.Error(err))
+		logger.Log.Error("Failed to save metrics on shutdown", zap.Error(err))
 	}
 
 	// Завершение работы сервера с таймаутом
@@ -141,20 +146,18 @@ func StartServer() error {
 	defer cancel()
 
 	if err := srv.Shutdown(ctx); err != nil {
-		zLogger.Fatal("Server forced to shutdown", zap.Error(err))
+		logger.Log.Fatal("Server forced to shutdown", zap.Error(err))
 	}
 
-	zLogger.Info("Server exited")
+	logger.Log.Info("Server exited")
 	return nil
 }
 
 func shutdownServer(store *memstorage.MemStorage) error {
-	zLogger := logger.Log
-
-	zLogger.Info("Saving metrics to file during shutdown", zap.String("file", config.FileStoragePath))
+	logger.Log.Info("Saving metrics to file during shutdown", zap.String("file", config.FileStoragePath))
 	err := filestorage.UpdateMetrics(config.FileStoragePath, store)
 	if err != nil {
-		zLogger.Error("Failed to save metrics to file", zap.Error(err))
+		logger.Log.Error("Failed to save metrics to file", zap.Error(err))
 		return err
 	}
 

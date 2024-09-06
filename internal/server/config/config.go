@@ -15,7 +15,13 @@ var (
 	Restore         bool
 	FileStoragePath string
 	FlagLogLevel    string
+	DbConnString    string
 )
+
+// connStr := fmt.Sprintf(
+// 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+// 		dbHost, dbPort, dbUser, dbPassword, dbName,
+// 	)
 
 func FlagParse() error {
 	_ = godotenv.Load()
@@ -50,6 +56,12 @@ func FlagParse() error {
 		FileStoragePath = envFileStoragePath
 	} else {
 		flag.StringVar(&FileStoragePath, "f", "storage/storage.txt", "path to storage file")
+	}
+
+	if envDbConn := os.Getenv("DB_DSN"); envDbConn != "" {
+		DbConnString = envDbConn
+	} else {
+		flag.StringVar(&DbConnString, "d", "", "dsn for database")
 	}
 
 	flag.Parse()
