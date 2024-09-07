@@ -26,3 +26,8 @@ vendor/
 
 # Env variables
 .env
+
+storage/storage.txt
+internal/server/storage/fileStorage/storage
+Makefile
+metricstest
