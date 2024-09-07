@@ -2,14 +2,12 @@ package get
 
 import (
 	"fmt"
-	"io"
 	"net/http"
 	"text/template"
 
 	"github.com/Zrossiz/go-metrics/internal/server/dto"
 	memstorage "github.com/Zrossiz/go-metrics/internal/server/storage/memStorage"
 	"github.com/Zrossiz/go-metrics/internal/server/storage/postgres"
-	"github.com/go-chi/chi/v5"
 )
 
 func JSONMetric(body dto.GetMetricDto) (*dto.MetricDTO, error) {
@@ -34,16 +32,14 @@ func JSONMetric(body dto.GetMetricDto) (*dto.MetricDTO, error) {
 	return &responseMetric, nil
 }
 
-func Metric(rw http.ResponseWriter, r *http.Request) {
-	nameMetric := chi.URLParam(r, "name")
+func StringValueMetric(nameMetric string) string {
 	metric := memstorage.MemStore.GetMetric(nameMetric)
 
 	if metric == nil {
-		http.Error(rw, "metric not found", http.StatusNotFound)
-		return
+		return ""
 	}
 
-	io.WriteString(rw, fmt.Sprintf("%v", metric.Value))
+	return fmt.Sprintf("%v", metric.Value)
 }
 
 func HTMLPageMetric(rw http.ResponseWriter) {
