@@ -1,7 +1,6 @@
 package get
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -13,20 +12,10 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func JSONMetric(rw http.ResponseWriter, r *http.Request) {
-	var body dto.GetMetricDto
-
-	err := json.NewDecoder(r.Body).Decode(&body)
-	if err != nil {
-		http.Error(rw, "invalid request body", http.StatusBadRequest)
-		return
-	}
-	defer r.Body.Close()
-
+func JSONMetric(body dto.GetMetricDto) (*dto.MetricDTO, error) {
 	metric := memstorage.MemStore.GetMetric(body.ID)
 	if metric == nil {
-		http.Error(rw, "metric not found", http.StatusNotFound)
-		return
+		return nil, nil
 	}
 
 	responseMetric := dto.MetricDTO{
@@ -42,15 +31,7 @@ func JSONMetric(rw http.ResponseWriter, r *http.Request) {
 		responseMetric.Delta = &d
 	}
 
-	response, err := json.Marshal(responseMetric)
-	if err != nil {
-		http.Error(rw, "failed to marshal response", http.StatusInternalServerError)
-		return
-	}
-
-	rw.Header().Set("Content-Type", "application/json")
-	rw.WriteHeader(http.StatusOK)
-	rw.Write(response)
+	return &responseMetric, nil
 }
 
 func Metric(rw http.ResponseWriter, r *http.Request) {
@@ -65,7 +46,7 @@ func Metric(rw http.ResponseWriter, r *http.Request) {
 	io.WriteString(rw, fmt.Sprintf("%v", metric.Value))
 }
 
-func HTMLPageMetric(rw http.ResponseWriter, r *http.Request) {
+func HTMLPageMetric(rw http.ResponseWriter) {
 	metrics := memstorage.MemStore.Metrics
 	tmpl := `
 		<!DOCTYPE html>
@@ -105,12 +86,11 @@ func HTMLPageMetric(rw http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func Ping(rw http.ResponseWriter, r *http.Request) {
+func Ping() error {
 	err := postgres.Ping(postgres.PgConn)
 	if err != nil {
-		http.Error(rw, "db not available", http.StatusInternalServerError)
-		return
+		return err
 	}
 
-	rw.WriteHeader(http.StatusOK)
+	return nil
 }
