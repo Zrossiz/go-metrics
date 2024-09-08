@@ -24,7 +24,8 @@ func GetJSONMetric(rw http.ResponseWriter, r *http.Request) {
 
 	metric, err := get.JSONMetric(body)
 	if err != nil {
-
+		http.Error(rw, "failed to marshal response", http.StatusInternalServerError)
+		return
 	}
 
 	response, err := json.Marshal(metric)
@@ -62,7 +63,6 @@ func PingDB(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 	rw.WriteHeader(http.StatusOK)
-	return
 }
 
 func UpdateJSONMetric(rw http.ResponseWriter, r *http.Request) {
