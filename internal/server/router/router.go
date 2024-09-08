@@ -6,7 +6,6 @@ import (
 	"github.com/Zrossiz/go-metrics/internal/server/handler"
 	"github.com/Zrossiz/go-metrics/internal/server/middleware/gzip"
 	"github.com/Zrossiz/go-metrics/internal/server/middleware/logger/request"
-	"github.com/Zrossiz/go-metrics/internal/server/services/update"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -32,8 +31,8 @@ func InitRouter() {
 	ChiRouter.Get("/ping", handler.PingDB)
 
 	ChiRouter.Route("/update", func(r chi.Router) {
-		r.Post("/{type}/{name}/{value}", update.Metric)
-		r.Post("/", update.JSONMetric)
+		r.Post("/{type}/{name}/{value}", handler.UpdateParamsMetric)
+		r.Post("/", handler.UpdateJSONMetric)
 	})
 
 	ChiRouter.Route("/value", func(r chi.Router) {
