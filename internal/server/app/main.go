@@ -36,7 +36,7 @@ func StartServer() error {
 
 	// Создаем подключение к базе данных
 	logger.Log.Info("connect to db...")
-	err = postgres.InitConnect(config.DbConnString)
+	err = postgres.InitConnect(config.DBConnString)
 	if err != nil {
 		logger.Log.Sugar().Panicf("error connect to db", err)
 	}

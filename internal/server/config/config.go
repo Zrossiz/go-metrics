@@ -15,7 +15,7 @@ var (
 	Restore         bool
 	FileStoragePath string
 	FlagLogLevel    string
-	DbConnString    string
+	DBConnString    string
 )
 
 func FlagParse() error {
@@ -53,10 +53,10 @@ func FlagParse() error {
 		flag.StringVar(&FileStoragePath, "f", "storage/storage.txt", "path to storage file")
 	}
 
-	if envDbConn := os.Getenv("DB_DSN"); envDbConn != "" {
-		DbConnString = envDbConn
+	if envDBConn := os.Getenv("DB_DSN"); envDBConn != "" {
+		DBConnString = envDBConn
 	} else {
-		flag.StringVar(&DbConnString, "d", "", "dsn for database")
+		flag.StringVar(&DBConnString, "d", "", "dsn for database")
 	}
 
 	flag.Parse()
