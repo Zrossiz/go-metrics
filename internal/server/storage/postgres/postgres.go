@@ -1,6 +1,7 @@
 package postgres
 
 import (
+	"github.com/Zrossiz/go-metrics/internal/server/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -19,6 +20,15 @@ func InitConnect(connStr string) error {
 	}
 
 	PgConn = db
+
+	return nil
+}
+
+func MigrateSQL(db *gorm.DB) error {
+	err := db.AutoMigrate(&models.Metric{})
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

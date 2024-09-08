@@ -28,7 +28,7 @@ func StartServer() error {
 		return err
 	}
 
-	// Парсим флаги и переменный окружения
+	// Парсим флаги и переменные окружения
 	err := config.FlagParse()
 	if err != nil {
 		logger.Log.Sugar().Panicf("error parse config: ", err)
@@ -41,6 +41,12 @@ func StartServer() error {
 		logger.Log.Sugar().Panicf("error connect to db", err)
 	}
 	logger.Log.Info("db connected")
+
+	// Применение миграций
+	err = postgres.MigrateSQL(postgres.PgConn)
+	if err != nil {
+		logger.Log.Panic("migrate error", zap.Error(err))
+	}
 
 	// Восстановление метрик из файла, если включена опция Restore
 	if config.Restore {
