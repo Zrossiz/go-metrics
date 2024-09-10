@@ -45,14 +45,52 @@ func Ping(db *gorm.DB) error {
 	return nil
 }
 
-func (d *DBStorage) CreateGauge(metric dto.PostMetricDto) error {
+func (d *DBStorage) SetGauge(metric dto.PostMetricDto) error {
+	DBMetric := models.Metric{
+		Name:  metric.Name,
+		Type:  metric.MType,
+		Value: metric.Value,
+	}
+
+	err := d.db.Create(&DBMetric).Error
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
-func (d *DBStorage) CreateCounter(metric dto.PostMetricDto) error {
+func (d *DBStorage) SetCounter(metric dto.PostMetricDto) error {
+	DBMetric := models.Metric{
+		Name:  metric.Name,
+		Type:  metric.MType,
+		Delta: int64(metric.Value),
+	}
+
+	err := d.db.Create(&DBMetric).Error
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
-func (d *DBStorage) Get(body dto.GetMetricDto) (models.Metric, error) {
-	return models.Metric{}, nil
+func (d *DBStorage) Get(body dto.GetMetricDto) (*models.Metric, error) {
+	var metric models.Metric
+	err := d.db.Where("name = ?", body.Name).Last(&metric).Error
+	if err != nil {
+		return nil, err
+	}
+	return &metric, nil
+}
+
+func (d *DBStorage) GetAll() (*[]models.Metric, error) {
+	var metrics []models.Metric
+
+	err := d.db.Order("created_at DESC").Limit(27).Find(&metrics).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &metrics, nil
 }

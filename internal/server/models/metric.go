@@ -9,4 +9,10 @@ type Metric struct {
 	Value     float64   `gorm:"column:value"`
 	Delta     int64     `gorm:"column:delta"`
 	UpdatedAt time.Time `gorm:"column:updated_at"`
+	CreatedAt time.Time `gorm:"column:created_at"`
 }
+
+const (
+	CounterType = "counter"
+	GaugeType   = "gauge"
+)

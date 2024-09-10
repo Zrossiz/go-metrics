@@ -13,9 +13,10 @@ import (
 )
 
 type Storage interface {
-	CreateGauge(body dto.PostMetricDto) error
-	CreateCounter(body dto.PostMetricDto) error
-	Get(body dto.GetMetricDto) (models.Metric, error)
+	SetGauge(body dto.PostMetricDto) error
+	SetCounter(body dto.PostMetricDto) error
+	Get(body dto.GetMetricDto) (*models.Metric, error)
+	GetAll() (*[]models.Metric, error)
 }
 
 func New(dbConn *gorm.DB, filePath string, storeInterval time.Duration, log *zap.Logger) Storage {
