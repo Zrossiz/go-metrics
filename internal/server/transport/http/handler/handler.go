@@ -1,18 +1,22 @@
 package handler
 
 import (
-	"github.com/Zrossiz/go-metrics/internal/server/storage"
+	"github.com/Zrossiz/go-metrics/internal/server/service"
 	"go.uber.org/zap"
 )
 
 type MetricHandlers struct {
-	service storage.Storage
+	service *service.MetricService
 	logger  *zap.Logger
 }
 
-func New(s storage.Storage, logger *zap.Logger) MetricHandlers {
+func New(s *service.MetricService, logger *zap.Logger) MetricHandlers {
 	return MetricHandlers{
 		service: s,
 		logger:  logger,
 	}
+}
+
+func (m *MetricHandlers) Test() {
+
 }
