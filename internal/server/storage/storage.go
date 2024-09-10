@@ -1,18 +1,31 @@
 package storage
 
-const (
-	CounterType = "counter"
-	GaugeType   = "gauge"
+import (
+	"time"
+
+	"github.com/Zrossiz/go-metrics/internal/server/dto"
+	"github.com/Zrossiz/go-metrics/internal/server/models"
+	"github.com/Zrossiz/go-metrics/internal/server/storage/dbstorage"
+	"github.com/Zrossiz/go-metrics/internal/server/storage/filestorage"
+	"github.com/Zrossiz/go-metrics/internal/server/storage/memstorage"
+	"go.uber.org/zap"
+	"gorm.io/gorm"
 )
 
-type Metric struct {
-	Name  string
-	Type  string
-	Value interface{}
+type Storage interface {
+	CreateGauge(body dto.PostMetricDto) error
+	CreateCounter(body dto.PostMetricDto) error
+	Get(body dto.GetMetricDto) (models.Metric, error)
 }
 
-type MetricsStorage interface {
-	SetGauge(name string, value float64) bool
-	SetCounter(name string, value int64) bool
-	GetMetric(name string) Metric
+func New(dbConn *gorm.DB, filePath string, storeInterval time.Duration, log *zap.Logger) Storage {
+	if dbConn != nil {
+		return dbstorage.New(dbConn, log)
+	}
+
+	if storeInterval > 0 {
+		return filestorage.New()
+	}
+
+	return memstorage.New()
 }

@@ -1,24 +1,44 @@
 package logger
 
-import "go.uber.org/zap"
+import (
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
+)
 
-var Log *zap.Logger = zap.NewNop()
+type Logger struct {
+	ZapLogger   *zap.Logger
+	AtomicLevel zap.AtomicLevel
+}
 
-func Initialize(level string) error {
-	lvl, err := zap.ParseAtomicLevel(level)
-	if err != nil {
-		return err
+func New(level string) (*Logger, error) {
+	var zapLevel zapcore.Level
+
+	switch level {
+	case "debug":
+		zapLevel = zap.DebugLevel
+	case "info":
+		zapLevel = zap.InfoLevel
+	case "warn":
+		zapLevel = zap.WarnLevel
+	case "error":
+		zapLevel = zap.ErrorLevel
+	default:
+		zapLevel = zap.InfoLevel
 	}
 
-	cfg := zap.NewProductionConfig()
-	cfg.Level = lvl
+	atomicLevel := zap.NewAtomicLevelAt(zapLevel)
 
-	zl, err := cfg.Build()
+	config := zap.Config{
+		Level:            atomicLevel,
+		Encoding:         "json",
+		EncoderConfig:    zap.NewProductionEncoderConfig(),
+		OutputPaths:      []string{"stdout"},
+		ErrorOutputPaths: []string{"stderr"},
+	}
+	zapLogger, err := config.Build()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	Log = zl
-
-	return nil
+	return &Logger{ZapLogger: zapLogger, AtomicLevel: atomicLevel}, nil
 }

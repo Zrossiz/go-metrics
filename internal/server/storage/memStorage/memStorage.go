@@ -3,79 +3,29 @@ package memstorage
 import (
 	"sync"
 
-	"github.com/Zrossiz/go-metrics/internal/server/storage"
+	"github.com/Zrossiz/go-metrics/internal/server/dto"
+	"github.com/Zrossiz/go-metrics/internal/server/models"
 )
 
 type MemStorage struct {
-	Metrics []storage.Metric
+	data []models.Metric
+	mu   sync.Mutex
 }
 
-var MemStore *MemStorage
-
-func NewMemStorage() {
-	MemStore = &MemStorage{
-		Metrics: []storage.Metric{},
+func New() *MemStorage {
+	return &MemStorage{
+		data: make([]models.Metric, 0),
 	}
 }
 
-func (m *MemStorage) SetGauge(name string, value float64) *storage.Metric {
-	var mu sync.Mutex
-	mu.Lock()
-	defer mu.Unlock()
-
-	for i := 0; i < len(m.Metrics); i++ {
-		if m.Metrics[i].Name == name {
-			m.Metrics[i].Value = value
-			return &m.Metrics[i]
-		}
-	}
-
-	newMetric := storage.Metric{
-		Type:  storage.GaugeType,
-		Name:  name,
-		Value: value,
-	}
-
-	m.Metrics = append(m.Metrics, newMetric)
-
-	return &newMetric
-}
-
-func (m *MemStorage) SetCounter(name string, value int64) *storage.Metric {
-	var mu sync.Mutex
-	mu.Lock()
-	defer mu.Unlock()
-
-	for i := 0; i < len(m.Metrics); i++ {
-		if m.Metrics[i].Name == name {
-			currentValue, ok := m.Metrics[i].Value.(int64)
-			if !ok {
-				return nil
-			}
-			m.Metrics[i].Value = currentValue + value
-			return &m.Metrics[i]
-		}
-	}
-
-	newMetric := storage.Metric{
-		Type:  storage.CounterType,
-		Name:  name,
-		Value: value,
-	}
-
-	m.Metrics = append(m.Metrics, newMetric)
-
-	return &newMetric
-}
-
-func (m *MemStorage) GetMetric(name string) *storage.Metric {
-	var mu sync.Mutex
-	mu.Lock()
-	defer mu.Unlock()
-	for i := 0; i < len(m.Metrics); i++ {
-		if m.Metrics[i].Name == name {
-			return &m.Metrics[i]
-		}
-	}
+func (m *MemStorage) CreateGauge(metric dto.PostMetricDto) error {
 	return nil
+}
+
+func (m *MemStorage) CreateCounter(metric dto.PostMetricDto) error {
+	return nil
+}
+
+func (m *MemStorage) Get(body dto.GetMetricDto) (models.Metric, error) {
+	return models.Metric{}, nil
 }

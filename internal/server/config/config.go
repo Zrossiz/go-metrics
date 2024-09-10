@@ -9,63 +9,69 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-var (
-	RunAddr         string
+type Config struct {
+	ServerAddress   string
 	StoreInterval   int
-	Restore         bool
 	FileStoragePath string
-	FlagLogLevel    string
-	DBConnString    string
-)
+	Restore         bool
+	DBDSN           string
+	LogLevel        string
+}
 
-func FlagParse() error {
-	_ = godotenv.Load()
+var AppConfig Config
+
+func GetConfig() (*Config, error) {
+	if err := godotenv.Load(); err != nil {
+		return nil, err
+	}
+
+	cfg := &Config{}
 
 	if envRunAddr := os.Getenv("ADDRESS"); envRunAddr != "" {
-		RunAddr = envRunAddr
+		cfg.ServerAddress = envRunAddr
 	} else {
-		flag.StringVar(&RunAddr, "a", "localhost:8080", "address and port to run server")
+		flag.StringVar(&cfg.ServerAddress, "a", "localhost:8080", "address and port to run server")
 	}
 
 	if envStoreInterval := os.Getenv("STORE_INTERVAL"); envStoreInterval != "" {
 		value, err := strconv.Atoi(envStoreInterval)
 		if err != nil {
-			return err
+			return nil, err
 		}
-		StoreInterval = value
+		cfg.StoreInterval = value
 	} else {
-		flag.IntVar(&StoreInterval, "i", 20, "interval for save metrics")
+		flag.IntVar(&cfg.StoreInterval, "i", 20, "interval for save metrics")
 	}
 
 	if envRestore := os.Getenv("RESTORE"); envRestore != "" {
 		value, err := strconv.ParseBool(envRestore)
 		if err != nil {
-			return err
+			return nil, err
 		}
-		Restore = value
+		cfg.Restore = value
 	} else {
-		flag.BoolVar(&Restore, "r", false, "get metrics from file")
+		flag.BoolVar(&cfg.Restore, "r", false, "get metrics from file")
 	}
 
 	if envFileStoragePath := os.Getenv("FILE_STORAGE_PATH"); envFileStoragePath != "" {
-		FileStoragePath = envFileStoragePath
+		cfg.FileStoragePath = envFileStoragePath
 	} else {
-		flag.StringVar(&FileStoragePath, "f", "storage/storage.txt", "path to storage file")
+		flag.StringVar(&cfg.FileStoragePath, "f", "storage/storage.txt", "path to storage file")
 	}
 
 	if envDBConn := os.Getenv("DB_DSN"); envDBConn != "" {
-		DBConnString = envDBConn
+		cfg.DBDSN = envDBConn
 	} else {
-		flag.StringVar(&DBConnString, "d", "", "dsn for database")
+		flag.StringVar(&cfg.DBDSN, "d", "", "dsn for database")
+	}
+
+	if envLogLevel := os.Getenv("LOG_LEVEL"); envLogLevel != "" {
+		cfg.LogLevel = envLogLevel
+	} else {
+		cfg.LogLevel = zapcore.ErrorLevel.String()
 	}
 
 	flag.Parse()
 
-	if envLogLevel := os.Getenv("LOG_LEVEL"); envLogLevel != "" {
-		FlagLogLevel = envLogLevel
-	} else {
-		FlagLogLevel = zapcore.ErrorLevel.String()
-	}
-
-	return nil
+	return cfg, nil
 }

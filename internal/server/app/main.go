@@ -1,131 +1,40 @@
 package app
 
 import (
-	"context"
-	"net/http"
-	"os"
-	"os/signal"
-	"syscall"
 	"time"
 
 	"github.com/Zrossiz/go-metrics/internal/server/config"
 	"github.com/Zrossiz/go-metrics/internal/server/libs/logger"
-	"github.com/Zrossiz/go-metrics/internal/server/router"
-	filestorage "github.com/Zrossiz/go-metrics/internal/server/storage/fileStorage"
-	memstorage "github.com/Zrossiz/go-metrics/internal/server/storage/memStorage"
-	"github.com/Zrossiz/go-metrics/internal/server/storage/postgres"
+	"github.com/Zrossiz/go-metrics/internal/server/service"
+	"github.com/Zrossiz/go-metrics/internal/server/storage"
+	"github.com/Zrossiz/go-metrics/internal/server/storage/dbstorage"
+	"github.com/Zrossiz/go-metrics/internal/server/transport/http/router"
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 )
 
-func StartServer() error {
-	// Инициализация хранилища в памяти
-	memstorage.NewMemStorage()
-	store := memstorage.MemStore
-
-	// Инициализация логгера
-	if err := logger.Initialize(config.FlagLogLevel); err != nil {
-		zap.L().Error("Failed to initialize logger", zap.Error(err))
-		return err
-	}
-
-	// Парсим флаги и переменные окружения
-	err := config.FlagParse()
+func StartServer() {
+	cfg, err := config.GetConfig()
 	if err != nil {
-		logger.Log.Sugar().Panicf("error parse config: ", err)
+		zap.S().Fatalf("get config error", zap.Error(err))
 	}
 
-	// Создаем подключение к базе данных
-	logger.Log.Info("connect to db...")
-	err = postgres.InitConnect(config.DBConnString)
+	log, err := logger.New(cfg.LogLevel)
 	if err != nil {
-		logger.Log.Sugar().Panicf("error connect to db", err)
-	}
-	logger.Log.Info("db connected")
-
-	// Применение миграций
-	err = postgres.MigrateSQL(postgres.PgConn)
-	if err != nil {
-		logger.Log.Panic("migrate error", zap.Error(err))
+		zap.S().Fatalf("init logger error", zap.Error(err))
 	}
 
-	// Восстановление метрик из файла, если включена опция Restore
-	if config.Restore {
-		logger.Log.Info("Restoring metrics from file", zap.String("file", config.FileStoragePath))
-		_, err := filestorage.CollectMetricsFromFile(config.FileStoragePath, store)
+	var dbConn *gorm.DB
+	if len(cfg.DBDSN) > 0 {
+		dbConn, err = dbstorage.GetConnect(cfg.DBDSN)
 		if err != nil {
-			logger.Log.Sugar().Fatalf("Failed to collect metrics from file: %v", err)
+			log.ZapLogger.Fatal("error connect to db", zap.Error(err))
 		}
 	}
 
-	// Настройка тикера для сохранения метрик
-	ticker := time.NewTicker(time.Duration(config.StoreInterval) * time.Second)
-	defer func() {
-		logger.Log.Info("Stopping ticker")
-		ticker.Stop()
-	}()
-	stop := make(chan bool)
+	store := storage.New(dbConn, cfg.FileStoragePath, time.Duration(cfg.StoreInterval), log.ZapLogger)
 
-	go func() {
-		for {
-			select {
-			case <-ticker.C:
-				logger.Log.Info("Saving metrics to file", zap.String("file", config.FileStoragePath))
-				if err := filestorage.UpdateMetrics(config.FileStoragePath, store); err != nil {
-					logger.Log.Error("Failed to save metrics to file", zap.Error(err))
-				}
-			case <-stop:
-				logger.Log.Info("Stopping task execution")
-			}
-		}
-	}()
+	serv := service.New(store, log.ZapLogger)
 
-	router.InitRouter()
-
-	// Инициализация HTTP сервера
-	srv := &http.Server{
-		Addr:    config.RunAddr,
-		Handler: router.ChiRouter,
-	}
-
-	// Запуск сервера в отдельной горутине
-	go func() {
-		logger.Log.Info("Starting server", zap.String("address", config.RunAddr))
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			logger.Log.Fatal("Failed to start server", zap.Error(err))
-		}
-	}()
-
-	// Обработка сигнала завершения работы
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
-
-	logger.Log.Info("Shutting down server...")
-
-	// Сохранение метрик при завершении работы сервера
-	if err := shutdownServer(store); err != nil {
-		logger.Log.Error("Failed to save metrics on shutdown", zap.Error(err))
-	}
-
-	// Завершение работы сервера с таймаутом
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	if err := srv.Shutdown(ctx); err != nil {
-		logger.Log.Fatal("Server forced to shutdown", zap.Error(err))
-	}
-
-	logger.Log.Info("Server exited")
-	return nil
-}
-
-func shutdownServer(store *memstorage.MemStorage) error {
-	logger.Log.Info("Saving metrics to file during shutdown", zap.String("file", config.FileStoragePath))
-	err := filestorage.UpdateMetrics(config.FileStoragePath, store)
-	if err != nil {
-		logger.Log.Error("Failed to save metrics to file", zap.Error(err))
-		return err
-	}
-
-	return nil
+	r := router.New(serv, log.ZapLogger)
 }

@@ -1,82 +1,31 @@
 package filestorage
 
 import (
-	"bufio"
-	"encoding/json"
-	"os"
+	"sync"
 
-	"github.com/Zrossiz/go-metrics/internal/server/storage"
-	memstorage "github.com/Zrossiz/go-metrics/internal/server/storage/memStorage"
+	"github.com/Zrossiz/go-metrics/internal/server/dto"
+	"github.com/Zrossiz/go-metrics/internal/server/models"
 )
 
-func CollectMetricsFromFile(relativePath string, store *memstorage.MemStorage) ([]storage.Metric, error) {
-	var collectedMetrics []storage.Metric
-
-	file, err := os.Open(relativePath)
-	if os.IsNotExist(err) {
-		file, err = os.Create(relativePath)
-		if err != nil {
-			return nil, err
-		}
-	} else if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		var metric storage.Metric
-		line := scanner.Text()
-
-		if err := json.Unmarshal([]byte(line), &metric); err != nil {
-			continue
-		}
-
-		collectedMetrics = append(collectedMetrics, metric)
-	}
-
-	if err := scanner.Err(); err != nil {
-		return nil, err
-	}
-
-	for _, curMetric := range collectedMetrics {
-		switch curMetric.Type {
-		case storage.CounterType:
-			if value, ok := curMetric.Value.(float64); ok {
-				store.SetCounter(curMetric.Name, int64(value))
-			}
-		case storage.GaugeType:
-			if value, ok := curMetric.Value.(float64); ok {
-				store.SetGauge(curMetric.Name, value)
-			}
-		}
-	}
-
-	return collectedMetrics, nil
+type FileStorage struct {
+	data []models.Metric
+	mu   sync.Mutex
 }
 
-func UpdateMetrics(relativePath string, store *memstorage.MemStorage) error {
-	file, err := os.OpenFile(relativePath, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		return err
+func New() *FileStorage {
+	return &FileStorage{
+		data: make([]models.Metric, 0),
 	}
-	defer file.Close()
+}
 
-	var newMetrics string
-
-	for _, s := range store.Metrics {
-		str, err := json.Marshal(s)
-		if err != nil {
-			return err
-		}
-		newMetrics += string(str)
-		newMetrics += "\n"
-	}
-
-	_, err = file.WriteString(newMetrics)
-	if err != nil {
-		return err
-	}
-
+func (f *FileStorage) CreateGauge(metric dto.PostMetricDto) error {
 	return nil
+}
+
+func (f *FileStorage) CreateCounter(metric dto.PostMetricDto) error {
+	return nil
+}
+
+func (f *FileStorage) Get(body dto.GetMetricDto) (models.Metric, error) {
+	return models.Metric{}, nil
 }
