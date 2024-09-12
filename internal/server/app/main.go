@@ -37,16 +37,7 @@ func StartServer() {
 		}
 	}
 
-	store := storage.New(dbConn, cfg.FileStoragePath)
-
-	if cfg.Restore {
-		log.ZapLogger.Info("start collect metrics from storage...")
-		err := store.Load(cfg.FileStoragePath)
-		if err != nil {
-			log.ZapLogger.Fatal("error collect metric", zap.Error(err))
-		}
-		log.ZapLogger.Info("metric collected")
-	}
+	store := storage.New(dbConn, cfg, log.ZapLogger)
 
 	serv := service.New(store, log.ZapLogger)
 
@@ -64,24 +55,3 @@ func StartServer() {
 		}
 	}()
 }
-
-// ticker := time.NewTicker(time.Duration(config.StoreInterval) * time.Second)
-// defer func() {
-// 	logger.Log.Info("Stopping ticker")
-// 	ticker.Stop()
-// }()
-// stop := make(chan bool)
-
-// go func() {
-// 	for {
-// 		select {
-// 		case <-ticker.C:
-// 			logger.Log.Info("Saving metrics to file", zap.String("file", config.FileStoragePath))
-// 			if err := filestorage.UpdateMetrics(config.FileStoragePath, store); err != nil {
-// 				logger.Log.Error("Failed to save metrics to file", zap.Error(err))
-// 			}
-// 		case <-stop:
-// 			logger.Log.Info("Stopping task execution")
-// 		}
-// 	}
-// }()
