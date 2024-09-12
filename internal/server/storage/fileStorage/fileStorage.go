@@ -1,6 +1,9 @@
 package filestorage
 
 import (
+	"bufio"
+	"encoding/json"
+	"os"
 	"sync"
 
 	"github.com/Zrossiz/go-metrics/internal/server/dto"
@@ -11,11 +14,13 @@ import (
 type FileStorage struct {
 	data []models.Metric
 	mu   sync.Mutex
+	path string
 }
 
-func New() *FileStorage {
+func New(filePath string) *FileStorage {
 	return &FileStorage{
 		data: make([]models.Metric, 0),
+		path: filePath,
 	}
 }
 
@@ -61,12 +66,12 @@ func (f *FileStorage) SetCounter(metric dto.PostMetricDto) error {
 	return nil
 }
 
-func (f *FileStorage) Get(body dto.GetMetricDto) (*models.Metric, error) {
+func (f *FileStorage) Get(name string) (*models.Metric, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
 	for i := 0; i < len(f.data); i++ {
-		if f.data[i].Name == body.Name {
+		if f.data[i].Name == name {
 			return &f.data[i], nil
 		}
 	}
@@ -78,4 +83,78 @@ func (f *FileStorage) GetAll() (*[]models.Metric, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	return &f.data, nil
+}
+
+func (f *FileStorage) Load() error {
+	var collectedMetrics []models.Metric
+
+	file, err := os.Open(f.path)
+	if os.IsNotExist(err) {
+		file, err = os.Create(f.path)
+		if err != nil {
+			return err
+		}
+	} else if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		var metric models.Metric
+		line := scanner.Text()
+
+		if err := json.Unmarshal([]byte(line), &metric); err != nil {
+			continue
+		}
+
+		collectedMetrics = append(collectedMetrics, metric)
+	}
+
+	if err := scanner.Err(); err != nil {
+		return err
+	}
+
+	for _, curMetric := range collectedMetrics {
+		metricDTO := dto.PostMetricDto{
+			Name:  curMetric.Name,
+			MType: curMetric.Type,
+		}
+
+		switch curMetric.Type {
+		case models.CounterType:
+			metricDTO.Value = float64(curMetric.Delta)
+			f.SetCounter(metricDTO)
+		case models.GaugeType:
+			metricDTO.Value = curMetric.Value
+		}
+	}
+
+	return nil
+}
+
+func (f *FileStorage) Save() error {
+	file, err := os.OpenFile(f.path, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	var newMetrics string
+
+	for _, s := range f.data {
+		str, err := json.Marshal(s)
+		if err != nil {
+			return err
+		}
+		newMetrics += string(str)
+		newMetrics += "\n"
+	}
+
+	_, err = file.WriteString(newMetrics)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

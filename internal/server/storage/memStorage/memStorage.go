@@ -61,12 +61,12 @@ func (m *MemStorage) SetCounter(metric dto.PostMetricDto) error {
 	return nil
 }
 
-func (m *MemStorage) Get(body dto.GetMetricDto) (*models.Metric, error) {
+func (m *MemStorage) Get(name string) (*models.Metric, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
 	for i := 0; i < len(m.data); i++ {
-		if m.data[i].Name == body.Name {
+		if m.data[i].Name == name {
 			return &m.data[i], nil
 		}
 	}
@@ -78,4 +78,12 @@ func (m *MemStorage) GetAll() (*[]models.Metric, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	return &m.data, nil
+}
+
+func (m *MemStorage) Load() error {
+	return nil
+}
+
+func (m *MemStorage) Save() error {
+	return nil
 }

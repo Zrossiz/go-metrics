@@ -1,31 +1,30 @@
 package storage
 
 import (
-	"time"
-
 	"github.com/Zrossiz/go-metrics/internal/server/dto"
 	"github.com/Zrossiz/go-metrics/internal/server/models"
 	"github.com/Zrossiz/go-metrics/internal/server/storage/dbstorage"
 	"github.com/Zrossiz/go-metrics/internal/server/storage/filestorage"
 	"github.com/Zrossiz/go-metrics/internal/server/storage/memstorage"
-	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
 type Storage interface {
 	SetGauge(body dto.PostMetricDto) error
 	SetCounter(body dto.PostMetricDto) error
-	Get(body dto.GetMetricDto) (*models.Metric, error)
+	Get(name string) (*models.Metric, error)
 	GetAll() (*[]models.Metric, error)
+	Load() error
+	Save() error
 }
 
-func New(dbConn *gorm.DB, filePath string, storeInterval time.Duration, log *zap.Logger) Storage {
+func New(dbConn *gorm.DB, filePath string) Storage {
 	if dbConn != nil {
-		return dbstorage.New(dbConn, log)
+		return dbstorage.New(dbConn)
 	}
 
-	if storeInterval > 0 {
-		return filestorage.New()
+	if len(filePath) > 0 {
+		return filestorage.New(filePath)
 	}
 
 	return memstorage.New()

@@ -1,7 +1,7 @@
 package app
 
 import (
-	"time"
+	"net/http"
 
 	"github.com/Zrossiz/go-metrics/internal/server/config"
 	"github.com/Zrossiz/go-metrics/internal/server/libs/logger"
@@ -32,9 +32,25 @@ func StartServer() {
 		}
 	}
 
-	store := storage.New(dbConn, cfg.FileStoragePath, time.Duration(cfg.StoreInterval), log.ZapLogger)
+	store := storage.New(dbConn, cfg.FileStoragePath)
+
+	if cfg.Restore {
+		store.Load()
+	}
 
 	serv := service.New(store, log.ZapLogger)
 
 	r := router.New(serv, log.ZapLogger)
+
+	srv := &http.Server{
+		Addr:    cfg.ServerAddress,
+		Handler: r,
+	}
+
+	go func() {
+		log.ZapLogger.Info("Starting server", zap.String("address", cfg.ServerAddress))
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.ZapLogger.Fatal("Failed to start server", zap.Error(err))
+		}
+	}()
 }

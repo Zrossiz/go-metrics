@@ -17,10 +17,23 @@ func New(s *service.MetricService, log *zap.Logger) http.Handler {
 	r := chi.NewRouter()
 
 	r.Use(logger.WithLogs(log))
-
 	r.Use(gzip.DecompressMiddleware)
-
 	r.Use(gzip.CompressMiddleware)
+
+	r.Get("/", handl.GetHTML)
+
+	// r.Get("/ping", handl.PingDB)
+
+	r.Route("/update", func(r chi.Router) {
+		r.Post("/{type}/{name}/{value}", handl.CreateParamMetric)
+		r.Post("/", handl.CreateJSONMetric)
+	})
+
+	r.Route("/value", func(r chi.Router) {
+		r.Get("/{type}/{name}", handl.GetStringMetric)
+
+		r.Post("/", handl.GetJSONMetric)
+	})
 
 	return r
 }

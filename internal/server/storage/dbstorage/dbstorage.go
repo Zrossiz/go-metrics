@@ -3,18 +3,16 @@ package dbstorage
 import (
 	"github.com/Zrossiz/go-metrics/internal/server/dto"
 	"github.com/Zrossiz/go-metrics/internal/server/models"
-	"go.uber.org/zap"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
 type DBStorage struct {
-	db  *gorm.DB
-	log *zap.Logger
+	db *gorm.DB
 }
 
-func New(dbConn *gorm.DB, log *zap.Logger) *DBStorage {
-	return &DBStorage{db: dbConn, log: log}
+func New(dbConn *gorm.DB) *DBStorage {
+	return &DBStorage{db: dbConn}
 }
 
 func GetConnect(connStr string) (*gorm.DB, error) {
@@ -75,9 +73,9 @@ func (d *DBStorage) SetCounter(metric dto.PostMetricDto) error {
 	return nil
 }
 
-func (d *DBStorage) Get(body dto.GetMetricDto) (*models.Metric, error) {
+func (d *DBStorage) Get(name string) (*models.Metric, error) {
 	var metric models.Metric
-	err := d.db.Where("name = ?", body.Name).Last(&metric).Error
+	err := d.db.Where("name = ?", name).Last(&metric).Error
 	if err != nil {
 		return nil, err
 	}
@@ -93,4 +91,12 @@ func (d *DBStorage) GetAll() (*[]models.Metric, error) {
 	}
 
 	return &metrics, nil
+}
+
+func (d *DBStorage) Load() error {
+	return nil
+}
+
+func (d *DBStorage) Save() error {
+	return nil
 }
