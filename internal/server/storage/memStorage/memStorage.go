@@ -80,10 +80,10 @@ func (m *MemStorage) GetAll() (*[]models.Metric, error) {
 	return &m.data, nil
 }
 
-func (m *MemStorage) Load() error {
+func (m *MemStorage) Load(string) error {
 	return nil
 }
 
-func (m *MemStorage) Save() error {
+func (m *MemStorage) Save(string) error {
 	return nil
 }

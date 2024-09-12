@@ -93,10 +93,19 @@ func (d *DBStorage) GetAll() (*[]models.Metric, error) {
 	return &metrics, nil
 }
 
-func (d *DBStorage) Load() error {
+func (d *DBStorage) Load(filePath string) error {
 	return nil
 }
 
-func (d *DBStorage) Save() error {
+func (d *DBStorage) Save(filePath string) error {
+	return nil
+}
+
+func MigrateSQL(db *gorm.DB) error {
+	err := db.AutoMigrate(&models.Metric{})
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

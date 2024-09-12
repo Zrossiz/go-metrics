@@ -85,7 +85,7 @@ func (f *FileStorage) GetAll() (*[]models.Metric, error) {
 	return &f.data, nil
 }
 
-func (f *FileStorage) Load() error {
+func (f *FileStorage) Load(filePath string) error {
 	var collectedMetrics []models.Metric
 
 	file, err := os.Open(f.path)
@@ -133,7 +133,7 @@ func (f *FileStorage) Load() error {
 	return nil
 }
 
-func (f *FileStorage) Save() error {
+func (f *FileStorage) Save(filePath string) error {
 	file, err := os.OpenFile(f.path, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return err

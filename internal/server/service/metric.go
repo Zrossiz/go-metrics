@@ -1,6 +1,8 @@
 package service
 
 import (
+	"fmt"
+
 	"github.com/Zrossiz/go-metrics/internal/server/dto"
 	"github.com/Zrossiz/go-metrics/internal/server/models"
 	"go.uber.org/zap"
@@ -52,9 +54,17 @@ func (m *MetricService) Get(name string) (*models.Metric, error) {
 }
 
 func (m *MetricService) GetStringValueMetric(name string) (string, error) {
-	return "", nil
+	metric, err := m.storage.Get(name)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%v", metric.Value), nil
 }
 
 func (m *MetricService) GetAll() (*[]models.Metric, error) {
-	return &[]models.Metric{}, nil
+	metrics, err := m.storage.GetAll()
+	if err != nil {
+		return nil, err
+	}
+	return metrics, nil
 }

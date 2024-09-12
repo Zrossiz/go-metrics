@@ -14,8 +14,8 @@ type Storage interface {
 	SetCounter(body dto.PostMetricDto) error
 	Get(name string) (*models.Metric, error)
 	GetAll() (*[]models.Metric, error)
-	Load() error
-	Save() error
+	Load(filePath string) error
+	Save(filePath string) error
 }
 
 func New(dbConn *gorm.DB, filePath string) Storage {
