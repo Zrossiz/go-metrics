@@ -87,3 +87,7 @@ func (m *MemStorage) Load(string) error {
 func (m *MemStorage) Save(string) error {
 	return nil
 }
+
+func (m *MemStorage) Close(string) error {
+	return nil
+}

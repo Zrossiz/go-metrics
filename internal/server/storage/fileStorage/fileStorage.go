@@ -158,3 +158,12 @@ func (f *FileStorage) Save(filePath string) error {
 
 	return nil
 }
+
+func (f *FileStorage) Close(filePath string) error {
+	err := f.Save(filePath)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

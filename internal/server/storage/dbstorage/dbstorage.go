@@ -101,6 +101,15 @@ func (d *DBStorage) Save(filePath string) error {
 	return nil
 }
 
+func (d *DBStorage) Close(string) error {
+	sqlDB, err := d.db.DB()
+	if err != nil {
+		return err
+	}
+
+	return sqlDB.Close()
+}
+
 func MigrateSQL(db *gorm.DB) error {
 	err := db.AutoMigrate(&models.Metric{})
 	if err != nil {

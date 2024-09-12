@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"context"
 	"time"
 
 	"github.com/Zrossiz/go-metrics/internal/server/config"
@@ -20,9 +21,10 @@ type Storage interface {
 	GetAll() (*[]models.Metric, error)
 	Load(filePath string) error
 	Save(filePath string) error
+	Close(filePath string) error
 }
 
-func New(dbConn *gorm.DB, cfg *config.Config, log *zap.Logger) Storage {
+func New(dbConn *gorm.DB, cfg *config.Config, log *zap.Logger, ctx context.Context) Storage {
 	if dbConn != nil {
 		return dbstorage.New(dbConn)
 	}
