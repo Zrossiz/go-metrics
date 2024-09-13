@@ -17,6 +17,7 @@ import (
 type Storage interface {
 	SetGauge(body dto.PostMetricDto) error
 	SetCounter(body dto.PostMetricDto) error
+	SetBatch(body []dto.PostMetricDto) error
 	Get(name string) (*models.Metric, error)
 	GetAll() (*[]models.Metric, error)
 	Load(filePath string) error

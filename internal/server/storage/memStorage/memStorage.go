@@ -80,6 +80,19 @@ func (m *MemStorage) GetAll() (*[]models.Metric, error) {
 	return &m.data, nil
 }
 
+func (m *MemStorage) SetBatch(body []dto.PostMetricDto) error {
+	for i := 0; i < len(body); i++ {
+		if body[i].Type == models.CounterType {
+			_ = m.SetCounter(body[i])
+			continue
+		}
+
+		_ = m.SetGauge(body[i])
+	}
+
+	return nil
+}
+
 func (m *MemStorage) Load(string) error {
 	return nil
 }

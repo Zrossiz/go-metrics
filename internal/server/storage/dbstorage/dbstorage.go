@@ -93,6 +93,34 @@ func (d *DBStorage) GetAll() (*[]models.Metric, error) {
 	return &metrics, nil
 }
 
+func (d *DBStorage) SetBatch(body []dto.PostMetricDto) error {
+	var metrics []models.Metric
+
+	for i := 0; i < len(body); i++ {
+		if body[i].Type == models.CounterType {
+			metrics = append(metrics, models.Metric{
+				Name:  body[i].Name,
+				Type:  body[i].Type,
+				Delta: int64(body[i].Value),
+			})
+			continue
+		}
+
+		metrics = append(metrics, models.Metric{
+			Name:  body[i].Name,
+			Type:  body[i].Type,
+			Value: body[i].Value,
+		})
+	}
+
+	err := d.db.Create(&metrics).Error
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (d *DBStorage) Load(filePath string) error {
 	return nil
 }

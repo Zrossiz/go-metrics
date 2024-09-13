@@ -159,6 +159,19 @@ func (f *FileStorage) Save(filePath string) error {
 	return nil
 }
 
+func (f *FileStorage) SetBatch(body []dto.PostMetricDto) error {
+	for i := 0; i < len(body); i++ {
+		if body[i].Type == models.CounterType {
+			_ = f.SetCounter(body[i])
+			continue
+		}
+
+		_ = f.SetGauge(body[i])
+	}
+
+	return nil
+}
+
 func (f *FileStorage) Close(filePath string) error {
 	err := f.Save(filePath)
 	if err != nil {
