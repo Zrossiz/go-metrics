@@ -22,7 +22,7 @@ func New(s *service.MetricService, log *zap.Logger) http.Handler {
 
 	r.Get("/", handl.GetHTML)
 
-	// r.Get("/ping", handl.PingDB)
+	r.Get("/ping", handl.PingDB)
 
 	r.Route("/update", func(r chi.Router) {
 		r.Post("/{type}/{name}/{value}", handl.CreateParamMetric)

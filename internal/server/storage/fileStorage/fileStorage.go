@@ -117,8 +117,8 @@ func (f *FileStorage) Load(filePath string) error {
 
 	for _, curMetric := range collectedMetrics {
 		metricDTO := dto.PostMetricDto{
-			Name:  curMetric.Name,
-			MType: curMetric.Type,
+			Name: curMetric.Name,
+			Type: curMetric.Type,
 		}
 
 		switch curMetric.Type {

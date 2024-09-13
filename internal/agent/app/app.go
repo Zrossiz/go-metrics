@@ -18,7 +18,7 @@ func StartAgent() {
 	defer tickerPoll.Stop()
 	defer tickerReport.Stop()
 	var metrics []types.Metric
-	var counter int64 = 0
+	var counter int64
 
 	for {
 		select {

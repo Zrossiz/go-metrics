@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"context"
+	"fmt"
 	"time"
 
 	"github.com/Zrossiz/go-metrics/internal/server/config"
@@ -24,12 +24,14 @@ type Storage interface {
 	Close(filePath string) error
 }
 
-func New(dbConn *gorm.DB, cfg *config.Config, log *zap.Logger, ctx context.Context) Storage {
-	if dbConn != nil {
+func New(dbConn *gorm.DB, cfg *config.Config, log *zap.Logger) Storage {
+	if cfg.DBDSN != "" {
+		fmt.Println("selected: db storage")
 		return dbstorage.New(dbConn)
 	}
 
 	if len(cfg.FileStoragePath) > 0 {
+		fmt.Println("selected: file storage")
 		store := filestorage.New(cfg.FileStoragePath)
 
 		if cfg.Restore {
@@ -42,10 +44,6 @@ func New(dbConn *gorm.DB, cfg *config.Config, log *zap.Logger, ctx context.Conte
 		}
 
 		ticker := time.NewTicker(time.Duration(cfg.StoreInterval) * time.Second)
-		defer func() {
-			log.Info("Stopping ticker")
-			ticker.Stop()
-		}()
 		stop := make(chan bool)
 
 		go func() {
@@ -59,10 +57,15 @@ func New(dbConn *gorm.DB, cfg *config.Config, log *zap.Logger, ctx context.Conte
 					log.Info("Successful save")
 				case <-stop:
 					log.Info("Stopping task execution")
+					return
 				}
 			}
 		}()
+
+		return store
 	}
 
+	fmt.Println("selected: mem storage")
 	return memstorage.New()
+
 }

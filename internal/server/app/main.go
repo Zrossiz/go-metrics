@@ -42,11 +42,9 @@ func StartServer() {
 		}
 	}
 
-	ctx := context.Background()
+	store := storage.New(dbConn, cfg, log.ZapLogger)
 
-	store := storage.New(dbConn, cfg, log.ZapLogger, ctx)
-
-	serv := service.New(store, log.ZapLogger)
+	serv := service.New(store, log.ZapLogger, dbConn)
 
 	r := router.New(serv, log.ZapLogger)
 

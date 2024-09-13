@@ -1,10 +1,9 @@
 package dto
 
 type MetricDTO struct {
-	ID    string   `json:"id"`
-	MType string   `json:"type"`
-	Delta *int64   `json:"delta,omitempty"`
-	Value *float64 `json:"value,omitempty"`
+	Name  string      `json:"name"`
+	MType string      `json:"type"`
+	Value interface{} `json:"value,omitempty"`
 }
 
 type GetMetricDto struct {

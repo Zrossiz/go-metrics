@@ -1,12 +1,12 @@
 package dto
 
 type GetMetricDto struct {
-	Name  string `json:"name"`
-	MType string `json:"type"`
+	Name string `json:"name"`
+	Type string `json:"type"`
 }
 
 type PostMetricDto struct {
 	Name  string  `json:"name"`
-	MType string  `json:"type"`
+	Type  string  `json:"type"`
 	Value float64 `json:"value"`
 }

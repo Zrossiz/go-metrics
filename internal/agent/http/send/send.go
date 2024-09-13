@@ -18,18 +18,9 @@ func Metrics(metrics []types.Metric, addr string) []types.Metric {
 	for i := 0; i < len(metrics); i++ {
 		reqURL := fmt.Sprintf("http://%s/update/", addr)
 		jsonBody := dto.MetricDTO{
-			ID:    metrics[i].Name,
+			Name:  metrics[i].Name,
 			MType: metrics[i].Type,
-		}
-
-		switch v := metrics[i].Value.(type) {
-		case int64:
-			jsonBody.Delta = &v
-		case float64:
-			jsonBody.Value = &v
-		default:
-			log.Println("Unsupported metric type for metric:", metrics[i].Name)
-			continue
+			Value: metrics[i].Value,
 		}
 
 		jsonData, err := json.Marshal(jsonBody)
@@ -58,7 +49,6 @@ func GzipMetrics(metrics []types.Metric, addr string) []types.Metric {
 
 		var gzippedData bytes.Buffer
 		gzipWriter := gzip.NewWriter(&gzippedData)
-
 		bytesData, err := getBytesMetricDTO(metrics[i])
 		if err != nil {
 			log.Println("failed get bytes from metric: ", err)
@@ -87,24 +77,18 @@ func GzipMetrics(metrics []types.Metric, addr string) []types.Metric {
 
 func getBytesMetricDTO(metric types.Metric) ([]byte, error) {
 	jsonBody := dto.MetricDTO{
-		ID:    metric.Name,
+		Name:  metric.Name,
 		MType: metric.Type,
+		Value: metric.Value,
 	}
 
-	switch v := metric.Value.(type) {
-	case int64:
-		jsonBody.Delta = &v
-	case float64:
-		jsonBody.Value = &v
-	default:
-		log.Println("unsupported metric type for metric:", metric.Name)
-	}
+	fmt.Print(jsonBody)
+	fmt.Println()
 
 	jsonData, err := json.Marshal(jsonBody)
 	if err != nil {
 		return nil, err
 	}
-
 	return jsonData, nil
 }
 

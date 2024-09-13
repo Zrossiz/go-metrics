@@ -46,7 +46,7 @@ func Ping(db *gorm.DB) error {
 func (d *DBStorage) SetGauge(metric dto.PostMetricDto) error {
 	DBMetric := models.Metric{
 		Name:  metric.Name,
-		Type:  metric.MType,
+		Type:  metric.Type,
 		Value: metric.Value,
 	}
 
@@ -61,7 +61,7 @@ func (d *DBStorage) SetGauge(metric dto.PostMetricDto) error {
 func (d *DBStorage) SetCounter(metric dto.PostMetricDto) error {
 	DBMetric := models.Metric{
 		Name:  metric.Name,
-		Type:  metric.MType,
+		Type:  metric.Type,
 		Delta: int64(metric.Value),
 	}
 

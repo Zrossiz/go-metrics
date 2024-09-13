@@ -40,7 +40,7 @@ func GetConfig() (*Config, error) {
 		}
 		cfg.StoreInterval = value
 	} else {
-		flag.IntVar(&cfg.StoreInterval, "i", 20, "interval for save metrics")
+		flag.IntVar(&cfg.StoreInterval, "i", 5, "interval for save metrics")
 	}
 
 	if envRestore := os.Getenv("RESTORE"); envRestore != "" {
@@ -56,7 +56,7 @@ func GetConfig() (*Config, error) {
 	if envFileStoragePath := os.Getenv("FILE_STORAGE_PATH"); envFileStoragePath != "" {
 		cfg.FileStoragePath = envFileStoragePath
 	} else {
-		flag.StringVar(&cfg.FileStoragePath, "f", "storage/storage.txt", "path to storage file")
+		flag.StringVar(&cfg.FileStoragePath, "f", "", "path to storage file")
 	}
 
 	if envDBConn := os.Getenv("DB_DSN"); envDBConn != "" {

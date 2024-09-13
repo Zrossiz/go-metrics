@@ -45,7 +45,7 @@ func (m *MemStorage) SetCounter(metric dto.PostMetricDto) error {
 	defer m.mu.Unlock()
 
 	for i := 0; i < len(m.data); i++ {
-		if metric.Name == m.data[i].Name {
+		if metric.Type == m.data[i].Type {
 			m.data[i].Delta += int64(metric.Value)
 			return nil
 		}

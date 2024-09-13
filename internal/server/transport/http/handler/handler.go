@@ -37,13 +37,13 @@ func New(s *service.MetricService, logger *zap.Logger) MetricHandler {
 
 func (m *MetricHandler) CreateParamMetric(rw http.ResponseWriter, r *http.Request) {
 	dto := dto.PostMetricDto{
-		Name:  chi.URLParam(r, "name"),
-		MType: chi.URLParam(r, "type"),
+		Name: chi.URLParam(r, "name"),
+		Type: chi.URLParam(r, "type"),
 	}
 
 	valueMetric := chi.URLParam(r, "value")
 
-	switch dto.MType {
+	switch dto.Type {
 	case models.GaugeType:
 		float64MetricValue, err := strconv.ParseFloat(valueMetric, 64)
 		if err != nil {
@@ -88,7 +88,8 @@ func (m *MetricHandler) CreateJSONMetric(rw http.ResponseWriter, r *http.Request
 		return
 	}
 	defer r.Body.Close()
-
+	fmt.Print(body)
+	fmt.Println("")
 	err = m.service.Create(body)
 	if err != nil {
 		m.logger.Error("internal error", zap.Error(err))
@@ -176,7 +177,13 @@ func (m *MetricHandler) GetHTML(rw http.ResponseWriter, r *http.Request) {
 			<tr>
 				<td>{{.Name}}</td>
 				<td>{{.Type}}</td>
-				<td>{{.Value}}</td>
+				<td>
+					{{if eq .Type "gauge"}}
+						{{.Value}}
+					{{else}}
+						{{.Delta}}
+					{{end}}
+				</td>
 			</tr>
 			{{end}}
 		</table>
@@ -202,4 +209,14 @@ func (m *MetricHandler) GetHTML(rw http.ResponseWriter, r *http.Request) {
 	if err := t.Execute(rw, metrics); err != nil {
 		http.Error(rw, "Internal Server Error", http.StatusInternalServerError)
 	}
+}
+
+func (m *MetricHandler) PingDB(rw http.ResponseWriter, r *http.Request) {
+	err := m.service.PingDB()
+	if err != nil {
+		http.Error(rw, "connection not available", http.StatusInternalServerError)
+		return
+	}
+
+	rw.WriteHeader(http.StatusOK)
 }

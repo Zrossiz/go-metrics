@@ -5,12 +5,15 @@ import (
 
 	"github.com/Zrossiz/go-metrics/internal/server/dto"
 	"github.com/Zrossiz/go-metrics/internal/server/models"
+	"github.com/Zrossiz/go-metrics/internal/server/storage/dbstorage"
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 )
 
 type MetricService struct {
 	storage Storager
 	logger  *zap.Logger
+	dbConn  *gorm.DB
 }
 
 type Storager interface {
@@ -20,7 +23,7 @@ type Storager interface {
 	GetAll() (*[]models.Metric, error)
 }
 
-func New(stor Storager, logger *zap.Logger) *MetricService {
+func New(stor Storager, logger *zap.Logger, dbConn *gorm.DB) *MetricService {
 	return &MetricService{
 		storage: stor,
 		logger:  logger,
@@ -28,7 +31,7 @@ func New(stor Storager, logger *zap.Logger) *MetricService {
 }
 
 func (m *MetricService) Create(body dto.PostMetricDto) error {
-	if body.MType == models.CounterType {
+	if body.Type == models.CounterType {
 		err := m.storage.SetCounter(body)
 		if err != nil {
 			return err
@@ -67,4 +70,8 @@ func (m *MetricService) GetAll() (*[]models.Metric, error) {
 		return nil, err
 	}
 	return metrics, nil
+}
+
+func (m *MetricService) PingDB() error {
+	return dbstorage.Ping(m.dbConn)
 }
