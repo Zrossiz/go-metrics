@@ -182,36 +182,36 @@ func (m *MetricHandler) GetJSONMetric(rw http.ResponseWriter, r *http.Request) {
 
 func (m *MetricHandler) GetHTML(rw http.ResponseWriter, r *http.Request) {
 	tmpl := `
-	<!DOCTYPE html>
-	<html>
-	<head>
-		<title>Метрики</title>
-	</head>
-	<body>
-		<h1>Список метрик</h1>
-		<table border="1">
-			<tr>
-				<th>Имя метрики</th>
-				<th>Тип метрики</th>
-				<th>Значение</th>
-			</tr>
-			{{range .}}
-			<tr>
-				<td>{{.Name}}</td>
-				<td>{{.Type}}</td>
-				<td>
-					{{if eq .Type "gauge"}}
-						{{.Value}}
-					{{else}}
-						{{.Delta}}
-					{{end}}
-				</td>
-			</tr>
-			{{end}}
-		</table>
-	</body>
-	</html>
-`
+		<!DOCTYPE html>
+		<html>
+		<head>
+			<title>Метрики</title>
+		</head>
+		<body>
+			<h1>Список метрик</h1>
+			<table border="1">
+				<tr>
+					<th>Имя метрики</th>
+					<th>Тип метрики</th>
+					<th>Значение</th>
+				</tr>
+				{{range .}}
+				<tr>
+					<td>{{.Name}}</td>
+					<td>{{.Type}}</td>
+					<td>
+						{{if eq .Type "gauge"}}
+							{{.Value}}
+						{{else}}
+							{{.Delta}}
+						{{end}}
+					</td>
+				</tr>
+				{{end}}
+			</table>
+		</body>
+		</html>
+	`
 
 	t, err := template.New("metrics").Parse(tmpl)
 	if err != nil {

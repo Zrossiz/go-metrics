@@ -90,6 +90,10 @@ func (d *DBStorage) GetAll() (*[]models.Metric, error) {
 		return nil, err
 	}
 
+	pollCount, _ := d.Get("PollCount")
+
+	metrics = append(metrics, *pollCount)
+
 	return &metrics, nil
 }
 
@@ -98,6 +102,13 @@ func (d *DBStorage) SetBatch(body []dto.PostMetricDto) error {
 
 	for i := 0; i < len(body); i++ {
 		if body[i].Type == models.CounterType {
+			pollCount, _ := d.Get(body[i].Name)
+
+			if pollCount != nil {
+				d.db.Model(&pollCount).Update("delta", pollCount.Delta+int64(body[i].Value))
+				continue
+			}
+
 			metrics = append(metrics, models.Metric{
 				Name:  body[i].Name,
 				Type:  body[i].Type,
