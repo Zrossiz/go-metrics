@@ -79,6 +79,29 @@ func (m *MetricHandler) CreateParamMetric(rw http.ResponseWriter, r *http.Reques
 	io.WriteString(rw, responseString)
 }
 
+func (m *MetricHandler) CreateBatchJSONMetrics(rw http.ResponseWriter, r *http.Request) {
+	var body []dto.PostMetricDto
+
+	err := json.NewDecoder(r.Body).Decode(&body)
+	if err != nil {
+		http.Error(rw, "invalid request body", http.StatusBadRequest)
+		return
+	}
+	defer r.Body.Close()
+
+	err = m.service.SetBatch(body)
+	if err != nil {
+		m.logger.Error("internal error", zap.Error(err))
+		http.Error(rw, "internal server error", http.StatusInternalServerError)
+	}
+
+	rw.Header().Set("Content-Type", "application/json")
+	rw.WriteHeader(http.StatusCreated)
+
+	response := map[string]string{"success": "true"}
+	json.NewEncoder(rw).Encode(response)
+}
+
 func (m *MetricHandler) CreateJSONMetric(rw http.ResponseWriter, r *http.Request) {
 	var body dto.PostMetricDto
 
@@ -88,8 +111,7 @@ func (m *MetricHandler) CreateJSONMetric(rw http.ResponseWriter, r *http.Request
 		return
 	}
 	defer r.Body.Close()
-	fmt.Print(body)
-	fmt.Println("")
+
 	err = m.service.Create(body)
 	if err != nil {
 		m.logger.Error("internal error", zap.Error(err))

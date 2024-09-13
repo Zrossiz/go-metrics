@@ -75,6 +75,33 @@ func GzipMetrics(metrics []types.Metric, addr string) []types.Metric {
 	return sendedMetrics
 }
 
+func BatchGzipMetrics(metrics []types.Metric, addr string) {
+	reqURL := fmt.Sprintf("http://%s/updates/", addr)
+
+	bytesData, err := json.Marshal(metrics)
+	if err != nil {
+		log.Println("failed to marshal metrics to JSON:", err)
+		return
+	}
+
+	var gzippedData bytes.Buffer
+	gzipWriter := gzip.NewWriter(&gzippedData)
+
+	_, err = gzipWriter.Write(bytesData)
+	if err != nil {
+		log.Println("failed to write JSON to gzip:", err)
+		gzipWriter.Close()
+		return
+	}
+
+	gzipWriter.Close()
+
+	_, err = sendMetric("POST", reqURL, gzippedData)
+	if err != nil {
+		log.Println("error sending metric:", err)
+	}
+}
+
 func getBytesMetricDTO(metric types.Metric) ([]byte, error) {
 	jsonBody := dto.MetricDTO{
 		Name:  metric.Name,

@@ -19,6 +19,7 @@ type MetricService struct {
 type Storager interface {
 	SetGauge(body dto.PostMetricDto) error
 	SetCounter(body dto.PostMetricDto) error
+	SetBatch(body []dto.PostMetricDto) error
 	Get(name string) (*models.Metric, error)
 	GetAll() (*[]models.Metric, error)
 }
@@ -41,6 +42,15 @@ func (m *MetricService) Create(body dto.PostMetricDto) error {
 	}
 
 	err := m.storage.SetGauge(body)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *MetricService) SetBatch(body []dto.PostMetricDto) error {
+	err := m.storage.SetBatch(body)
 	if err != nil {
 		return err
 	}

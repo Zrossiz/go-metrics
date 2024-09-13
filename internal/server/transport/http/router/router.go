@@ -29,6 +29,8 @@ func New(s *service.MetricService, log *zap.Logger) http.Handler {
 		r.Post("/", handl.CreateJSONMetric)
 	})
 
+	r.Post("/updates/", handl.CreateBatchJSONMetrics)
+
 	r.Route("/value", func(r chi.Router) {
 		r.Get("/{type}/{name}", handl.GetStringMetric)
 
