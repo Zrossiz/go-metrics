@@ -21,9 +21,7 @@ type Config struct {
 var AppConfig Config
 
 func GetConfig() (*Config, error) {
-	if err := godotenv.Load(); err != nil {
-		return nil, err
-	}
+	_ = godotenv.Load()
 
 	cfg := &Config{}
 
@@ -50,7 +48,7 @@ func GetConfig() (*Config, error) {
 		}
 		cfg.Restore = value
 	} else {
-		flag.BoolVar(&cfg.Restore, "r", true, "get metrics from file")
+		flag.BoolVar(&cfg.Restore, "r", false, "get metrics from file")
 	}
 
 	if envFileStoragePath := os.Getenv("FILE_STORAGE_PATH"); envFileStoragePath != "" {

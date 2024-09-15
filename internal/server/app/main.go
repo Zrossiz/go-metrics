@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -19,6 +20,7 @@ import (
 )
 
 func StartServer() {
+	fmt.Println("parse config")
 	cfg, err := config.GetConfig()
 	if err != nil {
 		zap.S().Fatalf("get config error", zap.Error(err))
