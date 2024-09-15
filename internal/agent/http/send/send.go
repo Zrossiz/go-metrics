@@ -7,10 +7,14 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/Zrossiz/go-metrics/internal/agent/constants/types"
 	"github.com/Zrossiz/go-metrics/internal/agent/dto"
 )
+
+const maxRetries = 3
+const retryDelay = 1 * time.Second
 
 func Metrics(metrics []types.Metric, addr string) []types.Metric {
 	var sendedMetrics []types.Metric
@@ -64,10 +68,14 @@ func GzipMetrics(metrics []types.Metric, addr string) []types.Metric {
 
 		gzipWriter.Close()
 
-		_, err = sendMetric("POST", reqURL, gzippedData)
+		request, err := getRequest("POST", reqURL, gzippedData)
 		if err != nil {
-			log.Println("error send metric")
-			continue
+			log.Println("error get request:", err)
+		}
+
+		err = sendWithRetry(request)
+		if err != nil {
+			log.Println("error send metric", err)
 		}
 
 		sendedMetrics = append(sendedMetrics, metrics[i])
@@ -96,9 +104,14 @@ func BatchGzipMetrics(metrics []types.Metric, addr string) {
 
 	gzipWriter.Close()
 
-	_, err = sendMetric("POST", reqURL, gzippedData)
+	request, err := getRequest("POST", reqURL, gzippedData)
 	if err != nil {
-		log.Println("error sending metric:", err)
+		log.Println("error get request:", err)
+	}
+
+	err = sendWithRetry(request)
+	if err != nil {
+		log.Println("error send metric", err)
 	}
 }
 
@@ -119,21 +132,34 @@ func getBytesMetricDTO(metric types.Metric) ([]byte, error) {
 	return jsonData, nil
 }
 
-func sendMetric(method string, reqURL string, data bytes.Buffer) (bool, error) {
+func getRequest(method string, reqURL string, data bytes.Buffer) (*http.Request, error) {
 	req, err := http.NewRequest(method, reqURL, &data)
 	if err != nil {
-		return false, err
+		return nil, err
 	}
 	req.Header.Set("Content-Encoding", "gzip")
 	req.Header.Set("Content-Type", "application/json")
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return false, err
+	return req, nil
+}
+
+func sendWithRetry(request *http.Request) error {
+	delay := retryDelay
+	for i := 0; i < maxRetries; i++ {
+		client := &http.Client{}
+		resp, err := client.Do(request)
+		resp.Body.Close()
+
+		if err != nil {
+			log.Printf("Failed to send request: %v\n", err)
+		} else if resp.StatusCode == 201 {
+			return nil
+		} else {
+			log.Printf("Failed to send request: status code %d\n", resp.StatusCode)
+		}
+
+		time.Sleep(delay)
+		delay += 2 * time.Second
 	}
-
-	resp.Body.Close()
-
-	return true, nil
+	return fmt.Errorf("failed to send request after %d attempts", maxRetries)
 }
