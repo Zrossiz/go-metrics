@@ -71,7 +71,19 @@ func (m *MetricService) GetStringValueMetric(name string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return fmt.Sprintf("%v", metric.Value), nil
+
+	if metric != nil {
+		var value string
+		if metric.Type == models.CounterType {
+			value = fmt.Sprintf("%v", metric.Delta)
+		} else {
+			value = fmt.Sprintf("%v", metric.Value)
+		}
+
+		return value, nil
+	}
+
+	return "", nil
 }
 
 func (m *MetricService) GetAll() (*[]models.Metric, error) {
