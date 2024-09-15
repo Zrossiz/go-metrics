@@ -28,6 +28,6 @@ vendor/
 .env
 
 storage/storage.txt
-internal/server/storage/fileStorage/storage
+internal/server/storage/filestorage/storage
 Makefile
 metricstest
