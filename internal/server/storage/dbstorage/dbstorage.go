@@ -1,24 +1,46 @@
 package dbstorage
 
 import (
+	"fmt"
+	"time"
+
 	"github.com/Zrossiz/go-metrics/internal/server/dto"
 	"github.com/Zrossiz/go-metrics/internal/server/models"
+	"go.uber.org/zap"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
 type DBStorage struct {
-	db *gorm.DB
+	db     *gorm.DB
+	logger *zap.Logger
 }
 
-func New(dbConn *gorm.DB) *DBStorage {
-	return &DBStorage{db: dbConn}
+const maxRetries = 3
+const retryDelay = 1 * time.Second
+
+func New(dbConn *gorm.DB, log *zap.Logger) *DBStorage {
+	return &DBStorage{db: dbConn, logger: log}
 }
 
-func GetConnect(connStr string) (*gorm.DB, error) {
-	db, err := gorm.Open(postgres.Open(connStr), &gorm.Config{})
+func GetConnect(connStr string, logger *zap.Logger) (*gorm.DB, error) {
+	var db *gorm.DB
+	var err error
+	delay := retryDelay
+
+	for i := 0; i < maxRetries; i++ {
+		db, err = gorm.Open(postgres.Open(connStr), &gorm.Config{})
+		if err == nil {
+			break
+		}
+
+		logger.Error("error connect to db. retry...")
+		delay += 2 * time.Second
+		time.Sleep(delay)
+	}
+
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to connect to database: %v", err)
 	}
 
 	err = Ping(db)

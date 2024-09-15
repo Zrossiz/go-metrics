@@ -31,7 +31,7 @@ func StartServer() {
 
 	var dbConn *gorm.DB
 	if len(cfg.DBDSN) > 0 {
-		dbConn, err = dbstorage.GetConnect(cfg.DBDSN)
+		dbConn, err = dbstorage.GetConnect(cfg.DBDSN, log.ZapLogger)
 		if err != nil {
 			log.ZapLogger.Fatal("error connect to db", zap.Error(err))
 		}

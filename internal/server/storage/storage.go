@@ -28,7 +28,7 @@ type Storage interface {
 func New(dbConn *gorm.DB, cfg *config.Config, log *zap.Logger) Storage {
 	if cfg.DBDSN != "" {
 		fmt.Println("selected: db storage")
-		return dbstorage.New(dbConn)
+		return dbstorage.New(dbConn, log)
 	}
 
 	if len(cfg.FileStoragePath) > 0 {
