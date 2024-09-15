@@ -145,6 +145,10 @@ func (m *MetricHandler) GetStringMetric(rw http.ResponseWriter, r *http.Request)
 	nameMetric := chi.URLParam(r, "name")
 
 	metric, err := m.service.GetStringValueMetric(nameMetric)
+	if metric == "" {
+		http.Error(rw, "metric not found", http.StatusNotFound)
+		return
+	}
 	if err != nil {
 		m.logger.Error("internal error", zap.Error(err))
 		http.Error(rw, "error get metric", http.StatusInternalServerError)
