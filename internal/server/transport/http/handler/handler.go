@@ -58,6 +58,9 @@ func (m *MetricHandler) CreateParamMetric(rw http.ResponseWriter, r *http.Reques
 			return
 		}
 		dto.Value = float64(int64MetricValue)
+	default:
+		http.Error(rw, "invalid value metric", http.StatusBadRequest)
+		return
 	}
 
 	err := m.service.Create(dto)
