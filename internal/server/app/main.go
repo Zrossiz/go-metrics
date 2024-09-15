@@ -47,7 +47,7 @@ func StartServer() {
 	store := storage.New(dbConn, cfg, log.ZapLogger)
 
 	serv := service.New(store, log.ZapLogger, dbConn)
-
+	time.Sleep(2 * time.Second)
 	r := router.New(serv, log.ZapLogger)
 
 	srv := &http.Server{
