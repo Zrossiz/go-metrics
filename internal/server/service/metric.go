@@ -83,9 +83,9 @@ func (m *MetricService) GetStringValueMetric(name string) (string, error) {
 	if metric != nil {
 		var value string
 		if metric.Type == models.CounterType {
-			value = fmt.Sprintf("%v", metric.Delta)
+			value = fmt.Sprintf("%v", *metric.Delta)
 		} else {
-			value = fmt.Sprintf("%v", metric.Value)
+			value = fmt.Sprintf("%v", *metric.Value)
 		}
 
 		return value, nil
