@@ -25,7 +25,7 @@ func (m *MemStorage) SetGauge(metric dto.PostMetricDto) error {
 
 	for i := 0; i < len(m.data); i++ {
 		if metric.ID == m.data[i].Name {
-			m.data[i].Value = *metric.Value
+			m.data[i].Value = metric.Value
 			return nil
 		}
 	}
@@ -34,7 +34,7 @@ func (m *MemStorage) SetGauge(metric dto.PostMetricDto) error {
 		ID:    uint(rand.Int63()),
 		Name:  metric.ID,
 		Type:  models.GaugeType,
-		Value: *metric.Value,
+		Value: metric.Value,
 	})
 
 	return nil
@@ -46,7 +46,8 @@ func (m *MemStorage) SetCounter(metric dto.PostMetricDto) error {
 
 	for i := 0; i < len(m.data); i++ {
 		if metric.ID == m.data[i].Name {
-			m.data[i].Delta += int64(*metric.Delta)
+			newValue := *m.data[i].Delta + int64(*metric.Delta)
+			m.data[i].Delta = &newValue
 			return nil
 		}
 	}
@@ -55,8 +56,9 @@ func (m *MemStorage) SetCounter(metric dto.PostMetricDto) error {
 		ID:    uint(rand.Int63()),
 		Name:  metric.ID,
 		Type:  models.CounterType,
-		Delta: *metric.Delta,
+		Delta: metric.Delta,
 	})
+
 	return nil
 }
 

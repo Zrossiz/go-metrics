@@ -134,17 +134,14 @@ func (m *MetricHandler) CreateJSONMetric(rw http.ResponseWriter, r *http.Request
 		return
 	}
 
-	var value interface{}
-	if metric.Type == "counter" {
-		value = &metric.Delta
-	} else {
-		value = &metric.Value
+	if metric == nil {
+		http.Error(rw, "metric not found", http.StatusNotFound)
+		return
 	}
 
-	responseMetric := dto.ResponseMerticDto{
+	responseMetric := dto.PostMetricDto{
 		ID:    metric.Name,
 		MType: metric.Type,
-		Value: value,
 	}
 
 	response, err := json.Marshal(responseMetric)
@@ -198,17 +195,15 @@ func (m *MetricHandler) GetJSONMetric(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var value interface{}
-	if metric.Type == "counter" {
-		value = &metric.Delta
-	} else {
-		value = &metric.Value
-	}
-
-	responseMetric := dto.ResponseMerticDto{
+	responseMetric := dto.PostMetricDto{
 		ID:    metric.Name,
 		MType: metric.Type,
-		Value: value,
+	}
+
+	if metric.Delta != nil {
+		responseMetric.Delta = metric.Delta
+	} else {
+		responseMetric.Value = metric.Value
 	}
 
 	response, err := json.Marshal(responseMetric)

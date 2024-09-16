@@ -30,7 +30,7 @@ func (f *FileStorage) SetGauge(metric dto.PostMetricDto) error {
 
 	for i := 0; i < len(f.data); i++ {
 		if metric.ID == f.data[i].Name {
-			f.data[i].Value = *metric.Value
+			f.data[i].Value = metric.Value
 			return nil
 		}
 	}
@@ -39,7 +39,7 @@ func (f *FileStorage) SetGauge(metric dto.PostMetricDto) error {
 		ID:    uint(rand.Int63()),
 		Name:  metric.ID,
 		Type:  models.GaugeType,
-		Value: *metric.Value,
+		Value: metric.Value,
 	})
 
 	return nil
@@ -51,7 +51,8 @@ func (f *FileStorage) SetCounter(metric dto.PostMetricDto) error {
 
 	for i := 0; i < len(f.data); i++ {
 		if metric.ID == f.data[i].Name {
-			f.data[i].Delta += int64(*metric.Value)
+			newValue := *f.data[i].Delta + int64(*metric.Delta)
+			f.data[i].Delta = &newValue
 			return nil
 		}
 	}
@@ -60,7 +61,7 @@ func (f *FileStorage) SetCounter(metric dto.PostMetricDto) error {
 		ID:    uint(rand.Int63()),
 		Name:  metric.ID,
 		Type:  models.CounterType,
-		Delta: int64(*metric.Value),
+		Delta: metric.Delta,
 	})
 
 	return nil
@@ -123,10 +124,10 @@ func (f *FileStorage) Load(filePath string) error {
 
 		switch curMetric.Type {
 		case models.CounterType:
-			metricDTO.Delta = &curMetric.Delta
+			metricDTO.Delta = curMetric.Delta
 			f.SetCounter(metricDTO)
 		case models.GaugeType:
-			metricDTO.Value = &curMetric.Value
+			metricDTO.Value = curMetric.Value
 			f.SetGauge(metricDTO)
 		}
 	}

@@ -69,7 +69,7 @@ func (d *DBStorage) SetGauge(metric dto.PostMetricDto) error {
 	DBMetric := models.Metric{
 		Name:  metric.ID,
 		Type:  metric.MType,
-		Value: *metric.Value,
+		Value: metric.Value,
 	}
 
 	err := d.db.Create(&DBMetric).Error
@@ -84,7 +84,7 @@ func (d *DBStorage) SetCounter(metric dto.PostMetricDto) error {
 	DBMetric := models.Metric{
 		Name:  metric.ID,
 		Type:  metric.MType,
-		Delta: int64(*metric.Delta),
+		Delta: metric.Delta,
 	}
 
 	err := d.db.Create(&DBMetric).Error
@@ -127,14 +127,15 @@ func (d *DBStorage) SetBatch(body []dto.PostMetricDto) error {
 			pollCount, _ := d.Get(body[i].ID)
 
 			if pollCount != nil {
-				d.db.Model(&pollCount).Update("delta", pollCount.Delta+int64(*body[i].Value))
+				newValue := *pollCount.Delta + *body[i].Delta
+				d.db.Model(&pollCount).Update("delta", newValue)
 				continue
 			}
 
 			metrics = append(metrics, models.Metric{
 				Name:  body[i].ID,
 				Type:  body[i].MType,
-				Delta: int64(*body[i].Value),
+				Delta: body[i].Delta,
 			})
 			continue
 		}
@@ -142,7 +143,7 @@ func (d *DBStorage) SetBatch(body []dto.PostMetricDto) error {
 		metrics = append(metrics, models.Metric{
 			Name:  body[i].ID,
 			Type:  body[i].MType,
-			Value: *body[i].Value,
+			Value: body[i].Value,
 		})
 	}
 
