@@ -14,8 +14,8 @@ import (
 	"github.com/Zrossiz/go-metrics/internal/server/storage"
 	"github.com/Zrossiz/go-metrics/internal/server/storage/dbstorage"
 	"github.com/Zrossiz/go-metrics/internal/server/transport/http/router"
+	"github.com/jackc/pgx/v4/pgxpool"
 	"go.uber.org/zap"
-	"gorm.io/gorm"
 )
 
 func StartServer() {
@@ -29,7 +29,7 @@ func StartServer() {
 		zap.S().Fatalf("init logger error", zap.Error(err))
 	}
 
-	var dbConn *gorm.DB
+	var dbConn *pgxpool.Pool
 	if len(cfg.DBDSN) > 0 {
 		dbConn, err = dbstorage.GetConnect(cfg.DBDSN, log.ZapLogger)
 		if err != nil {

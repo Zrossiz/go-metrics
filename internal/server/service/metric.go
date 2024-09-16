@@ -6,14 +6,14 @@ import (
 	"github.com/Zrossiz/go-metrics/internal/server/dto"
 	"github.com/Zrossiz/go-metrics/internal/server/models"
 	"github.com/Zrossiz/go-metrics/internal/server/storage/dbstorage"
+	"github.com/jackc/pgx/v4/pgxpool"
 	"go.uber.org/zap"
-	"gorm.io/gorm"
 )
 
 type MetricService struct {
 	storage Storager
 	logger  *zap.Logger
-	dbConn  *gorm.DB
+	dbConn  *pgxpool.Pool
 }
 
 type Storager interface {
@@ -24,7 +24,7 @@ type Storager interface {
 	GetAll() (*[]models.Metric, error)
 }
 
-func New(stor Storager, logger *zap.Logger, dbConn *gorm.DB) *MetricService {
+func New(stor Storager, logger *zap.Logger, dbConn *pgxpool.Pool) *MetricService {
 	return &MetricService{
 		storage: stor,
 		logger:  logger,

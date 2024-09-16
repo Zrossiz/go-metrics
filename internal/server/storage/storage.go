@@ -10,8 +10,8 @@ import (
 	"github.com/Zrossiz/go-metrics/internal/server/storage/dbstorage"
 	"github.com/Zrossiz/go-metrics/internal/server/storage/filestorage"
 	"github.com/Zrossiz/go-metrics/internal/server/storage/memstorage"
+	"github.com/jackc/pgx/v4/pgxpool"
 	"go.uber.org/zap"
-	"gorm.io/gorm"
 )
 
 type Storage interface {
@@ -25,7 +25,7 @@ type Storage interface {
 	Close(filePath string) error
 }
 
-func New(dbConn *gorm.DB, cfg *config.Config, log *zap.Logger) Storage {
+func New(dbConn *pgxpool.Pool, cfg *config.Config, log *zap.Logger) Storage {
 	if cfg.DBDSN != "" {
 		fmt.Println("selected: db storage")
 		return dbstorage.New(dbConn, log)
