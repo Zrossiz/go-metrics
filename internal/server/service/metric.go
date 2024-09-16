@@ -33,12 +33,20 @@ func New(stor Storager, logger *zap.Logger, dbConn *gorm.DB) *MetricService {
 
 func (m *MetricService) Create(body dto.PostMetricDto) error {
 	if body.MType == models.CounterType {
+		if body.Delta == nil {
+			return fmt.Errorf("delta not found")
+		}
+
 		err := m.storage.SetCounter(body)
 		if err != nil {
 			return err
 		}
 
 		return nil
+	}
+
+	if body.Value == nil {
+		return fmt.Errorf("value not found")
 	}
 
 	err := m.storage.SetGauge(body)
