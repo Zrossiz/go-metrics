@@ -134,7 +134,20 @@ func (m *MetricHandler) CreateJSONMetric(rw http.ResponseWriter, r *http.Request
 		return
 	}
 
-	response, err := json.Marshal(metric)
+	var value interface{}
+	if metric.Type == "counter" {
+		value = &metric.Delta
+	} else {
+		value = &metric.Value
+	}
+
+	responseMetric := dto.ResponseMerticDto{
+		ID:    metric.Name,
+		MType: metric.Type,
+		Value: value,
+	}
+
+	response, err := json.Marshal(responseMetric)
 	if err != nil {
 		m.logger.Error("internal error", zap.Error(err))
 		http.Error(rw, "failed to marshal response", http.StatusInternalServerError)
