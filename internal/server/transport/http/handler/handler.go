@@ -180,6 +180,11 @@ func (m *MetricHandler) GetJSONMetric(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if metric == nil {
+		http.Error(rw, "metric not found", http.StatusNotFound)
+		return
+	}
+
 	response, err := json.Marshal(metric)
 	if err != nil {
 		m.logger.Error("internal error", zap.Error(err))
