@@ -134,14 +134,7 @@ func (m *MetricHandler) CreateJSONMetric(rw http.ResponseWriter, r *http.Request
 		return
 	}
 
-	responseMetric := dto.PostMetricDto{
-		ID:    metric.Name,
-		MType: metric.Type,
-		Value: &metric.Value,
-		Delta: &metric.Delta,
-	}
-
-	response, err := json.Marshal(responseMetric)
+	response, err := json.Marshal(metric)
 	if err != nil {
 		m.logger.Error("internal error", zap.Error(err))
 		http.Error(rw, "failed to marshal response", http.StatusInternalServerError)
@@ -192,7 +185,20 @@ func (m *MetricHandler) GetJSONMetric(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := json.Marshal(metric)
+	var value interface{}
+	if metric.Type == "counter" {
+		value = &metric.Delta
+	} else {
+		value = &metric.Value
+	}
+
+	responseMetric := dto.ResponseMerticDto{
+		ID:    metric.Name,
+		MType: metric.Type,
+		Value: value,
+	}
+
+	response, err := json.Marshal(responseMetric)
 	if err != nil {
 		m.logger.Error("internal error", zap.Error(err))
 		http.Error(rw, "failed to marshal response", http.StatusInternalServerError)
