@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Zrossiz/go-metrics/internal/agent/constants"
 	"github.com/Zrossiz/go-metrics/internal/agent/constants/types"
 	"github.com/Zrossiz/go-metrics/internal/agent/dto"
 )
@@ -16,15 +17,27 @@ import (
 const maxRetries = 3
 const retryDelay = 1 * time.Second
 
-func Metrics(metrics []types.Metric, addr string) []types.Metric {
+func Metrics(metrics []types.Metric, addr string) *[]types.Metric {
 	var sendedMetrics []types.Metric
 
 	for i := 0; i < len(metrics); i++ {
 		reqURL := fmt.Sprintf("http://%s/update/", addr)
-		jsonBody := dto.MetricDTO{
-			Name:  metrics[i].Name,
+		jsonBody := dto.PostMetricDTO{
+			ID:    metrics[i].Name,
 			MType: metrics[i].Type,
-			Value: metrics[i].Value,
+		}
+
+		switch v := metrics[i].Value.(type) {
+		case int64:
+			if jsonBody.MType == constants.Counter {
+				jsonBody.Delta = &v
+			}
+		case float64:
+			if jsonBody.MType != constants.Counter {
+				jsonBody.Value = &v
+			}
+		default:
+			return nil
 		}
 
 		jsonData, err := json.Marshal(jsonBody)
@@ -42,7 +55,7 @@ func Metrics(metrics []types.Metric, addr string) []types.Metric {
 		sendedMetrics = append(sendedMetrics, metrics[i])
 		resp.Body.Close()
 	}
-	return sendedMetrics
+	return &sendedMetrics
 }
 
 func GzipMetrics(metrics []types.Metric, addr string) []types.Metric {
@@ -116,10 +129,22 @@ func BatchGzipMetrics(metrics []types.Metric, addr string) {
 }
 
 func getBytesMetricDTO(metric types.Metric) ([]byte, error) {
-	jsonBody := dto.MetricDTO{
-		Name:  metric.Name,
+	jsonBody := dto.PostMetricDTO{
+		ID:    metric.Name,
 		MType: metric.Type,
-		Value: metric.Value,
+	}
+
+	switch v := metric.Value.(type) {
+	case int64:
+		if jsonBody.MType == constants.Counter {
+			jsonBody.Delta = &v
+		}
+	case float64:
+		if jsonBody.MType != constants.Counter {
+			jsonBody.Value = &v
+		}
+	default:
+		return nil, fmt.Errorf("unsupported metric value type: %T", v)
 	}
 
 	jsonData, err := json.Marshal(jsonBody)
@@ -145,11 +170,13 @@ func sendWithRetry(request *http.Request) error {
 	for i := 0; i < maxRetries; i++ {
 		client := &http.Client{}
 		resp, err := client.Do(request)
-		resp.Body.Close()
+		if resp != nil {
+			defer resp.Body.Close()
+		}
 
 		if err != nil {
 			log.Printf("Failed to send request: %v\n", err)
-		} else if resp.StatusCode == 201 {
+		} else if resp.StatusCode == 201 || resp.StatusCode == 200 {
 			return nil
 		} else {
 			log.Printf("Failed to send request: status code %d\n", resp.StatusCode)

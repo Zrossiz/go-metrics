@@ -39,7 +39,7 @@ func TestMetrics(t *testing.T) {
 	defer server.Close()
 
 	sentMetrics := Metrics(metrics, server.URL[7:])
-	assert.Equal(t, len(metrics), len(sentMetrics), "All metrics should be sent successfully")
+	assert.Equal(t, len(metrics), len(*sentMetrics), "All metrics should be sent successfully")
 }
 
 func TestGzipMetrics(t *testing.T) {
@@ -58,7 +58,7 @@ func TestGzipMetrics(t *testing.T) {
 		body, err := io.ReadAll(gz)
 		assert.NoError(t, err)
 
-		var received dto.MetricDTO
+		var received dto.PostMetricDTO
 		err = json.Unmarshal(body, &received)
 		assert.NoError(t, err)
 
