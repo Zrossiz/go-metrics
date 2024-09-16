@@ -7,37 +7,29 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"time"
 
-	"github.com/Zrossiz/go-metrics/internal/agent/constants"
 	"github.com/Zrossiz/go-metrics/internal/agent/constants/types"
 	"github.com/Zrossiz/go-metrics/internal/agent/dto"
 )
 
-const maxRetries = 3
-const retryDelay = 1 * time.Second
-
-func Metrics(metrics []types.Metric, addr string) *[]types.Metric {
+func Metrics(metrics []types.Metric, addr string) []types.Metric {
 	var sendedMetrics []types.Metric
 
 	for i := 0; i < len(metrics); i++ {
 		reqURL := fmt.Sprintf("http://%s/update/", addr)
-		jsonBody := dto.PostMetricDTO{
+		jsonBody := dto.MetricDTO{
 			ID:    metrics[i].Name,
 			MType: metrics[i].Type,
 		}
 
 		switch v := metrics[i].Value.(type) {
 		case int64:
-			if jsonBody.MType == constants.Counter {
-				jsonBody.Delta = &v
-			}
+			jsonBody.Delta = &v
 		case float64:
-			if jsonBody.MType != constants.Counter {
-				jsonBody.Value = &v
-			}
+			jsonBody.Value = &v
 		default:
-			return nil
+			log.Println("Unsupported metric type for metric:", metrics[i].Name)
+			continue
 		}
 
 		jsonData, err := json.Marshal(jsonBody)
@@ -55,7 +47,7 @@ func Metrics(metrics []types.Metric, addr string) *[]types.Metric {
 		sendedMetrics = append(sendedMetrics, metrics[i])
 		resp.Body.Close()
 	}
-	return &sendedMetrics
+	return sendedMetrics
 }
 
 func GzipMetrics(metrics []types.Metric, addr string) []types.Metric {
@@ -66,6 +58,7 @@ func GzipMetrics(metrics []types.Metric, addr string) []types.Metric {
 
 		var gzippedData bytes.Buffer
 		gzipWriter := gzip.NewWriter(&gzippedData)
+
 		bytesData, err := getBytesMetricDTO(metrics[i])
 		if err != nil {
 			log.Println("failed get bytes from metric: ", err)
@@ -81,14 +74,10 @@ func GzipMetrics(metrics []types.Metric, addr string) []types.Metric {
 
 		gzipWriter.Close()
 
-		request, err := getRequest("POST", reqURL, gzippedData)
+		_, err = sendMetric("POST", reqURL, gzippedData)
 		if err != nil {
-			log.Println("error get request:", err)
-		}
-
-		err = sendWithRetry(request)
-		if err != nil {
-			log.Println("error send metric", err)
+			log.Println("error send metric")
+			continue
 		}
 
 		sendedMetrics = append(sendedMetrics, metrics[i])
@@ -96,94 +85,44 @@ func GzipMetrics(metrics []types.Metric, addr string) []types.Metric {
 	return sendedMetrics
 }
 
-func BatchGzipMetrics(metrics []types.Metric, addr string) {
-	reqURL := fmt.Sprintf("http://%s/updates/", addr)
-
-	bytesData, err := json.Marshal(metrics)
-	if err != nil {
-		log.Println("failed to marshal metrics to JSON:", err)
-		return
-	}
-
-	var gzippedData bytes.Buffer
-	gzipWriter := gzip.NewWriter(&gzippedData)
-
-	_, err = gzipWriter.Write(bytesData)
-	if err != nil {
-		log.Println("failed to write JSON to gzip:", err)
-		gzipWriter.Close()
-		return
-	}
-
-	gzipWriter.Close()
-
-	request, err := getRequest("POST", reqURL, gzippedData)
-	if err != nil {
-		log.Println("error get request:", err)
-	}
-
-	err = sendWithRetry(request)
-	if err != nil {
-		log.Println("error send metric", err)
-	}
-}
-
 func getBytesMetricDTO(metric types.Metric) ([]byte, error) {
-	jsonBody := dto.PostMetricDTO{
+	jsonBody := dto.MetricDTO{
 		ID:    metric.Name,
 		MType: metric.Type,
 	}
 
 	switch v := metric.Value.(type) {
 	case int64:
-		if jsonBody.MType == constants.Counter {
-			jsonBody.Delta = &v
-		}
+		jsonBody.Delta = &v
 	case float64:
-		if jsonBody.MType != constants.Counter {
-			jsonBody.Value = &v
-		}
+		jsonBody.Value = &v
 	default:
-		return nil, fmt.Errorf("unsupported metric value type: %T", v)
+		log.Println("unsupported metric type for metric:", metric.Name)
 	}
 
 	jsonData, err := json.Marshal(jsonBody)
 	if err != nil {
 		return nil, err
 	}
+
 	return jsonData, nil
 }
 
-func getRequest(method string, reqURL string, data bytes.Buffer) (*http.Request, error) {
+func sendMetric(method string, reqURL string, data bytes.Buffer) (bool, error) {
 	req, err := http.NewRequest(method, reqURL, &data)
 	if err != nil {
-		return nil, err
+		return false, err
 	}
 	req.Header.Set("Content-Encoding", "gzip")
 	req.Header.Set("Content-Type", "application/json")
 
-	return req, nil
-}
-
-func sendWithRetry(request *http.Request) error {
-	delay := retryDelay
-	for i := 0; i < maxRetries; i++ {
-		client := &http.Client{}
-		resp, err := client.Do(request)
-		if resp != nil {
-			defer resp.Body.Close()
-		}
-
-		if err != nil {
-			log.Printf("Failed to send request: %v\n", err)
-		} else if resp.StatusCode == 201 || resp.StatusCode == 200 {
-			return nil
-		} else {
-			log.Printf("Failed to send request: status code %d\n", resp.StatusCode)
-		}
-
-		time.Sleep(delay)
-		delay += 2 * time.Second
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return false, err
 	}
-	return fmt.Errorf("failed to send request after %d attempts", maxRetries)
+
+	resp.Body.Close()
+
+	return true, nil
 }

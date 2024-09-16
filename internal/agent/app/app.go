@@ -18,7 +18,7 @@ func StartAgent() {
 	defer tickerPoll.Stop()
 	defer tickerReport.Stop()
 	var metrics []types.Metric
-	var counter int64
+	var counter int64 = 0
 
 	for {
 		select {
@@ -31,7 +31,7 @@ func StartAgent() {
 				Name:  "PollCount",
 				Value: counter,
 			})
-			send.GzipMetrics(metrics, config.RunAddr)
+			send.Metrics(metrics, config.RunAddr)
 		}
 	}
 }

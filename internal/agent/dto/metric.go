@@ -1,6 +1,6 @@
 package dto
 
-type PostMetricDTO struct {
+type MetricDTO struct {
 	ID    string   `json:"id"`
 	MType string   `json:"type"`
 	Delta *int64   `json:"delta,omitempty"`
