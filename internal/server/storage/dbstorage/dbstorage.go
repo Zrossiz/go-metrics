@@ -67,9 +67,9 @@ func Ping(db *gorm.DB) error {
 
 func (d *DBStorage) SetGauge(metric dto.PostMetricDto) error {
 	DBMetric := models.Metric{
-		Name:  metric.Name,
-		Type:  metric.Type,
-		Value: metric.Value,
+		Name:  metric.ID,
+		Type:  metric.MType,
+		Value: *metric.Value,
 	}
 
 	err := d.db.Create(&DBMetric).Error
@@ -82,9 +82,9 @@ func (d *DBStorage) SetGauge(metric dto.PostMetricDto) error {
 
 func (d *DBStorage) SetCounter(metric dto.PostMetricDto) error {
 	DBMetric := models.Metric{
-		Name:  metric.Name,
-		Type:  metric.Type,
-		Delta: int64(metric.Value),
+		Name:  metric.ID,
+		Type:  metric.MType,
+		Delta: int64(*metric.Delta),
 	}
 
 	err := d.db.Create(&DBMetric).Error
@@ -123,26 +123,26 @@ func (d *DBStorage) SetBatch(body []dto.PostMetricDto) error {
 	var metrics []models.Metric
 
 	for i := 0; i < len(body); i++ {
-		if body[i].Type == models.CounterType {
-			pollCount, _ := d.Get(body[i].Name)
+		if body[i].MType == models.CounterType {
+			pollCount, _ := d.Get(body[i].ID)
 
 			if pollCount != nil {
-				d.db.Model(&pollCount).Update("delta", pollCount.Delta+int64(body[i].Value))
+				d.db.Model(&pollCount).Update("delta", pollCount.Delta+int64(*body[i].Value))
 				continue
 			}
 
 			metrics = append(metrics, models.Metric{
-				Name:  body[i].Name,
-				Type:  body[i].Type,
-				Delta: int64(body[i].Value),
+				Name:  body[i].ID,
+				Type:  body[i].MType,
+				Delta: int64(*body[i].Value),
 			})
 			continue
 		}
 
 		metrics = append(metrics, models.Metric{
-			Name:  body[i].Name,
-			Type:  body[i].Type,
-			Value: body[i].Value,
+			Name:  body[i].ID,
+			Type:  body[i].MType,
+			Value: *body[i].Value,
 		})
 	}
 

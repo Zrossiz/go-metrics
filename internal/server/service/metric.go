@@ -32,7 +32,7 @@ func New(stor Storager, logger *zap.Logger, dbConn *gorm.DB) *MetricService {
 }
 
 func (m *MetricService) Create(body dto.PostMetricDto) error {
-	if body.Type == models.CounterType {
+	if body.MType == models.CounterType {
 		err := m.storage.SetCounter(body)
 		if err != nil {
 			return err

@@ -24,17 +24,17 @@ func (m *MemStorage) SetGauge(metric dto.PostMetricDto) error {
 	defer m.mu.Unlock()
 
 	for i := 0; i < len(m.data); i++ {
-		if metric.Name == m.data[i].Name {
-			m.data[i].Value = metric.Value
+		if metric.ID == m.data[i].Name {
+			m.data[i].Value = *metric.Value
 			return nil
 		}
 	}
 
 	m.data = append(m.data, models.Metric{
 		ID:    uint(rand.Int63()),
-		Name:  metric.Name,
+		Name:  metric.ID,
 		Type:  models.GaugeType,
-		Value: metric.Value,
+		Value: *metric.Value,
 	})
 
 	return nil
@@ -45,17 +45,17 @@ func (m *MemStorage) SetCounter(metric dto.PostMetricDto) error {
 	defer m.mu.Unlock()
 
 	for i := 0; i < len(m.data); i++ {
-		if metric.Type == m.data[i].Type {
-			m.data[i].Delta += int64(metric.Value)
+		if metric.MType == m.data[i].Type {
+			m.data[i].Delta += int64(*metric.Delta)
 			return nil
 		}
 	}
 
 	m.data = append(m.data, models.Metric{
 		ID:    uint(rand.Int63()),
-		Name:  metric.Name,
+		Name:  metric.ID,
 		Type:  models.CounterType,
-		Delta: int64(metric.Value),
+		Delta: *metric.Delta,
 	})
 
 	return nil
@@ -82,7 +82,7 @@ func (m *MemStorage) GetAll() (*[]models.Metric, error) {
 
 func (m *MemStorage) SetBatch(body []dto.PostMetricDto) error {
 	for i := 0; i < len(body); i++ {
-		if body[i].Type == models.CounterType {
+		if body[i].MType == models.CounterType {
 			_ = m.SetCounter(body[i])
 			continue
 		}

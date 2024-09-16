@@ -30,17 +30,17 @@ func (f *FileStorage) SetGauge(metric dto.PostMetricDto) error {
 	defer f.mu.Unlock()
 
 	for i := 0; i < len(f.data); i++ {
-		if metric.Name == f.data[i].Name {
-			f.data[i].Value = metric.Value
+		if metric.ID == f.data[i].Name {
+			f.data[i].Value = *metric.Value
 			return nil
 		}
 	}
 
 	f.data = append(f.data, models.Metric{
 		ID:    uint(rand.Int63()),
-		Name:  metric.Name,
+		Name:  metric.ID,
 		Type:  models.GaugeType,
-		Value: metric.Value,
+		Value: *metric.Value,
 	})
 
 	return nil
@@ -51,17 +51,17 @@ func (f *FileStorage) SetCounter(metric dto.PostMetricDto) error {
 	defer f.mu.Unlock()
 
 	for i := 0; i < len(f.data); i++ {
-		if metric.Name == f.data[i].Name {
-			f.data[i].Delta += int64(metric.Value)
+		if metric.ID == f.data[i].Name {
+			f.data[i].Delta += int64(*metric.Value)
 			return nil
 		}
 	}
 
 	f.data = append(f.data, models.Metric{
 		ID:    uint(rand.Int63()),
-		Name:  metric.Name,
+		Name:  metric.ID,
 		Type:  models.CounterType,
-		Delta: int64(metric.Value),
+		Delta: int64(*metric.Value),
 	})
 
 	return nil
@@ -120,16 +120,16 @@ func (f *FileStorage) Load(filePath string) error {
 
 	for _, curMetric := range collectedMetrics {
 		metricDTO := dto.PostMetricDto{
-			Name: curMetric.Name,
-			Type: curMetric.Type,
+			ID:    curMetric.Name,
+			MType: curMetric.Type,
 		}
 
 		switch curMetric.Type {
 		case models.CounterType:
-			metricDTO.Value = float64(curMetric.Delta)
+			metricDTO.Delta = &curMetric.Delta
 			f.SetCounter(metricDTO)
 		case models.GaugeType:
-			metricDTO.Value = curMetric.Value
+			metricDTO.Value = &curMetric.Value
 			f.SetGauge(metricDTO)
 		}
 	}
@@ -165,7 +165,7 @@ func (f *FileStorage) Save(filePath string) error {
 
 func (f *FileStorage) SetBatch(body []dto.PostMetricDto) error {
 	for i := 0; i < len(body); i++ {
-		if body[i].Type == models.CounterType {
+		if body[i].MType == models.CounterType {
 			_ = f.SetCounter(body[i])
 			continue
 		}

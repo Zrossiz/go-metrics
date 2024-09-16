@@ -37,29 +37,29 @@ func New(s *service.MetricService, logger *zap.Logger) MetricHandler {
 
 func (m *MetricHandler) CreateParamMetric(rw http.ResponseWriter, r *http.Request) {
 	dto := dto.PostMetricDto{
-		Name: chi.URLParam(r, "name"),
-		Type: chi.URLParam(r, "type"),
+		ID:    chi.URLParam(r, "name"),
+		MType: chi.URLParam(r, "type"),
 	}
 
 	valueMetric := chi.URLParam(r, "value")
 
-	switch dto.Type {
+	switch dto.MType {
 	case models.GaugeType:
 		float64MetricValue, err := strconv.ParseFloat(valueMetric, 64)
 		if err != nil {
 			http.Error(rw, "invalid value metric", http.StatusBadRequest)
 			return
 		}
-		dto.Value = float64MetricValue
+		dto.Value = &float64MetricValue
 	case models.CounterType:
 		int64MetricValue, err := strconv.ParseInt(valueMetric, 10, 64)
 		if err != nil {
 			http.Error(rw, "invalid value metric", http.StatusBadRequest)
 			return
 		}
-		dto.Value = float64(int64MetricValue)
+		dto.Delta = &int64MetricValue
 	default:
-		http.Error(rw, "invalid value metric", http.StatusBadRequest)
+		http.Error(rw, "invalid metric type", http.StatusBadRequest)
 		return
 	}
 
@@ -70,14 +70,19 @@ func (m *MetricHandler) CreateParamMetric(rw http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	metric, err := m.service.Get(dto.Name)
+	metric, err := m.service.Get(dto.ID) // предполагается, что метод Get принимает ID
 	if err != nil {
 		m.logger.Error("internal error", zap.Error(err))
 		http.Error(rw, "get created metric error", http.StatusInternalServerError)
 		return
 	}
 
-	responseString := fmt.Sprintf("Type: %s, Name: %s, Value: %v", metric.Type, metric.Name, dto.Value)
+	var responseString string
+	if dto.MType == models.GaugeType {
+		responseString = fmt.Sprintf("Type: %s, Name: %s, Value: %v", metric.Type, metric.Name, dto.Value)
+	} else if dto.MType == models.CounterType {
+		responseString = fmt.Sprintf("Type: %s, Name: %s, Delta: %v", metric.Type, metric.Name, dto.Delta)
+	}
 
 	io.WriteString(rw, responseString)
 }
@@ -122,7 +127,7 @@ func (m *MetricHandler) CreateJSONMetric(rw http.ResponseWriter, r *http.Request
 		return
 	}
 
-	metric, err := m.service.Get(body.Name)
+	metric, err := m.service.Get(body.ID)
 	if err != nil {
 		m.logger.Error("internal error", zap.Error(err))
 		http.Error(rw, "get created metric error", http.StatusInternalServerError)
