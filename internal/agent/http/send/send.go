@@ -122,9 +122,6 @@ func getBytesMetricDTO(metric types.Metric) ([]byte, error) {
 		Value: metric.Value,
 	}
 
-	fmt.Print(jsonBody)
-	fmt.Println()
-
 	jsonData, err := json.Marshal(jsonBody)
 	if err != nil {
 		return nil, err

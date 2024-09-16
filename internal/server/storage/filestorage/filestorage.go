@@ -3,7 +3,6 @@ package filestorage
 import (
 	"bufio"
 	"encoding/json"
-	"fmt"
 	"os"
 	"sync"
 
@@ -111,8 +110,6 @@ func (f *FileStorage) Load(filePath string) error {
 
 		collectedMetrics = append(collectedMetrics, metric)
 	}
-
-	fmt.Print(collectedMetrics)
 
 	if err := scanner.Err(); err != nil {
 		return err

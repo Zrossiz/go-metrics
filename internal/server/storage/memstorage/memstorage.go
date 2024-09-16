@@ -57,7 +57,6 @@ func (m *MemStorage) SetCounter(metric dto.PostMetricDto) error {
 		Type:  models.CounterType,
 		Delta: *metric.Delta,
 	})
-
 	return nil
 }
 

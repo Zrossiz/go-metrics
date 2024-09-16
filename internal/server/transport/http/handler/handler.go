@@ -173,7 +173,7 @@ func (m *MetricHandler) GetJSONMetric(rw http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	metric, err := m.service.Get(body.Name)
+	metric, err := m.service.Get(body.ID)
 	if err != nil {
 		m.logger.Error("internal error", zap.Error(err))
 		http.Error(rw, "get metric error", http.StatusInternalServerError)

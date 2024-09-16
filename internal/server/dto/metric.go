@@ -1,7 +1,7 @@
 package dto
 
 type GetMetricDto struct {
-	Name string `json:"name"`
+	ID   string `json:"id"`
 	Type string `json:"type"`
 }
 

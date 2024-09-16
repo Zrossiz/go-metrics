@@ -2,7 +2,6 @@ package app
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -20,7 +19,6 @@ import (
 )
 
 func StartServer() {
-	fmt.Println("parse config")
 	cfg, err := config.GetConfig()
 	if err != nil {
 		zap.S().Fatalf("get config error", zap.Error(err))
@@ -45,11 +43,8 @@ func StartServer() {
 	}
 
 	store := storage.New(dbConn, cfg, log.ZapLogger)
-	fmt.Println("storage ready")
 	serv := service.New(store, log.ZapLogger, dbConn)
-	fmt.Println("service ready")
 	r := router.New(serv, log.ZapLogger)
-	fmt.Println("router ready")
 
 	srv := &http.Server{
 		Addr:    cfg.ServerAddress,
