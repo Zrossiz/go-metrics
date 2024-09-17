@@ -26,14 +26,14 @@ func Metrics(metrics []types.Metric, addr string) []types.Metric {
 			MType: metrics[i].Type,
 		}
 
-		float64Value, okFloat := metrics[i].Value.(float64)
-		if okFloat {
-			jsonBody.Value = &float64Value
-		}
-
-		int64Value, okInt := metrics[i].Value.(int64)
-		if okInt {
-			jsonBody.Delta = &int64Value
+		switch v := metrics[i].Value.(type) {
+		case int64:
+			jsonBody.Delta = &v
+		case float64:
+			jsonBody.Value = &v
+		default:
+			log.Println("Unsupported metric type for metric:", metrics[i].Name)
+			continue
 		}
 
 		jsonData, err := json.Marshal(jsonBody)
