@@ -114,6 +114,12 @@ func (d *DBStorage) GetAll() (*[]models.Metric, error) {
 }
 
 func (d *DBStorage) SetBatch(body []dto.PostMetricDto) error {
+	tx, err := d.db.BeginTx(context.Background(), pgx.TxOptions{})
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(context.Background())
+
 	counter, err := d.Get("PollCount")
 	if err != nil {
 		return err
@@ -122,14 +128,14 @@ func (d *DBStorage) SetBatch(body []dto.PostMetricDto) error {
 	if counter != nil {
 		var valueFromBatch int64
 		found := false
-		fmt.Println(true)
 
+		// Ищем Delta для PollCount в body
 		for i, metric := range body {
 			if metric.MType == models.CounterType {
 				if metric.Delta != nil {
 					valueFromBatch = *metric.Delta
 				}
-				body = append(body[:i], body[i+1:]...)
+				body = append(body[:i], body[i+1:]...) // Удаляем элемент из body
 				found = true
 				break
 			}
@@ -139,7 +145,7 @@ func (d *DBStorage) SetBatch(body []dto.PostMetricDto) error {
 			if counter.Delta != nil {
 				newValue := *counter.Delta + valueFromBatch
 
-				_, err = d.db.Exec(
+				_, err = tx.Exec(
 					context.Background(),
 					"UPDATE metrics SET delta = $1 WHERE name = 'PollCount'",
 					newValue,
@@ -151,7 +157,8 @@ func (d *DBStorage) SetBatch(body []dto.PostMetricDto) error {
 		}
 	}
 
-	result, err := d.db.CopyFrom(
+	// Копируем остальные записи
+	result, err := tx.CopyFrom(
 		context.Background(),
 		pgx.Identifier{"metrics"},
 		[]string{"name", "metric_type", "value", "delta", "created_at"},
@@ -170,7 +177,13 @@ func (d *DBStorage) SetBatch(body []dto.PostMetricDto) error {
 		return fmt.Errorf("failed to copy data: %w", err)
 	}
 
+	// Логируем количество вставленных строк
 	d.logger.Info(fmt.Sprintf("%d rows inserted", result))
+
+	// Завершаем транзакцию
+	if err := tx.Commit(context.Background()); err != nil {
+		return err
+	}
 
 	return nil
 }
