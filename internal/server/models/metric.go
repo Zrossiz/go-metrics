@@ -8,7 +8,6 @@ type Metric struct {
 	Type      string    `gorm:"column:metric_type"`
 	Value     *float64  `gorm:"column:value"`
 	Delta     *int64    `gorm:"column:delta"`
-	UpdatedAt time.Time `gorm:"column:updated_at"`
 	CreatedAt time.Time `gorm:"column:created_at"`
 }
 

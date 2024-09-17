@@ -66,8 +66,8 @@ func (d *DBStorage) SetGauge(metric dto.PostMetricDto) error {
 }
 
 func (d *DBStorage) SetCounter(metric dto.PostMetricDto) error {
-	query := `INSERT INTO metrics (name, metric_type, delta) VALUES ($1, $2, $3)`
-	_, err := d.db.Exec(context.Background(), query, metric.ID, metric.MType, metric.Delta)
+	query := `INSERT INTO metrics (name, metric_type, delta, value) VALUES ($1, $2, $3, $4)`
+	_, err := d.db.Exec(context.Background(), query, metric.ID, metric.MType, metric.Delta, metric.Value)
 	if err != nil {
 		return err
 	}
@@ -80,7 +80,7 @@ func (d *DBStorage) Get(name string) (*models.Metric, error) {
 	row := d.db.QueryRow(context.Background(), query, name)
 
 	var metric models.Metric
-	err := row.Scan(&metric.ID, &metric.Name, &metric.Type, &metric.Value, &metric.Delta, &metric.UpdatedAt, &metric.CreatedAt)
+	err := row.Scan(&metric.ID, &metric.Name, &metric.Type, &metric.Value, &metric.Delta, &metric.CreatedAt)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return nil, nil
@@ -92,7 +92,7 @@ func (d *DBStorage) Get(name string) (*models.Metric, error) {
 }
 
 func (d *DBStorage) GetAll() (*[]models.Metric, error) {
-	query := `SELECT * FROM metrics ORDER BY created_at DESC LIMIT 27`
+	query := `SELECT id, name, metric_type, value, delta, created_at FROM metrics ORDER BY created_at DESC LIMIT 27`
 	rows, err := d.db.Query(context.Background(), query)
 	if err != nil {
 		return nil, err
@@ -102,17 +102,11 @@ func (d *DBStorage) GetAll() (*[]models.Metric, error) {
 	var metrics []models.Metric
 	for rows.Next() {
 		var metric models.Metric
-		err := rows.Scan(&metric.ID, &metric.Name, &metric.Type, &metric.Value, &metric.Delta, &metric.UpdatedAt, &metric.CreatedAt)
+		err := rows.Scan(&metric.ID, &metric.Name, &metric.Type, &metric.Value, &metric.Delta, &metric.CreatedAt)
 		if err != nil {
 			return nil, err
 		}
 		metrics = append(metrics, metric)
-	}
-
-	// Add the "PollCount" metric if it exists
-	pollCount, _ := d.Get("PollCount")
-	if pollCount != nil {
-		metrics = append(metrics, *pollCount)
 	}
 
 	return &metrics, nil
@@ -177,10 +171,10 @@ func MigrateSQL(db *pgxpool.Pool) error {
 	_, err := db.Exec(context.Background(), `CREATE TABLE IF NOT EXISTS metrics (
 		id SERIAL PRIMARY KEY,
 		metric_type TEXT NOT NULL,
-		name TEXT NOT NULL UNIQUE,
+		name TEXT NOT NULL,
 		value DOUBLE PRECISION,
 		delta BIGINT,
-		timestamp TIMESTAMP NOT NULL
+		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 	);
 	CREATE INDEX IF NOT EXISTS idx_metrics_name ON metrics (name);`)
 	if err != nil {

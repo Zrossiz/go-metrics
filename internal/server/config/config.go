@@ -14,7 +14,7 @@ type Config struct {
 	StoreInterval   int
 	FileStoragePath string
 	Restore         bool
-	DBDSN           string
+	DATABASE_DSN    string
 	LogLevel        string
 }
 
@@ -58,9 +58,9 @@ func GetConfig() (*Config, error) {
 	}
 
 	if envDBConn := os.Getenv("DB_DSN"); envDBConn != "" {
-		cfg.DBDSN = envDBConn
+		cfg.DATABASE_DSN = envDBConn
 	} else {
-		flag.StringVar(&cfg.DBDSN, "d", "", "dsn for database")
+		flag.StringVar(&cfg.DATABASE_DSN, "d", "", "dsn for database")
 	}
 
 	if envLogLevel := os.Getenv("LOG_LEVEL"); envLogLevel != "" {

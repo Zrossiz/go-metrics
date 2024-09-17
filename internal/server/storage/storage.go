@@ -27,7 +27,7 @@ type Storage interface {
 }
 
 func New(dbConn *pgxpool.Pool, cfg *config.Config, log *zap.Logger) Storage {
-	if cfg.DBDSN != "" {
+	if cfg.DATABASE_DSN != "" {
 		fmt.Println("selected: db storage")
 		return dbstorage.New(dbConn, log)
 	}

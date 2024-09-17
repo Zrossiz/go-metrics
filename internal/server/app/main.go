@@ -30,8 +30,8 @@ func StartServer() {
 	}
 
 	var dbConn *pgxpool.Pool
-	if len(cfg.DBDSN) > 0 {
-		dbConn, err = dbstorage.GetConnect(cfg.DBDSN, log.ZapLogger)
+	if len(cfg.DATABASE_DSN) > 0 {
+		dbConn, err = dbstorage.GetConnect(cfg.DATABASE_DSN, log.ZapLogger)
 		if err != nil {
 			log.ZapLogger.Fatal("error connect to db", zap.Error(err))
 		}

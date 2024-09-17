@@ -266,7 +266,7 @@ func (m *MetricHandler) GetHTML(rw http.ResponseWriter, r *http.Request) {
 	}
 
 	rw.Header().Set("Content-Type", "text/html; charset=utf-8")
-	if err := t.Execute(rw, metrics); err != nil {
+	if err := t.Execute(rw, *metrics); err != nil {
 		http.Error(rw, "Internal Server Error", http.StatusInternalServerError)
 	}
 }
