@@ -119,6 +119,13 @@ func (d *DBStorage) SetBatch(body []dto.PostMetricDto) error {
 		return err
 	}
 
+	for _, metric := range body {
+		if metric.MType == models.CounterType {
+			fmt.Print(*metric.Delta)
+			fmt.Println("----")
+		}
+	}
+
 	if counter != nil {
 		var valueFromBatch int64
 		found := false
