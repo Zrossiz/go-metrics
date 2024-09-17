@@ -114,22 +114,15 @@ func (d *DBStorage) GetAll() (*[]models.Metric, error) {
 }
 
 func (d *DBStorage) SetBatch(body []dto.PostMetricDto) error {
-	fmt.Println("++++++")
 	counter, err := d.Get("PollCount")
 	if err != nil {
 		return err
 	}
 
-	for _, metric := range body {
-		if metric.MType == models.CounterType {
-			fmt.Println(*metric.Delta)
-			fmt.Println("----")
-		}
-	}
-
 	if counter != nil {
 		var valueFromBatch int64
 		found := false
+		fmt.Println(true)
 
 		for i, metric := range body {
 			if metric.MType == models.CounterType {
@@ -178,13 +171,6 @@ func (d *DBStorage) SetBatch(body []dto.PostMetricDto) error {
 	}
 
 	d.logger.Info(fmt.Sprintf("%d rows inserted", result))
-
-	counter1, err := d.Get("PollCount")
-	if err != nil {
-		return err
-	}
-	fmt.Println(*counter1.Delta)
-	fmt.Println("++++++")
 
 	return nil
 }
