@@ -114,6 +114,7 @@ func (d *DBStorage) GetAll() (*[]models.Metric, error) {
 }
 
 func (d *DBStorage) SetBatch(body []dto.PostMetricDto) error {
+	fmt.Println("++++++")
 	counter, err := d.Get("PollCount")
 	if err != nil {
 		return err
@@ -121,7 +122,7 @@ func (d *DBStorage) SetBatch(body []dto.PostMetricDto) error {
 
 	for _, metric := range body {
 		if metric.MType == models.CounterType {
-			fmt.Print(*metric.Delta)
+			fmt.Println(*metric.Delta)
 			fmt.Println("----")
 		}
 	}
@@ -176,8 +177,14 @@ func (d *DBStorage) SetBatch(body []dto.PostMetricDto) error {
 		return fmt.Errorf("failed to copy data: %w", err)
 	}
 
-	// Логируем количество вставленных строк
 	d.logger.Info(fmt.Sprintf("%d rows inserted", result))
+
+	counter1, err := d.Get("PollCount")
+	if err != nil {
+		return err
+	}
+	fmt.Println(*counter1.Delta)
+	fmt.Println("++++++")
 
 	return nil
 }
