@@ -114,8 +114,36 @@ func (d *DBStorage) GetAll() (*[]models.Metric, error) {
 }
 
 func (d *DBStorage) SetBatch(body []dto.PostMetricDto) error {
+	counter, err := d.Get("PollCount")
+	if err != nil {
+		return err
+	}
 
-	_, err := d.db.CopyFrom(
+	if counter != nil {
+		var valueFromBatch int64
+		fmt.Print(true)
+
+		for i, metric := range body {
+			if metric.MType == models.CounterType {
+				valueFromBatch = *metric.Delta
+				body = append(body[:i], body[i+1:]...)
+				break
+			}
+		}
+
+		newValue := *counter.Delta + valueFromBatch
+
+		_, err = d.db.Exec(
+			context.Background(),
+			"UPDATE metrics SET delta = $1 WHERE name = 'PollCount'",
+			newValue,
+		)
+		if err != nil {
+			return err
+		}
+	}
+
+	result, err := d.db.CopyFrom(
 		context.Background(),
 		pgx.Identifier{"metrics"},
 		[]string{"name", "metric_type", "value", "delta", "created_at"},
@@ -133,6 +161,8 @@ func (d *DBStorage) SetBatch(body []dto.PostMetricDto) error {
 		log.Println("Db failed to insert", err)
 		return fmt.Errorf("failed to copy data: %w", err)
 	}
+
+	d.logger.Info(string(result))
 
 	return nil
 }
