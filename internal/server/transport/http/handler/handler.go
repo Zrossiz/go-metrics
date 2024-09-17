@@ -104,7 +104,7 @@ func (m *MetricHandler) CreateBatchJSONMetrics(rw http.ResponseWriter, r *http.R
 	}
 
 	rw.Header().Set("Content-Type", "application/json")
-	rw.WriteHeader(http.StatusCreated)
+	rw.WriteHeader(http.StatusOK)
 
 	response := map[string]string{"success": "true"}
 	json.NewEncoder(rw).Encode(response)
