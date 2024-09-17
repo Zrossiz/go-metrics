@@ -57,7 +57,7 @@ func GetConfig() (*Config, error) {
 		flag.StringVar(&cfg.FileStoragePath, "f", "", "path to storage file")
 	}
 
-	if envDBConn := os.Getenv("DB_DSN"); envDBConn != "" {
+	if envDBConn := os.Getenv("DATABASE_DSN"); envDBConn != "" {
 		cfg.DBDSN = envDBConn
 	} else {
 		flag.StringVar(&cfg.DBDSN, "d", "", "dsn for database")
