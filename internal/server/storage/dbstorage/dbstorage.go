@@ -121,25 +121,32 @@ func (d *DBStorage) SetBatch(body []dto.PostMetricDto) error {
 
 	if counter != nil {
 		var valueFromBatch int64
-		fmt.Print(true)
+		found := false
 
 		for i, metric := range body {
 			if metric.MType == models.CounterType {
-				valueFromBatch = *metric.Delta
+				if metric.Delta != nil {
+					valueFromBatch = *metric.Delta
+				}
 				body = append(body[:i], body[i+1:]...)
+				found = true
 				break
 			}
 		}
 
-		newValue := *counter.Delta + valueFromBatch
+		if found {
+			if counter.Delta != nil {
+				newValue := *counter.Delta + valueFromBatch
 
-		_, err = d.db.Exec(
-			context.Background(),
-			"UPDATE metrics SET delta = $1 WHERE name = 'PollCount'",
-			newValue,
-		)
-		if err != nil {
-			return err
+				_, err = d.db.Exec(
+					context.Background(),
+					"UPDATE metrics SET delta = $1 WHERE name = 'PollCount'",
+					newValue,
+				)
+				if err != nil {
+					return err
+				}
+			}
 		}
 	}
 
@@ -162,7 +169,8 @@ func (d *DBStorage) SetBatch(body []dto.PostMetricDto) error {
 		return fmt.Errorf("failed to copy data: %w", err)
 	}
 
-	d.logger.Info(string(result))
+	// Логируем количество вставленных строк
+	d.logger.Info(fmt.Sprintf("%d rows inserted", result))
 
 	return nil
 }
