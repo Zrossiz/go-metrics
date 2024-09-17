@@ -31,7 +31,7 @@ func StartAgent() {
 				Name:  "PollCount",
 				Value: counter,
 			})
-			send.Metrics(metrics, config.RunAddr)
+			send.BatchGzipMetrics(metrics, config.RunAddr)
 		}
 	}
 }
