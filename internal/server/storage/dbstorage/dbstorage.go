@@ -3,6 +3,7 @@ package dbstorage
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/Zrossiz/go-metrics/internal/server/dto"
@@ -113,42 +114,27 @@ func (d *DBStorage) GetAll() (*[]models.Metric, error) {
 }
 
 func (d *DBStorage) SetBatch(body []dto.PostMetricDto) error {
-	tx, err := d.db.Begin(context.Background())
+
+	_, err := d.db.CopyFrom(
+		context.Background(),
+		pgx.Identifier{"metrics"},
+		[]string{"name", "metric_type", "value", "delta", "created_at"},
+		pgx.CopyFromSlice(len(body), func(i int) ([]interface{}, error) {
+			return []interface{}{
+				body[i].ID,
+				body[i].MType,
+				body[i].Value,
+				body[i].Delta,
+				time.Now(),
+			}, nil
+		}),
+	)
 	if err != nil {
-		return err
-	}
-	defer tx.Rollback(context.Background())
-
-	for _, metric := range body {
-		if metric.MType == models.CounterType {
-			pollCount, _ := d.Get(metric.ID)
-
-			if pollCount != nil {
-				var newValue int64
-				if pollCount.Delta != nil && metric.Delta != nil {
-					newValue = *pollCount.Delta + *metric.Delta
-				}
-				_, err := tx.Exec(context.Background(), `UPDATE metrics SET delta = $1 WHERE name = $2`, newValue, metric.ID)
-				if err != nil {
-					return err
-				}
-				continue
-			}
-
-			_, err := tx.Exec(context.Background(), `INSERT INTO metrics (name, metric_type, delta) VALUES ($1, $2, $3)`, metric.ID, metric.MType, metric.Delta)
-			if err != nil {
-				return err
-			}
-			continue
-		}
-
-		_, err := tx.Exec(context.Background(), `INSERT INTO metrics (name, metric_type, value) VALUES ($1, $2, $3)`, metric.ID, metric.MType, metric.Value)
-		if err != nil {
-			return err
-		}
+		log.Println("Db failed to insert", err)
+		return fmt.Errorf("failed to copy data: %w", err)
 	}
 
-	return tx.Commit(context.Background())
+	return nil
 }
 
 func (d *DBStorage) Load(filePath string) error {
