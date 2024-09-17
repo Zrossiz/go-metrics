@@ -102,6 +102,10 @@ func (m *MemStorage) Save(string) error {
 	return nil
 }
 
-func (m *MemStorage) Close(string) error {
+func (m *MemStorage) Close() error {
+	return nil
+}
+
+func (m *MemStorage) Ping() error {
 	return nil
 }

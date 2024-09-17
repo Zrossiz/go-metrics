@@ -5,7 +5,6 @@ import (
 
 	"github.com/Zrossiz/go-metrics/internal/server/dto"
 	"github.com/Zrossiz/go-metrics/internal/server/models"
-	"github.com/Zrossiz/go-metrics/internal/server/storage/dbstorage"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"go.uber.org/zap"
 )
@@ -22,6 +21,7 @@ type Storager interface {
 	SetBatch(body []dto.PostMetricDto) error
 	Get(name string) (*models.Metric, error)
 	GetAll() (*[]models.Metric, error)
+	Ping() error
 }
 
 func New(stor Storager, logger *zap.Logger, dbConn *pgxpool.Pool) *MetricService {
@@ -103,5 +103,5 @@ func (m *MetricService) GetAll() (*[]models.Metric, error) {
 }
 
 func (m *MetricService) PingDB() error {
-	return dbstorage.Ping(m.dbConn)
+	return m.storage.Ping()
 }

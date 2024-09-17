@@ -22,7 +22,8 @@ type Storage interface {
 	GetAll() (*[]models.Metric, error)
 	Load(filePath string) error
 	Save(filePath string) error
-	Close(filePath string) error
+	Close() error
+	Ping() error
 }
 
 func New(dbConn *pgxpool.Pool, cfg *config.Config, log *zap.Logger) Storage {

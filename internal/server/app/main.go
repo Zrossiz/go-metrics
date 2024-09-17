@@ -76,15 +76,14 @@ func StartServer() {
 	}
 
 	log.ZapLogger.Info("Server exited")
-
 }
 
 func shutdownServer(store storage.Storage, log *zap.Logger, cfg config.Config) error {
 	log.Info("Saving metrics to file during shutdown", zap.String("file", cfg.FileStoragePath))
-	err := store.Close(cfg.FileStoragePath)
+	err := store.Close()
 
 	if err != nil {
-		log.Error("Failed to save metrics to file", zap.Error(err))
+		log.Error("Failed to close connection", zap.Error(err))
 		return err
 	}
 

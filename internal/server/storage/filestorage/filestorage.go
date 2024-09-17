@@ -174,11 +174,15 @@ func (f *FileStorage) SetBatch(body []dto.PostMetricDto) error {
 	return nil
 }
 
-func (f *FileStorage) Close(filePath string) error {
-	err := f.Save(filePath)
+func (f *FileStorage) Close() error {
+	err := f.Save(f.path)
 	if err != nil {
 		return err
 	}
 
+	return nil
+}
+
+func (f *FileStorage) Ping() error {
 	return nil
 }

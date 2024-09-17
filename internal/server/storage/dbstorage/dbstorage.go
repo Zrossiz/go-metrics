@@ -44,27 +44,15 @@ func GetConnect(connStr string, logger *zap.Logger) (*pgxpool.Pool, error) {
 		return nil, fmt.Errorf("failed to connect to database: %v", err)
 	}
 
-	err = Ping(db)
-	if err != nil {
-		return nil, err
-	}
-
 	return db, nil
 }
 
-func Ping(db *pgxpool.Pool) error {
-	conn, err := db.Acquire(context.Background())
-	if err != nil {
-		return err
+func (d *DBStorage) Ping() error {
+	fmt.Println("ping")
+	if d.db == nil {
+		return fmt.Errorf("database is not connected")
 	}
-	defer conn.Release()
-
-	err = conn.Ping(context.Background())
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return d.db.Ping(context.Background())
 }
 
 func (d *DBStorage) SetGauge(metric dto.PostMetricDto) error {
@@ -142,7 +130,6 @@ func (d *DBStorage) SetBatch(body []dto.PostMetricDto) error {
 			pollCount, _ := d.Get(metric.ID)
 
 			if pollCount != nil {
-				// Handle update for existing counter metric
 				var newValue int64
 				if pollCount.Delta != nil && metric.Delta != nil {
 					newValue = *pollCount.Delta + *metric.Delta
@@ -154,7 +141,6 @@ func (d *DBStorage) SetBatch(body []dto.PostMetricDto) error {
 				continue
 			}
 
-			// Insert new counter metric
 			_, err := tx.Exec(context.Background(), `INSERT INTO metrics (name, metric_type, delta) VALUES ($1, $2, $3)`, metric.ID, metric.MType, metric.Delta)
 			if err != nil {
 				return err
@@ -162,7 +148,6 @@ func (d *DBStorage) SetBatch(body []dto.PostMetricDto) error {
 			continue
 		}
 
-		// Insert new gauge metric
 		_, err := tx.Exec(context.Background(), `INSERT INTO metrics (name, metric_type, value) VALUES ($1, $2, $3)`, metric.ID, metric.MType, metric.Value)
 		if err != nil {
 			return err
@@ -180,11 +165,26 @@ func (d *DBStorage) Save(filePath string) error {
 	return nil
 }
 
-func (d *DBStorage) Close(string) error {
+func (d *DBStorage) Close() error {
+	if d.db == nil {
+		return nil
+	}
 	d.db.Close()
 	return nil
 }
 
 func MigrateSQL(db *pgxpool.Pool) error {
+	_, err := db.Exec(context.Background(), `CREATE TABLE IF NOT EXISTS metrics (
+		id SERIAL PRIMARY KEY,
+		metric_type TEXT NOT NULL,
+		name TEXT NOT NULL UNIQUE,
+		value DOUBLE PRECISION,
+		delta BIGINT,
+		timestamp TIMESTAMP NOT NULL
+	);
+	CREATE INDEX IF NOT EXISTS idx_metrics_name ON metrics (name);`)
+	if err != nil {
+		return fmt.Errorf("failed to create table: %w", err)
+	}
 	return nil
 }

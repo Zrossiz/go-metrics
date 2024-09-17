@@ -274,6 +274,7 @@ func (m *MetricHandler) GetHTML(rw http.ResponseWriter, r *http.Request) {
 func (m *MetricHandler) PingDB(rw http.ResponseWriter, r *http.Request) {
 	err := m.service.PingDB()
 	if err != nil {
+		m.logger.Error("db not available", zap.Error(err))
 		http.Error(rw, "connection not available", http.StatusInternalServerError)
 		return
 	}
