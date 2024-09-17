@@ -41,14 +41,13 @@ func GetConfig() (*Config, error) {
 		flag.IntVar(&cfg.StoreInterval, "i", 5, "interval for save metrics")
 	}
 
+	flag.BoolVar(&cfg.Restore, "r", false, "get metrics from file")
 	if envRestore := os.Getenv("RESTORE"); envRestore != "" {
 		value, err := strconv.ParseBool(envRestore)
 		if err != nil {
 			return nil, err
 		}
 		cfg.Restore = value
-	} else {
-		flag.BoolVar(&cfg.Restore, "r", false, "get metrics from file")
 	}
 
 	if envFileStoragePath := os.Getenv("FILE_STORAGE_PATH"); envFileStoragePath != "" {
