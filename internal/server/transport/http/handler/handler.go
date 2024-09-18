@@ -194,8 +194,8 @@ func (m *MetricHandler) GetJSONMetric(rw http.ResponseWriter, r *http.Request) {
 	}
 
 	responseMetric := dto.PostMetricDto{
-		ID:    metric.Type,
-		MType: metric.Name,
+		ID:    metric.Name,
+		MType: metric.Type,
 	}
 
 	if metric.Delta != nil {
