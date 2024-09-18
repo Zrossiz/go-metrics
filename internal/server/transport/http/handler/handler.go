@@ -194,15 +194,15 @@ func (m *MetricHandler) GetJSONMetric(rw http.ResponseWriter, r *http.Request) {
 	}
 
 	var responseMetric dto.PostMetricDto
-	if metric.Type != models.CounterType || metric.Type != models.GaugeType {
-		responseMetric = dto.PostMetricDto{
-			ID:    metric.Type,
-			MType: metric.Name,
-		}
-	} else {
+	if metric.Type == models.CounterType || metric.Type == models.GaugeType {
 		responseMetric = dto.PostMetricDto{
 			ID:    metric.Name,
 			MType: metric.Type,
+		}
+	} else {
+		responseMetric = dto.PostMetricDto{
+			ID:    metric.Type,
+			MType: metric.Name,
 		}
 	}
 
