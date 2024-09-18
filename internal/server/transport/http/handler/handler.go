@@ -112,14 +112,15 @@ func (m *MetricHandler) CreateBatchJSONMetrics(rw http.ResponseWriter, r *http.R
 
 func (m *MetricHandler) CreateJSONMetric(rw http.ResponseWriter, r *http.Request) {
 	var body dto.PostMetricDto
-
 	err := json.NewDecoder(r.Body).Decode(&body)
 	if err != nil {
 		http.Error(rw, "invalid request body", http.StatusBadRequest)
 		return
 	}
 	defer r.Body.Close()
-
+	if body.MType == models.CounterType {
+		fmt.Println("delta: ", *body.Delta)
+	}
 	err = m.service.Create(body)
 	if err != nil {
 		m.logger.Error("internal error", zap.Error(err))
@@ -143,6 +144,10 @@ func (m *MetricHandler) CreateJSONMetric(rw http.ResponseWriter, r *http.Request
 		ID:    metric.Name,
 		MType: metric.Type,
 	}
+	if metric.Delta != nil {
+		fmt.Println("value: ", *metric.Delta)
+	}
+	fmt.Println("----")
 
 	response, err := json.Marshal(responseMetric)
 	if err != nil {
@@ -196,8 +201,8 @@ func (m *MetricHandler) GetJSONMetric(rw http.ResponseWriter, r *http.Request) {
 	}
 
 	responseMetric := dto.PostMetricDto{
-		ID:    metric.Name,
-		MType: metric.Type,
+		ID:    metric.Type,
+		MType: metric.Name,
 	}
 
 	if metric.Delta != nil {

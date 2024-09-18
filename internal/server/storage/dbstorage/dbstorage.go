@@ -67,10 +67,24 @@ func (d *DBStorage) SetGauge(metric dto.PostMetricDto) error {
 }
 
 func (d *DBStorage) SetCounter(metric dto.PostMetricDto) error {
-	query := `INSERT INTO metrics (name, metric_type, delta, value) VALUES ($1, $2, $3, $4)`
-	_, err := d.db.Exec(context.Background(), query, metric.ID, metric.MType, metric.Delta, metric.Value)
+	counter, err := d.Get(metric.ID)
 	if err != nil {
 		return err
+	}
+
+	if counter == nil {
+		query := `INSERT INTO metrics (name, metric_type, delta, value) VALUES ($1, $2, $3, $4)`
+		_, err := d.db.Exec(context.Background(), query, metric.ID, metric.MType, metric.Delta, metric.Value)
+		if err != nil {
+			return err
+		}
+	} else {
+		newValue := *metric.Delta + *counter.Delta
+		query := `UPDATE metrics SET delta = $1, value = $2 WHERE name = $3`
+		_, err := d.db.Exec(context.Background(), query, newValue, metric.Value, metric.ID)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
