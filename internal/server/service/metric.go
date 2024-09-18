@@ -59,10 +59,10 @@ func (m *MetricService) Create(body dto.PostMetricDto) error {
 
 func (m *MetricService) SetBatch(body []dto.PostMetricDto) error {
 	var counterValue int64
-	for _, metric := range body {
+	for i, metric := range body {
 		if metric.MType == models.CounterType {
 			counterValue += *metric.Delta
-			*metric.Delta = 0
+			body = append(body[:i], body[i+1:]...)
 		}
 	}
 
