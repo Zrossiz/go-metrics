@@ -58,21 +58,26 @@ func (m *MetricService) Create(body dto.PostMetricDto) error {
 }
 
 func (m *MetricService) SetBatch(body []dto.PostMetricDto) error {
-	var counterValue int64
-	for i, metric := range body {
+	counterMap := make(map[string]int64)
+	var newBody []dto.PostMetricDto
+
+	for _, metric := range body {
 		if metric.MType == models.CounterType {
-			counterValue += *metric.Delta
-			body = append(body[:i], body[i+1:]...)
+			counterMap[metric.ID] += *metric.Delta
+		} else {
+			newBody = append(newBody, metric)
 		}
 	}
 
-	body = append(body, dto.PostMetricDto{
-		ID:    "PollCount",
-		MType: models.CounterType,
-		Delta: &counterValue,
-	})
+	for id, value := range counterMap {
+		newBody = append(newBody, dto.PostMetricDto{
+			ID:    id,
+			MType: models.CounterType,
+			Delta: &value,
+		})
+	}
 
-	err := m.storage.SetBatch(body)
+	err := m.storage.SetBatch(newBody)
 	if err != nil {
 		return err
 	}
