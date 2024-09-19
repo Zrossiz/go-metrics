@@ -3,6 +3,7 @@ package filestorage
 import (
 	"bufio"
 	"encoding/json"
+	"fmt"
 	"os"
 	"sync"
 
@@ -125,10 +126,16 @@ func (f *FileStorage) Load(filePath string) error {
 		switch curMetric.Type {
 		case models.CounterType:
 			metricDTO.Delta = curMetric.Delta
-			f.SetCounter(metricDTO)
+			err := f.SetCounter(metricDTO)
+			if err != nil {
+				return fmt.Errorf("error set counter")
+			}
 		case models.GaugeType:
 			metricDTO.Value = curMetric.Value
-			f.SetGauge(metricDTO)
+			err := f.SetGauge(metricDTO)
+			if err != nil {
+				return fmt.Errorf("error set gauge")
+			}
 		}
 	}
 

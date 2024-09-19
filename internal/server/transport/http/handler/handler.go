@@ -107,7 +107,10 @@ func (m *MetricHandler) CreateBatchJSONMetrics(rw http.ResponseWriter, r *http.R
 	rw.WriteHeader(http.StatusOK)
 
 	response := map[string]string{"success": "true"}
-	json.NewEncoder(rw).Encode(response)
+	err = json.NewEncoder(rw).Encode(response)
+	if err != nil {
+		http.Error(rw, "internal error", http.StatusInternalServerError)
+	}
 }
 
 func (m *MetricHandler) CreateJSONMetric(rw http.ResponseWriter, r *http.Request) {
@@ -277,7 +280,7 @@ func (m *MetricHandler) GetHTML(rw http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (m *MetricHandler) PingDB(rw http.ResponseWriter, r *http.Request) {
+func (m *MetricHandler) PingDB(rw http.ResponseWriter, _ *http.Request) {
 	err := m.service.PingDB()
 	if err != nil {
 		m.logger.Error("db not available", zap.Error(err))

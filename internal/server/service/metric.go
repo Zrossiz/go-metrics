@@ -11,8 +11,6 @@ import (
 
 type MetricService struct {
 	storage Storager
-	logger  *zap.Logger
-	dbConn  *pgxpool.Pool
 }
 
 type Storager interface {
@@ -27,7 +25,6 @@ type Storager interface {
 func New(stor Storager, logger *zap.Logger, dbConn *pgxpool.Pool) *MetricService {
 	return &MetricService{
 		storage: stor,
-		logger:  logger,
 	}
 }
 
@@ -59,7 +56,7 @@ func (m *MetricService) Create(body dto.PostMetricDto) error {
 
 func (m *MetricService) SetBatch(body []dto.PostMetricDto) error {
 	counterMap := make(map[string]int64)
-	var newBody []dto.PostMetricDto
+	newBody := make([]dto.PostMetricDto, 0, len(body))
 
 	for _, metric := range body {
 		if metric.MType == models.CounterType {
