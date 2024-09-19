@@ -188,9 +188,7 @@ func sendWithRetry(request *http.Request) error {
 
 		if err != nil {
 			log.Printf("Failed to send request: %v\n", err)
-		}
-
-		if resp.StatusCode == 200 {
+		} else if resp.StatusCode == 200 {
 			return nil
 		} else {
 			log.Printf("Failed to send request: status code %d\n", resp.StatusCode)
