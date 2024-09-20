@@ -3,12 +3,15 @@ package send
 import (
 	"bytes"
 	"compress/gzip"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"time"
 
+	"github.com/Zrossiz/go-metrics/internal/agent/config"
 	"github.com/Zrossiz/go-metrics/internal/agent/constants/types"
 	"github.com/Zrossiz/go-metrics/internal/agent/dto"
 )
@@ -77,7 +80,9 @@ func GzipMetrics(metrics []types.Metric, addr string) []types.Metric {
 
 		gzipWriter.Close()
 
-		request, err := getRequest("POST", reqURL, gzippedData)
+		hash := computeHash(gzippedData, config.ApiKey)
+
+		request, err := getRequest("POST", reqURL, gzippedData, hash)
 		if err != nil {
 			log.Println("error get request:", err)
 		}
@@ -134,7 +139,9 @@ func BatchGzipMetrics(metrics []types.Metric, addr string) {
 
 	gzipWriter.Close()
 
-	request, err := getRequest("POST", reqURL, gzippedData)
+	hash := computeHash(gzippedData, config.ApiKey)
+
+	request, err := getRequest("POST", reqURL, gzippedData, hash)
 	if err != nil {
 		log.Println("error get request:", err)
 	}
@@ -168,13 +175,14 @@ func getBytesMetricDTO(metric types.Metric) ([]byte, error) {
 	return jsonData, nil
 }
 
-func getRequest(method string, reqURL string, data bytes.Buffer) (*http.Request, error) {
+func getRequest(method string, reqURL string, data bytes.Buffer, hash string) (*http.Request, error) {
 	req, err := http.NewRequest(method, reqURL, &data)
 	if err != nil {
 		return nil, err
 	}
 	req.Header.Set("Content-Encoding", "gzip")
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("HashSHA256", hash)
 
 	return req, nil
 }
@@ -198,4 +206,11 @@ func sendWithRetry(request *http.Request) error {
 		delay += 2 * time.Second
 	}
 	return fmt.Errorf("failed to send request after %d attempts", maxRetries)
+}
+
+func computeHash(data bytes.Buffer, cfgKey string) string {
+	h := sha256.New()
+	h.Write(data.Bytes())
+	h.Write([]byte(cfgKey))
+	return hex.EncodeToString(h.Sum(nil))
 }

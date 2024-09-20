@@ -16,6 +16,7 @@ type Config struct {
 	Restore         bool
 	DBDSN           string
 	LogLevel        string
+	ApiKey          string
 }
 
 var AppConfig Config
@@ -66,6 +67,12 @@ func GetConfig() (*Config, error) {
 		cfg.LogLevel = envLogLevel
 	} else {
 		cfg.LogLevel = zapcore.ErrorLevel.String()
+	}
+
+	if envApiKey := os.Getenv("KEY"); envApiKey != "" {
+		cfg.ApiKey = envApiKey
+	} else {
+		flag.StringVar(&cfg.ApiKey, "k", "", "api key for hash")
 	}
 
 	flag.Parse()

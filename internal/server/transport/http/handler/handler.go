@@ -8,7 +8,9 @@ import (
 	"strconv"
 	"text/template"
 
+	"github.com/Zrossiz/go-metrics/internal/server/config"
 	"github.com/Zrossiz/go-metrics/internal/server/dto"
+	"github.com/Zrossiz/go-metrics/internal/server/libs/hashgenerator"
 	"github.com/Zrossiz/go-metrics/internal/server/models"
 	"github.com/Zrossiz/go-metrics/internal/server/service"
 	"github.com/go-chi/chi/v5"
@@ -106,8 +108,19 @@ func (m *MetricHandler) CreateBatchJSONMetrics(rw http.ResponseWriter, r *http.R
 	rw.Header().Set("Content-Type", "application/json")
 	rw.WriteHeader(http.StatusOK)
 
-	response := map[string]string{"success": "true"}
-	err = json.NewEncoder(rw).Encode(response)
+	responseBody := map[string]string{"success": "true"}
+
+	responseBodyBytes, err := json.Marshal(responseBody)
+	if err != nil {
+		http.Error(rw, "internal error", http.StatusInternalServerError)
+		return
+	}
+
+	if config.AppConfig.ApiKey != "" {
+		setHashHeader(rw, responseBodyBytes)
+	}
+
+	err = json.NewEncoder(rw).Encode(responseBody)
 	if err != nil {
 		http.Error(rw, "internal error", http.StatusInternalServerError)
 	}
@@ -150,6 +163,10 @@ func (m *MetricHandler) CreateJSONMetric(rw http.ResponseWriter, r *http.Request
 		m.logger.Error("internal error", zap.Error(err))
 		http.Error(rw, "failed to marshal response", http.StatusInternalServerError)
 		return
+	}
+
+	if config.AppConfig.ApiKey != "" {
+		setHashHeader(rw, response)
 	}
 
 	rw.Header().Set("Content-Type", "application/json")
@@ -289,4 +306,9 @@ func (m *MetricHandler) PingDB(rw http.ResponseWriter, _ *http.Request) {
 	}
 
 	rw.WriteHeader(http.StatusOK)
+}
+
+func setHashHeader(rw http.ResponseWriter, body []byte) {
+	hash := hashgenerator.Generate(body, config.AppConfig.ApiKey)
+	rw.Header().Set("HashSHA256", hash)
 }

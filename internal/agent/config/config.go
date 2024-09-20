@@ -11,6 +11,7 @@ import (
 var RunAddr string
 var PollInterval int64
 var ReportInterval int64
+var ApiKey string
 
 func FlagParse() {
 	_ = godotenv.Load()
@@ -35,5 +36,11 @@ func FlagParse() {
 		if val, err := strconv.ParseInt(envReportInterval, 6, 64); err == nil {
 			ReportInterval = val
 		}
+	}
+
+	if envApiKey := os.Getenv("KEY"); envApiKey != "" {
+		ApiKey = envApiKey
+	} else {
+		flag.StringVar(&ApiKey, "k", "", "api key for hash")
 	}
 }
