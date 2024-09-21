@@ -10,151 +10,80 @@ import (
 
 	"github.com/Zrossiz/go-metrics/internal/server/config"
 	"github.com/Zrossiz/go-metrics/internal/server/libs/logger"
-	"github.com/Zrossiz/go-metrics/internal/server/middleware/gzip"
-	"github.com/Zrossiz/go-metrics/internal/server/middleware/logger/request"
-	"github.com/Zrossiz/go-metrics/internal/server/services/get"
-	"github.com/Zrossiz/go-metrics/internal/server/services/update"
-	filestorage "github.com/Zrossiz/go-metrics/internal/server/storage/fileStorage"
-	memstorage "github.com/Zrossiz/go-metrics/internal/server/storage/memStorage"
-	"github.com/go-chi/chi/v5"
+	"github.com/Zrossiz/go-metrics/internal/server/service"
+	"github.com/Zrossiz/go-metrics/internal/server/storage"
+	"github.com/Zrossiz/go-metrics/internal/server/storage/dbstorage"
+	"github.com/Zrossiz/go-metrics/internal/server/transport/http/router"
+	"github.com/jackc/pgx/v4/pgxpool"
 	"go.uber.org/zap"
 )
 
-func StartServer() error {
-	r := chi.NewRouter()
-
-	// Инициализация хранилища в памяти
-	store := memstorage.NewMemStorage()
-
-	// Инициализация логгера
-	if err := logger.Initialize(config.FlagLogLevel); err != nil {
-		zap.L().Error("Failed to initialize logger", zap.Error(err))
-		return err
-	}
-
-	zLogger := logger.Log
-
-	err := config.FlagParse()
+func StartServer() {
+	cfg, err := config.GetConfig()
 	if err != nil {
-		zLogger.Sugar().Panicf("error parse config: ", err)
+		zap.S().Fatalf("get config error", zap.Error(err))
 	}
 
-	// Восстановление метрик из файла, если включена опция Restore
-	if config.Restore {
-		zLogger.Info("Restoring metrics from file", zap.String("file", config.FileStoragePath))
-		_, err := filestorage.CollectMetricsFromFile(config.FileStoragePath, store)
+	log, err := logger.New(cfg.LogLevel)
+	if err != nil {
+		zap.S().Fatalf("init logger error", zap.Error(err))
+	}
+
+	var dbConn *pgxpool.Pool
+	if len(cfg.DBDSN) > 0 {
+		dbConn, err = dbstorage.GetConnect(cfg.DBDSN, log.ZapLogger)
 		if err != nil {
-			zLogger.Sugar().Fatalf("Failed to collect metrics from file: %v", err)
+			log.ZapLogger.Fatal("error connect to db", zap.Error(err))
+		}
+
+		err = dbstorage.MigrateSQL(dbConn)
+		if err != nil {
+			log.ZapLogger.Fatal("migrate error", zap.Error(err))
 		}
 	}
 
-	// Настройка тикера для сохранения метрик
-	ticker := time.NewTicker(time.Duration(config.StoreInterval) * time.Second)
-	defer func() {
-		zLogger.Info("Stopping ticker")
-		ticker.Stop()
-	}()
-	stop := make(chan bool)
+	store := storage.New(dbConn, cfg, log.ZapLogger)
+	serv := service.New(store, log.ZapLogger, dbConn)
+	r := router.New(serv, log.ZapLogger)
 
-	go func() {
-		for {
-			select {
-			case <-ticker.C:
-				zLogger.Info("Saving metrics to file", zap.String("file", config.FileStoragePath))
-				if err := filestorage.UpdateMetrics(config.FileStoragePath, store); err != nil {
-					zLogger.Error("Failed to save metrics to file", zap.Error(err))
-				}
-			case <-stop:
-				zLogger.Info("Stopping task execution")
-			}
-		}
-	}()
-
-	// Применение middleware для логирования запросов
-	r.Use(func(next http.Handler) http.Handler {
-		return request.WithLogs(next)
-	})
-
-	// Применение middleware для декомпрессии запросов
-	r.Use(func(next http.Handler) http.Handler {
-		return gzip.DecompressMiddleware(next)
-	})
-
-	// Применение middleware для компрессии ответов
-	r.Use(func(next http.Handler) http.Handler {
-		return gzip.CompressMiddleware(next)
-	})
-
-	// Определение маршрутов
-	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		get.HTMLPageMetric(w, r, *store)
-	})
-
-	r.Route("/update", func(r chi.Router) {
-		r.Post("/{type}/{name}/{value}", func(w http.ResponseWriter, r *http.Request) {
-			update.Metric(w, r, store)
-		})
-
-		r.Post("/", func(w http.ResponseWriter, r *http.Request) {
-			update.JSONMetric(w, r, store)
-		})
-	})
-
-	r.Route("/value", func(r chi.Router) {
-		r.Get("/{type}/{name}", func(w http.ResponseWriter, r *http.Request) {
-			get.Metric(w, r, *store)
-		})
-
-		r.Post("/", func(w http.ResponseWriter, r *http.Request) {
-			get.JSONMetric(w, r, *store)
-		})
-	})
-
-	// Инициализация HTTP сервера
 	srv := &http.Server{
-		Addr:    config.RunAddr,
+		Addr:    cfg.ServerAddress,
 		Handler: r,
 	}
 
-	// Запуск сервера в отдельной горутине
 	go func() {
-		zLogger.Info("Starting server", zap.String("address", config.RunAddr))
+		log.ZapLogger.Info("Starting server", zap.String("address", cfg.ServerAddress))
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			zLogger.Fatal("Failed to start server", zap.Error(err))
+			log.ZapLogger.Fatal("Failed to start server", zap.Error(err))
 		}
 	}()
 
-	// Обработка сигнала завершения работы
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	zLogger.Info("Shutting down server...")
+	log.ZapLogger.Info("Shutting down server...")
 
-	// Сохранение метрик при завершении работы сервера
-	if err := shutdownServer(store); err != nil {
-		zLogger.Error("Failed to save metrics on shutdown", zap.Error(err))
+	if err := shutdownServer(store, log.ZapLogger, *cfg); err != nil {
+		log.ZapLogger.Error("Failed to save metrics on shutdown", zap.Error(err))
 	}
 
-	// Завершение работы сервера с таймаутом
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	if err := srv.Shutdown(ctx); err != nil {
-		zLogger.Fatal("Server forced to shutdown", zap.Error(err))
+		log.ZapLogger.Fatal("Server forced to shutdown", zap.Error(err))
 	}
 
-	zLogger.Info("Server exited")
-	return nil
+	log.ZapLogger.Info("Server exited")
 }
 
-func shutdownServer(store *memstorage.MemStorage) error {
-	zLogger := logger.Log
+func shutdownServer(store storage.Storage, log *zap.Logger, cfg config.Config) error {
+	log.Info("Saving metrics to file during shutdown", zap.String("file", cfg.FileStoragePath))
+	err := store.Close()
 
-	zLogger.Info("Saving metrics to file during shutdown", zap.String("file", config.FileStoragePath))
-	err := filestorage.UpdateMetrics(config.FileStoragePath, store)
 	if err != nil {
-		zLogger.Error("Failed to save metrics to file", zap.Error(err))
+		log.Error("Failed to close connection", zap.Error(err))
 		return err
 	}
 

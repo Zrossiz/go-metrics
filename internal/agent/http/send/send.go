@@ -7,10 +7,14 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/Zrossiz/go-metrics/internal/agent/constants/types"
 	"github.com/Zrossiz/go-metrics/internal/agent/dto"
 )
+
+const maxRetries = 3
+const retryDelay = 1 * time.Second
 
 func Metrics(metrics []types.Metric, addr string) []types.Metric {
 	var sendedMetrics []types.Metric
@@ -58,7 +62,6 @@ func GzipMetrics(metrics []types.Metric, addr string) []types.Metric {
 
 		var gzippedData bytes.Buffer
 		gzipWriter := gzip.NewWriter(&gzippedData)
-
 		bytesData, err := getBytesMetricDTO(metrics[i])
 		if err != nil {
 			log.Println("failed get bytes from metric: ", err)
@@ -74,15 +77,72 @@ func GzipMetrics(metrics []types.Metric, addr string) []types.Metric {
 
 		gzipWriter.Close()
 
-		_, err = sendMetric("POST", reqURL, gzippedData)
+		request, err := getRequest("POST", reqURL, gzippedData)
 		if err != nil {
-			log.Println("error send metric")
-			continue
+			log.Println("error get request:", err)
+		}
+
+		err = sendWithRetry(request)
+		if err != nil {
+			log.Println("error send metric", err)
 		}
 
 		sendedMetrics = append(sendedMetrics, metrics[i])
 	}
 	return sendedMetrics
+}
+
+func BatchGzipMetrics(metrics []types.Metric, addr string) {
+	reqURL := fmt.Sprintf("http://%s/updates/", addr)
+
+	postDtoMetrics := []dto.MetricDTO{}
+
+	for i := 0; i < len(metrics); i++ {
+		postMetricDto := dto.MetricDTO{
+			ID:    metrics[i].Name,
+			MType: metrics[i].Type,
+		}
+
+		float64Value, okFloat := metrics[i].Value.(float64)
+		if okFloat {
+			postMetricDto.Value = &float64Value
+		}
+
+		int64Value, okInt := metrics[i].Value.(int64)
+		if okInt {
+			postMetricDto.Delta = &int64Value
+		}
+
+		postDtoMetrics = append(postDtoMetrics, postMetricDto)
+	}
+
+	bytesData, err := json.Marshal(postDtoMetrics)
+	if err != nil {
+		log.Println("failed to marshal metrics to JSON:", err)
+		return
+	}
+
+	var gzippedData bytes.Buffer
+	gzipWriter := gzip.NewWriter(&gzippedData)
+
+	_, err = gzipWriter.Write(bytesData)
+	if err != nil {
+		log.Println("failed to write JSON to gzip:", err)
+		gzipWriter.Close()
+		return
+	}
+
+	gzipWriter.Close()
+
+	request, err := getRequest("POST", reqURL, gzippedData)
+	if err != nil {
+		log.Println("error get request:", err)
+	}
+
+	err = sendWithRetry(request)
+	if err != nil {
+		log.Println("error send metric", err)
+	}
 }
 
 func getBytesMetricDTO(metric types.Metric) ([]byte, error) {
@@ -91,38 +151,51 @@ func getBytesMetricDTO(metric types.Metric) ([]byte, error) {
 		MType: metric.Type,
 	}
 
-	switch v := metric.Value.(type) {
-	case int64:
-		jsonBody.Delta = &v
-	case float64:
-		jsonBody.Value = &v
-	default:
-		log.Println("unsupported metric type for metric:", metric.Name)
+	float64Value, okFloat := metric.Value.(float64)
+	if okFloat {
+		jsonBody.Value = &float64Value
+	}
+
+	int64Value, okInt := metric.Value.(int64)
+	if okInt {
+		jsonBody.Delta = &int64Value
 	}
 
 	jsonData, err := json.Marshal(jsonBody)
 	if err != nil {
 		return nil, err
 	}
-
 	return jsonData, nil
 }
 
-func sendMetric(method string, reqURL string, data bytes.Buffer) (bool, error) {
+func getRequest(method string, reqURL string, data bytes.Buffer) (*http.Request, error) {
 	req, err := http.NewRequest(method, reqURL, &data)
 	if err != nil {
-		return false, err
+		return nil, err
 	}
 	req.Header.Set("Content-Encoding", "gzip")
 	req.Header.Set("Content-Type", "application/json")
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return false, err
+	return req, nil
+}
+
+func sendWithRetry(request *http.Request) error {
+	delay := retryDelay
+	for i := 0; i < maxRetries; i++ {
+		client := &http.Client{}
+		resp, err := client.Do(request)
+		resp.Body.Close()
+
+		if err != nil {
+			log.Printf("Failed to send request: %v\n", err)
+		} else if resp.StatusCode == 200 {
+			return nil
+		} else {
+			log.Printf("Failed to send request: status code %d\n", resp.StatusCode)
+		}
+
+		time.Sleep(delay)
+		delay += 2 * time.Second
 	}
-
-	resp.Body.Close()
-
-	return true, nil
+	return fmt.Errorf("failed to send request after %d attempts", maxRetries)
 }

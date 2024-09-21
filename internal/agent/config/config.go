@@ -26,13 +26,13 @@ func FlagParse() {
 	}
 
 	if envPollInterval := os.Getenv("POLL_INTERVAL"); envPollInterval != "" {
-		if val, err := strconv.ParseInt(envPollInterval, 10, 64); err == nil {
+		if val, err := strconv.ParseInt(envPollInterval, 2, 64); err == nil {
 			PollInterval = val
 		}
 	}
 
 	if envReportInterval := os.Getenv("REPORT_INTERVAL"); envReportInterval != "" {
-		if val, err := strconv.ParseInt(envReportInterval, 10, 64); err == nil {
+		if val, err := strconv.ParseInt(envReportInterval, 6, 64); err == nil {
 			ReportInterval = val
 		}
 	}

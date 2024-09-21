@@ -15,6 +15,8 @@ func CompressMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
+		w.Header().Set("Content-Encoding", "gzip")
+		w.Header().Del("Content-Length")
 		zw, err := gzip.NewWriterLevel(w, gzip.BestSpeed)
 		if err != nil {
 			next.ServeHTTP(w, r)
@@ -22,16 +24,13 @@ func CompressMiddleware(next http.Handler) http.Handler {
 		}
 		defer zw.Close()
 
-		w.Header().Set("Content-Encoding", "gzip")
-
 		next.ServeHTTP(&compressWriter{ResponseWriter: w, Writer: zw}, r)
 	})
 }
 
 func DecompressMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		encoding := r.Header.Get("Content-Encoding")
-		if !strings.Contains(encoding, "gzip") {
+		if r.Header.Get("Content-Encoding") != "gzip" {
 			next.ServeHTTP(w, r)
 			return
 		}
