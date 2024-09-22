@@ -9,11 +9,11 @@ import (
 	"time"
 
 	"github.com/Zrossiz/go-metrics/internal/server/config"
-	"github.com/Zrossiz/go-metrics/internal/server/libs/logger"
 	"github.com/Zrossiz/go-metrics/internal/server/service"
 	"github.com/Zrossiz/go-metrics/internal/server/storage"
 	"github.com/Zrossiz/go-metrics/internal/server/storage/dbstorage"
 	"github.com/Zrossiz/go-metrics/internal/server/transport/http/router"
+	"github.com/Zrossiz/go-metrics/pkg/logger"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"go.uber.org/zap"
 )
