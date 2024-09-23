@@ -69,9 +69,10 @@ func GetConfig() (*Config, error) {
 		cfg.LogLevel = zapcore.ErrorLevel.String()
 	}
 
-	flag.StringVar(&cfg.Key, "k", "", "api key for hash")
 	if envKey := os.Getenv("KEY"); envKey != "" {
 		cfg.Key = envKey
+	} else {
+		flag.StringVar(&cfg.Key, "k", "", "api key for hash")
 	}
 
 	flag.Parse()
