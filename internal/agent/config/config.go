@@ -12,6 +12,7 @@ var RunAddr string
 var PollInterval int64
 var ReportInterval int64
 var Key string
+var RateLimiter int64
 
 func FlagParse() {
 	_ = godotenv.Load()
@@ -39,6 +40,14 @@ func FlagParse() {
 	flag.StringVar(&Key, "k", "", "key for hash")
 	if envKey := os.Getenv("KEY"); envKey != "" {
 		Key = envKey
+	}
+
+	flag.Int64Var(&RateLimiter, "l", 1000, "rate limiter")
+	if envRateLimiter := os.Getenv("RATE_LIMITER"); envRateLimiter != "" {
+		value, err := strconv.Atoi(envRateLimiter)
+		if err == nil {
+			RateLimiter = int64(value)
+		}
 	}
 
 	flag.Parse()

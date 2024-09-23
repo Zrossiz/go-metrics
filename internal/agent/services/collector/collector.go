@@ -4,14 +4,17 @@ import (
 	"math/rand"
 	"runtime"
 
+	"github.com/Zrossiz/go-metrics/internal/agent/constants"
 	"github.com/Zrossiz/go-metrics/internal/agent/constants/types"
 )
 
-func GetMetrics() []types.Metric {
+func GetMetrics(counter *int64) []types.Metric {
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
 
-	return []types.Metric{
+	*counter += 1
+	metrics := []types.Metric{
+		{Type: constants.Counter, Name: "PollCount", Value: *counter},
 		{Name: "Alloc", Type: "gauge", Value: float64(m.Alloc)},
 		{Name: "BuckHashSys", Type: "gauge", Value: float64(m.BuckHashSys)},
 		{Name: "Frees", Type: "gauge", Value: float64(m.Frees)},
@@ -41,4 +44,6 @@ func GetMetrics() []types.Metric {
 		{Name: "TotalAlloc", Type: "gauge", Value: float64(m.TotalAlloc)},
 		{Name: "RandomValue", Type: "gauge", Value: rand.Float64()},
 	}
+
+	return metrics
 }
