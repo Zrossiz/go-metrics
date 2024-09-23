@@ -34,12 +34,11 @@ func StartAgent() {
 
 	var counter int64 = 0
 
-	for {
-		select {
-		case <-tickerPoll.C:
-			metrics := collector.GetMetrics(&counter)
-			metricsChan <- metrics
+	for range tickerPoll.C { // Refactored loop with range
+		metrics := collector.GetMetrics(&counter)
+		metricsChan <- metrics
 
+		select {
 		case <-tickerReport.C:
 			select {
 			case metrics := <-metricsChan:
@@ -52,22 +51,18 @@ func StartAgent() {
 }
 
 func collectorWorker(metricsChan chan []types.Metric) {
-	for {
-		select {
-		case metrics := <-metricsChan:
-			metricsChan <- metrics
-		}
+	for metrics := range metricsChan {
+		metricsChan <- metrics
 	}
 }
 
 func senderWorker(sendChan chan []types.Metric, rateLimiter chan struct{}) {
-	for metrics := range sendChan {
+	for metrics := range sendChan { // Refactored to range over the channel
 		rateLimiter <- struct{}{}
 		go func(metrics []types.Metric) {
 			defer func() {
 				<-rateLimiter
 			}()
-
 			send.Metrics(metrics, config.RunAddr)
 		}(metrics)
 	}
