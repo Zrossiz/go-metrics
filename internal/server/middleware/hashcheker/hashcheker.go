@@ -21,7 +21,7 @@ func HashCheker(next http.Handler) http.Handler {
 			defer r.Body.Close()
 			r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 
-			generatedHash := hashgenerator.Generate(bodyBytes, config.AppConfig.ApiKey)
+			generatedHash := hashgenerator.Generate(bodyBytes, config.AppConfig.Key)
 
 			if generatedHash == hash {
 				next.ServeHTTP(w, r)

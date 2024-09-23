@@ -10,7 +10,7 @@ import (
 func Generate(body []byte, key string) string {
 	h := sha256.New()
 	h.Write(body)
-	h.Write([]byte(config.AppConfig.ApiKey))
+	h.Write([]byte(config.AppConfig.Key))
 	generatedHash := hex.EncodeToString(h.Sum(nil))
 	return generatedHash
 }

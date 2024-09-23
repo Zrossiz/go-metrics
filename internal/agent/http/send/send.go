@@ -80,7 +80,7 @@ func GzipMetrics(metrics []types.Metric, addr string) []types.Metric {
 
 		gzipWriter.Close()
 
-		hash := computeHash(gzippedData, config.ApiKey)
+		hash := computeHash(gzippedData, config.Key)
 
 		request, err := getRequest("POST", reqURL, gzippedData, hash)
 		if err != nil {
@@ -139,7 +139,7 @@ func BatchGzipMetrics(metrics []types.Metric, addr string) {
 
 	gzipWriter.Close()
 
-	hash := computeHash(gzippedData, config.ApiKey)
+	hash := computeHash(gzippedData, config.Key)
 
 	request, err := getRequest("POST", reqURL, gzippedData, hash)
 	if err != nil {
