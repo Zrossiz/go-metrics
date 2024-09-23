@@ -20,8 +20,6 @@ func FlagParse() {
 	flag.Int64Var(&PollInterval, "p", 2, "interval for get metrics")
 	flag.Int64Var(&ReportInterval, "r", 10, "interval for send metrics")
 
-	flag.Parse()
-
 	if envRunAddr := os.Getenv("ADDRESS"); envRunAddr != "" {
 		RunAddr = envRunAddr
 	}
@@ -42,4 +40,6 @@ func FlagParse() {
 	if envKey := os.Getenv("KEY"); envKey != "" {
 		Key = envKey
 	}
+
+	flag.Parse()
 }
