@@ -40,12 +40,8 @@ func StartAgent() {
 
 		select {
 		case <-tickerReport.C:
-			select {
-			case metrics := <-metricsChan:
-				sendChan <- metrics
-			default:
-				continue
-			}
+			metrics := <-metricsChan
+			sendChan <- metrics
 		}
 	}
 }
@@ -57,7 +53,7 @@ func collectorWorker(metricsChan chan []types.Metric) {
 }
 
 func senderWorker(sendChan chan []types.Metric, rateLimiter chan struct{}) {
-	for metrics := range sendChan { // Refactored to range over the channel
+	for metrics := range sendChan {
 		rateLimiter <- struct{}{}
 		go func(metrics []types.Metric) {
 			defer func() {
