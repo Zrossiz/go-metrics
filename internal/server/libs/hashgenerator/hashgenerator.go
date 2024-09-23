@@ -8,6 +8,9 @@ import (
 )
 
 func Generate(body []byte, key string) string {
+	if key == "" {
+		return ""
+	}
 	h := sha256.New()
 	h.Write(body)
 	h.Write([]byte(config.AppConfig.Key))

@@ -12,7 +12,7 @@ import (
 func HashCheker(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		hash := r.Header.Get("HashSHA256")
-		if hash != "" {
+		if hash != "" && config.AppConfig.Key != "" {
 			bodyBytes, err := io.ReadAll(r.Body)
 			if err != nil {
 				http.Error(w, "failed to read request body", http.StatusInternalServerError)

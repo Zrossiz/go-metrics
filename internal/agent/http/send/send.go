@@ -209,6 +209,9 @@ func sendWithRetry(request *http.Request) error {
 }
 
 func computeHash(data bytes.Buffer, cfgKey string) string {
+	if cfgKey == "" {
+		return ""
+	}
 	h := sha256.New()
 	h.Write(data.Bytes())
 	h.Write([]byte(cfgKey))

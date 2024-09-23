@@ -38,7 +38,7 @@ func FlagParse() {
 		}
 	}
 
-	flag.StringVar(&Key, "k", "", "api key for hash")
+	flag.StringVar(&Key, "k", "", "key for hash")
 	if envKey := os.Getenv("KEY"); envKey != "" {
 		Key = envKey
 	}
