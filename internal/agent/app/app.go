@@ -34,12 +34,11 @@ func StartAgent() {
 
 	var counter int64 = 0
 
-	for range tickerPoll.C { // Refactored loop with range
+	for range tickerPoll.C {
 		metrics := collector.GetMetrics(&counter)
 		metricsChan <- metrics
 
-		select {
-		case <-tickerReport.C:
+		if len(tickerReport.C) > 0 {
 			metrics := <-metricsChan
 			sendChan <- metrics
 		}
