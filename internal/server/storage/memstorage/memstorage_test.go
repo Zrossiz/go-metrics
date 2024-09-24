@@ -26,8 +26,9 @@ func TestMemStorageSetGauge(t *testing.T) {
 
 	addedMetric := storage.data[0]
 
-	if addedMetric.Value != &value {
-		t.Errorf("exptected %v, got %v", value, *addedMetric.Value)
+	// Проверка на возможное разыменование nil указателя
+	if addedMetric.Value == nil || *addedMetric.Value != value {
+		t.Errorf("expected %v, got %v", value, addedMetric.Value)
 	}
 
 	if addedMetric.Type != models.GaugeType {
@@ -54,12 +55,13 @@ func TestMemStorageSetCounter(t *testing.T) {
 
 	addedMetric := storage.data[0]
 
-	if addedMetric.Delta != &value {
-		t.Errorf("exptected %v, got %v", value, *addedMetric.Value)
+	// Проверка на возможное разыменование nil указателя
+	if addedMetric.Delta == nil || *addedMetric.Delta != value {
+		t.Errorf("expected %v, got %v", value, addedMetric.Delta)
 	}
 
 	if addedMetric.Type != models.CounterType {
-		t.Errorf("expected gauge type, got %v", addedMetric.Type)
+		t.Errorf("expected counter type, got %v", addedMetric.Type)
 	}
 }
 
@@ -83,11 +85,12 @@ func TestGetMetric(t *testing.T) {
 	}
 
 	if addedMetric.Name != name {
-		t.Errorf("expected name %v, got %v", name, addedMetric.ID)
+		t.Errorf("expected name %v, got %v", name, addedMetric.Name)
 	}
 
-	if addedMetric.Delta != &value {
-		t.Errorf("exptected %v, got %v", value, *addedMetric.Value)
+	// Проверка на возможное разыменование nil указателя
+	if addedMetric.Delta == nil || *addedMetric.Delta != value {
+		t.Errorf("expected %v, got %v", value, addedMetric.Delta)
 	}
 }
 
@@ -95,7 +98,7 @@ func TestGetAllMetrics(t *testing.T) {
 	storage := New()
 
 	var metricValue1 int64 = 123
-	var metricValue2 float64 = 1.2
+	metricValue2 := 1.2 // Тип выведен автоматически
 
 	metrics := []dto.PostMetricDto{
 		{
@@ -123,7 +126,7 @@ func TestSetBatch(t *testing.T) {
 	storage := New()
 
 	var metricValue1 int64 = 123
-	var metricValue2 float64 = 1.2
+	metricValue2 := 1.2 // Тип выведен автоматически
 
 	metrics := []dto.PostMetricDto{
 		{

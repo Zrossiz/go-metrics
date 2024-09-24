@@ -1,6 +1,7 @@
 package collector
 
 import (
+	"fmt"
 	"math/rand"
 	"runtime"
 
@@ -61,7 +62,7 @@ func GetMetrics(counter *int64) []types.Metric {
 
 	for i, cpuUtil := range cpuPercentages {
 		metrics = append(metrics, types.Metric{
-			Name:  "CPUutilization" + string(i+1),
+			Name:  "CPUutilization" + fmt.Sprint(i+1),
 			Type:  "gauge",
 			Value: cpuUtil,
 		})
