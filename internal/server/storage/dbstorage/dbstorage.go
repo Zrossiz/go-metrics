@@ -107,7 +107,21 @@ func (d *DBStorage) Get(name string) (*models.Metric, error) {
 }
 
 func (d *DBStorage) GetAll() (*[]models.Metric, error) {
-	query := `SELECT id, name, metric_type, value, delta, created_at FROM metrics ORDER BY created_at DESC LIMIT 27`
+	query := `
+		WITH latest_metrics AS (
+			SELECT name, metric_type, MAX(created_at) as max_created_at
+			FROM metrics
+			GROUP BY name, metric_type
+		)
+		SELECT m.id, m.name, m.metric_type, m.value, m.delta, m.created_at
+		FROM metrics m
+		JOIN latest_metrics lm 
+		ON m.name = lm.name 
+		AND m.metric_type = lm.metric_type 
+		AND m.created_at = lm.max_created_at
+		ORDER BY m.created_at DESC
+	`
+
 	rows, err := d.db.Query(context.Background(), query)
 	if err != nil {
 		return nil, err

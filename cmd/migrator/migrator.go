@@ -15,20 +15,23 @@ func main() {
 
 	db, err := pgxpool.Connect(context.Background(), DBDSN)
 	if err != nil {
-		fmt.Errorf("error connect to db: %v", err)
+		fmt.Printf("error connecting to db: %v\n", err)
+		return
 	}
+	defer db.Close()
 
-	_, err = db.Exec(context.Background(), `CREATE TABLE IF NOT EXISTS metrics (
-		id SERIAL PRIMARY KEY,
-		metric_type TEXT NOT NULL,
-		name TEXT NOT NULL,
-		value DOUBLE PRECISION,
-		delta BIGINT,
-		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-	);
-	CREATE INDEX IF NOT EXISTS idx_metrics_name ON metrics (name);`)
-
+	sqlFilePath := "migrations/1_init.sql"
+	schemaSQL, err := os.ReadFile(sqlFilePath)
 	if err != nil {
-		fmt.Errorf("failed to create table: %w", err)
+		fmt.Printf("error reading sql file: %v\n", err)
+		return
 	}
+
+	_, err = db.Exec(context.Background(), string(schemaSQL))
+	if err != nil {
+		fmt.Printf("failed to execute schema SQL: %v\n", err)
+		return
+	}
+
+	fmt.Println("Schema created successfully!")
 }

@@ -72,7 +72,7 @@ func (m *MetricHandler) CreateParamMetric(rw http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	metric, err := m.service.Get(dto.ID) // предполагается, что метод Get принимает ID
+	metric, err := m.service.Get(dto.ID)
 	if err != nil {
 		m.logger.Error("internal error", zap.Error(err))
 		http.Error(rw, "get created metric error", http.StatusInternalServerError)
@@ -213,17 +213,9 @@ func (m *MetricHandler) GetJSONMetric(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var responseMetric dto.PostMetricDto
-	if metric.Type == models.CounterType || metric.Type == models.GaugeType {
-		responseMetric = dto.PostMetricDto{
-			ID:    metric.Name,
-			MType: metric.Type,
-		}
-	} else {
-		responseMetric = dto.PostMetricDto{
-			ID:    metric.Type,
-			MType: metric.Name,
-		}
+	responseMetric := dto.PostMetricDto{
+		ID:    metric.Name,
+		MType: metric.Type,
 	}
 
 	if metric.Delta != nil {

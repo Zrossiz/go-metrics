@@ -6,13 +6,25 @@ import (
 
 	"github.com/Zrossiz/go-metrics/internal/agent/constants"
 	"github.com/Zrossiz/go-metrics/internal/agent/constants/types"
+	"github.com/shirou/gopsutil/cpu"
+	"github.com/shirou/gopsutil/mem"
 )
 
 func GetMetrics(counter *int64) []types.Metric {
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
-
 	*counter += 1
+
+	vmStat, err := mem.VirtualMemory()
+	if err != nil {
+		vmStat = &mem.VirtualMemoryStat{}
+	}
+
+	cpuPercentages, err := cpu.Percent(0, true)
+	if err != nil {
+		cpuPercentages = []float64{0}
+	}
+
 	metrics := []types.Metric{
 		{Type: constants.Counter, Name: "PollCount", Value: *counter},
 		{Name: "Alloc", Type: "gauge", Value: float64(m.Alloc)},
@@ -43,6 +55,16 @@ func GetMetrics(counter *int64) []types.Metric {
 		{Name: "Sys", Type: "gauge", Value: float64(m.Sys)},
 		{Name: "TotalAlloc", Type: "gauge", Value: float64(m.TotalAlloc)},
 		{Name: "RandomValue", Type: "gauge", Value: rand.Float64()},
+		{Name: "TotalMemory", Type: "gauge", Value: float64(vmStat.Total)},
+		{Name: "FreeMemory", Type: "gauge", Value: float64(vmStat.Free)},
+	}
+
+	for i, cpuUtil := range cpuPercentages {
+		metrics = append(metrics, types.Metric{
+			Name:  "CPUutilization" + string(i+1),
+			Type:  "gauge",
+			Value: cpuUtil,
+		})
 	}
 
 	return metrics
