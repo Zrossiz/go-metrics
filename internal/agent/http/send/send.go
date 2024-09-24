@@ -57,7 +57,7 @@ func Metrics(metrics []types.Metric, addr string) []types.Metric {
 	return sendedMetrics
 }
 
-func GzipMetrics(metrics []types.Metric, addr string) []types.Metric {
+func GzipMetrics(metrics []types.Metric, addr string, cfg config.Config) []types.Metric {
 	var sendedMetrics []types.Metric
 
 	for i := 0; i < len(metrics); i++ {
@@ -80,7 +80,7 @@ func GzipMetrics(metrics []types.Metric, addr string) []types.Metric {
 
 		gzipWriter.Close()
 
-		hash := computeHash(gzippedData, config.Key)
+		hash := computeHash(gzippedData, cfg.Key)
 
 		request, err := getRequest("POST", reqURL, gzippedData, hash)
 		if err != nil {
@@ -97,7 +97,7 @@ func GzipMetrics(metrics []types.Metric, addr string) []types.Metric {
 	return sendedMetrics
 }
 
-func BatchGzipMetrics(metrics []types.Metric, addr string) {
+func BatchGzipMetrics(metrics []types.Metric, addr string, cfg *config.Config) {
 	reqURL := fmt.Sprintf("http://%s/updates/", addr)
 
 	postDtoMetrics := []dto.MetricDTO{}
@@ -139,7 +139,7 @@ func BatchGzipMetrics(metrics []types.Metric, addr string) {
 
 	gzipWriter.Close()
 
-	hash := computeHash(gzippedData, config.Key)
+	hash := computeHash(gzippedData, cfg.Key)
 
 	request, err := getRequest("POST", reqURL, gzippedData, hash)
 	if err != nil {

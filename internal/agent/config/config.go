@@ -8,47 +8,62 @@ import (
 	"github.com/joho/godotenv"
 )
 
-var RunAddr string
-var PollInterval int64
-var ReportInterval int64
-var Key string
-var RateLimiter int64
+type Config struct {
+	RunAddr        string
+	PollInterval   int64
+	ReportInterval int64
+	Key            string
+	RateLimiter    int64
+}
 
-func FlagParse() {
+func GetConfig() (*Config, error) {
 	_ = godotenv.Load()
 
-	flag.StringVar(&RunAddr, "a", "localhost:8080", "address and port to run server")
-	flag.Int64Var(&PollInterval, "p", 2, "interval for get metrics")
-	flag.Int64Var(&ReportInterval, "r", 10, "interval for send metrics")
+	cfg := &Config{}
+
+	flag.StringVar(&cfg.RunAddr, "a", "localhost:8080", "address and port to run server")
+	flag.Int64Var(&cfg.PollInterval, "p", 2, "interval for get metrics")
+	flag.Int64Var(&cfg.ReportInterval, "r", 10, "interval for send metrics")
 
 	if envRunAddr := os.Getenv("ADDRESS"); envRunAddr != "" {
-		RunAddr = envRunAddr
+		cfg.RunAddr = envRunAddr
 	}
 
 	if envPollInterval := os.Getenv("POLL_INTERVAL"); envPollInterval != "" {
-		if val, err := strconv.ParseInt(envPollInterval, 2, 64); err == nil {
-			PollInterval = val
+		val, err := strconv.ParseInt(envPollInterval, 2, 64)
+
+		if err == nil {
+			cfg.PollInterval = val
+		} else {
+			return nil, err
 		}
 	}
 
 	if envReportInterval := os.Getenv("REPORT_INTERVAL"); envReportInterval != "" {
-		if val, err := strconv.ParseInt(envReportInterval, 6, 64); err == nil {
-			ReportInterval = val
+		val, err := strconv.ParseInt(envReportInterval, 6, 64)
+		if err == nil {
+			cfg.ReportInterval = val
+		} else {
+			return nil, err
 		}
 	}
 
-	flag.StringVar(&Key, "k", "", "key for hash")
+	flag.StringVar(&cfg.Key, "k", "", "key for hash")
 	if envKey := os.Getenv("KEY"); envKey != "" {
-		Key = envKey
+		cfg.Key = envKey
 	}
 
-	flag.Int64Var(&RateLimiter, "l", 1000, "rate limiter")
+	flag.Int64Var(&cfg.RateLimiter, "l", 1000, "rate limiter")
 	if envRateLimiter := os.Getenv("RATE_LIMITER"); envRateLimiter != "" {
 		value, err := strconv.Atoi(envRateLimiter)
 		if err == nil {
-			RateLimiter = int64(value)
+			cfg.RateLimiter = int64(value)
+		} else {
+			return nil, err
 		}
 	}
 
 	flag.Parse()
+
+	return cfg, nil
 }
