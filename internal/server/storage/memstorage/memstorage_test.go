@@ -84,11 +84,10 @@ func TestGetMetric(t *testing.T) {
 		t.Errorf("expected metric, got nil")
 	}
 
-	if addedMetric.Name != name {
+	if addedMetric != nil && addedMetric.Name != name {
 		t.Errorf("expected name %v, got %v", name, addedMetric.Name)
 	}
 
-	// Проверка на возможное разыменование nil указателя
 	if addedMetric.Delta == nil || *addedMetric.Delta != value {
 		t.Errorf("expected %v, got %v", value, addedMetric.Delta)
 	}
