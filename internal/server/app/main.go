@@ -35,11 +35,6 @@ func StartServer() {
 		if err != nil {
 			log.ZapLogger.Fatal("error connect to db", zap.Error(err))
 		}
-
-		err = dbstorage.MigrateSQL(dbConn)
-		if err != nil {
-			log.ZapLogger.Fatal("migrate error", zap.Error(err))
-		}
 	}
 
 	store := storage.New(dbConn, cfg, log.ZapLogger)

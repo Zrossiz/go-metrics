@@ -217,19 +217,3 @@ func (d *DBStorage) Close() error {
 	d.db.Close()
 	return nil
 }
-
-func MigrateSQL(db *pgxpool.Pool) error {
-	_, err := db.Exec(context.Background(), `CREATE TABLE IF NOT EXISTS metrics (
-		id SERIAL PRIMARY KEY,
-		metric_type TEXT NOT NULL,
-		name TEXT NOT NULL,
-		value DOUBLE PRECISION,
-		delta BIGINT,
-		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-	);
-	CREATE INDEX IF NOT EXISTS idx_metrics_name ON metrics (name);`)
-	if err != nil {
-		return fmt.Errorf("failed to create table: %w", err)
-	}
-	return nil
-}
