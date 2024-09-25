@@ -190,6 +190,41 @@ func TestGetStringMetric(t *testing.T) {
 	mockService.AssertCalled(t, "GetStringValueMetric", "TestMetric")
 }
 
+func TestGetJSONMetric(t *testing.T) {
+	mockService := new(MockMetricService)
+	logger := zap.NewExample()
+
+	h := handler.New(mockService, logger)
+
+	t.Run("Successful Get Metric", func(t *testing.T) {
+		mockMetric := &models.Metric{
+			Name:  "TestMetric",
+			Type:  models.GaugeType,
+			Value: floatPtr(123.45),
+		}
+		mockService.On("Get", "TestMetric").Return(mockMetric, nil)
+
+		body := dto.GetMetricDto{ID: "TestMetric"}
+		bodyBytes, _ := json.Marshal(body)
+		req := httptest.NewRequest("POST", "/metric", bytes.NewReader(bodyBytes))
+		rr := httptest.NewRecorder()
+
+		h.GetJSONMetric(rr, req)
+
+		assert.Equal(t, http.StatusOK, rr.Code)
+
+		expectedResponse := dto.PostMetricDto{
+			ID:    "TestMetric",
+			MType: models.GaugeType,
+			Value: floatPtr(123.45),
+		}
+		expectedResponseBytes, _ := json.Marshal(expectedResponse)
+		assert.JSONEq(t, string(expectedResponseBytes), rr.Body.String())
+
+		mockService.AssertCalled(t, "Get", "TestMetric")
+	})
+}
+
 func floatPtr(f float64) *float64 {
 	return &f
 }
