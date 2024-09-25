@@ -99,7 +99,7 @@ func TestCreateParamMetric(t *testing.T) {
 	mockService.AssertCalled(t, "Create", expectedDto)
 }
 
-func TestCreateBatchMetric(t *testing.T) {
+func TestCreateBatchJSONMetrics(t *testing.T) {
 	mockService := new(MockMetricService)
 	logger := zap.NewExample()
 
@@ -125,6 +125,28 @@ func TestCreateBatchMetric(t *testing.T) {
 	expectedResponse := `{"success":true}`
 	assert.JSONEq(t, expectedResponse, rr.Body.String())
 	mockService.AssertCalled(t, "SetBatch", metrics)
+}
+
+func TestGetStringMetric(t *testing.T) {
+	mockService := new(MockMetricService)
+	logger := zap.NewExample()
+	h := handler.New(mockService, logger)
+
+	mockService.On("GetStringValueMetric", "TestMetric").Return("123.45", nil)
+
+	req := httptest.NewRequest("GET", "/value/TestMetric", nil)
+	rr := httptest.NewRecorder()
+
+	rctx := chi.NewRouteContext()
+	rctx.URLParams.Add("name", "TestMetric")
+	req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
+
+	h.GetStringMetric(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+	assert.Equal(t, "123.45", rr.Body.String())
+
+	mockService.AssertCalled(t, "GetStringValueMetric", "TestMetric")
 }
 
 func floatPtr(f float64) *float64 {
