@@ -103,12 +103,13 @@ func (m *MetricHandler) CreateBatchJSONMetrics(rw http.ResponseWriter, r *http.R
 	if err != nil {
 		m.logger.Error("internal error", zap.Error(err))
 		http.Error(rw, "internal server error", http.StatusInternalServerError)
+		return
 	}
 
 	rw.Header().Set("Content-Type", "application/json")
 	rw.WriteHeader(http.StatusOK)
 
-	responseBody := map[string]string{"success": "true"}
+	responseBody := map[string]bool{"success": true}
 
 	responseBodyBytes, err := json.Marshal(responseBody)
 	if err != nil {

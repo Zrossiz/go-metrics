@@ -1,7 +1,9 @@
 package handler_test
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -16,7 +18,6 @@ import (
 	"go.uber.org/zap"
 )
 
-// MockMetricService должен реализовывать интерфейс service.MetricServiceer
 type MockMetricService struct {
 	mock.Mock
 }
@@ -57,7 +58,7 @@ func (m *MockMetricService) SetBatch(body []dto.PostMetricDto) error {
 	return args.Error(0)
 }
 
-func TestMetricHandler_CreateParamMetric(t *testing.T) {
+func TestCreateParamMetric(t *testing.T) {
 	mockService := new(MockMetricService)
 	logger := zap.NewExample()
 
@@ -96,4 +97,40 @@ func TestMetricHandler_CreateParamMetric(t *testing.T) {
 	}
 	*expectedDto.Value = 123.45
 	mockService.AssertCalled(t, "Create", expectedDto)
+}
+
+func TestCreateBatchMetric(t *testing.T) {
+	mockService := new(MockMetricService)
+	logger := zap.NewExample()
+
+	h := handler.New(mockService, logger)
+
+	mockService.On("CreateBatchJSONMetrics", mock.Anything).Return(nil)
+
+	metrics := []dto.PostMetricDto{
+		{ID: "TestGauge1", MType: "gauge", Value: floatPtr(10.1)},
+		{ID: "TestCounter", MType: "counter", Delta: intPtr(5)},
+	}
+	metricsJSON, _ := json.Marshal(metrics)
+
+	req := httptest.NewRequest("POST", "/updates/", bytes.NewReader(metricsJSON))
+	rr := httptest.NewRecorder()
+
+	mockService.On("SetBatch", metrics).Return(nil)
+
+	h.CreateBatchJSONMetrics(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+
+	expectedResponse := `{"success":true}`
+	assert.JSONEq(t, expectedResponse, rr.Body.String())
+	mockService.AssertCalled(t, "SetBatch", metrics)
+}
+
+func floatPtr(f float64) *float64 {
+	return &f
+}
+
+func intPtr(i int64) *int64 {
+	return &i
 }
