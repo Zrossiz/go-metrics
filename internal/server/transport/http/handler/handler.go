@@ -12,25 +12,25 @@ import (
 	"github.com/Zrossiz/go-metrics/internal/server/dto"
 	"github.com/Zrossiz/go-metrics/internal/server/libs/hashgenerator"
 	"github.com/Zrossiz/go-metrics/internal/server/models"
-	"github.com/Zrossiz/go-metrics/internal/server/service"
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
 )
 
 type MetricHandler struct {
-	service *service.MetricService
+	service MetricHandlerer
 	logger  *zap.Logger
 }
 
 type MetricHandlerer interface {
-	GetHTML(rw http.ResponseWriter, r *http.Request)
-	CreateParamMetric(rw http.ResponseWriter, r *http.Request)
-	CreateJSONMetric(rw http.ResponseWriter, r *http.Request)
-	GetStringMetric(rw http.ResponseWriter, r *http.Request)
-	GetJSONMetric(rw http.ResponseWriter, r *http.Request)
+	Create(body dto.PostMetricDto) error
+	Get(name string) (*models.Metric, error)
+	GetAll() (*[]models.Metric, error)
+	GetStringValueMetric(name string) (string, error)
+	PingDB() error
+	SetBatch(body []dto.PostMetricDto) error
 }
 
-func New(s *service.MetricService, logger *zap.Logger) MetricHandler {
+func New(s MetricHandlerer, logger *zap.Logger) MetricHandler {
 	return MetricHandler{
 		service: s,
 		logger:  logger,
@@ -81,9 +81,9 @@ func (m *MetricHandler) CreateParamMetric(rw http.ResponseWriter, r *http.Reques
 
 	var responseString string
 	if dto.MType == models.GaugeType {
-		responseString = fmt.Sprintf("Type: %s, Name: %s, Value: %v", metric.Type, metric.Name, dto.Value)
+		responseString = fmt.Sprintf("Type: %s, Name: %s, Value: %v", metric.Type, metric.Name, *dto.Value)
 	} else if dto.MType == models.CounterType {
-		responseString = fmt.Sprintf("Type: %s, Name: %s, Delta: %v", metric.Type, metric.Name, dto.Delta)
+		responseString = fmt.Sprintf("Type: %s, Name: %s, Delta: %v", metric.Type, metric.Name, *dto.Delta)
 	}
 
 	io.WriteString(rw, responseString)

@@ -12,6 +12,7 @@ import (
 	"github.com/Zrossiz/go-metrics/internal/server/service"
 	"github.com/Zrossiz/go-metrics/internal/server/storage"
 	"github.com/Zrossiz/go-metrics/internal/server/storage/dbstorage"
+	"github.com/Zrossiz/go-metrics/internal/server/transport/http/handler"
 	"github.com/Zrossiz/go-metrics/internal/server/transport/http/router"
 	"github.com/Zrossiz/go-metrics/pkg/logger"
 	"github.com/jackc/pgx/v4/pgxpool"
@@ -39,7 +40,8 @@ func StartServer() {
 
 	store := storage.New(dbConn, cfg, log.ZapLogger)
 	serv := service.New(store, log.ZapLogger, dbConn)
-	r := router.New(serv, log.ZapLogger)
+	handl := handler.New(serv, log.ZapLogger)
+	r := router.New(&handl, log.ZapLogger)
 
 	srv := &http.Server{
 		Addr:    cfg.ServerAddress,
