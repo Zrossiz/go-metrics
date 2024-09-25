@@ -127,6 +127,47 @@ func TestCreateBatchJSONMetrics(t *testing.T) {
 	mockService.AssertCalled(t, "SetBatch", metrics)
 }
 
+func TestCreateJSONMetric(t *testing.T) {
+	mockService := new(MockMetricService)
+	logger := zap.NewExample()
+
+	h := handler.New(mockService, logger)
+
+	t.Run("Successful Metric Creation", func(t *testing.T) {
+		metric := dto.PostMetricDto{
+			ID:    "TestMetric",
+			MType: "gauge",
+		}
+		metricModel := &models.Metric{
+			Name:  "TestMetric",
+			Type:  models.GaugeType,
+			Value: new(float64),
+		}
+		*metricModel.Value = 123.45
+
+		mockService.On("Create", metric).Return(nil)
+		mockService.On("Get", "TestMetric").Return(metricModel, nil)
+
+		body, _ := json.Marshal(metric)
+		req := httptest.NewRequest("POST", "/metric", bytes.NewReader(body))
+		rr := httptest.NewRecorder()
+
+		h.CreateJSONMetric(rr, req)
+
+		assert.Equal(t, http.StatusOK, rr.Code)
+
+		expectedResponse := dto.PostMetricDto{
+			ID:    "TestMetric",
+			MType: models.GaugeType,
+		}
+		responseBody, _ := json.Marshal(expectedResponse)
+
+		assert.JSONEq(t, string(responseBody), rr.Body.String())
+		mockService.AssertCalled(t, "Create", metric)
+		mockService.AssertCalled(t, "Get", "TestMetric")
+	})
+}
+
 func TestGetStringMetric(t *testing.T) {
 	mockService := new(MockMetricService)
 	logger := zap.NewExample()
