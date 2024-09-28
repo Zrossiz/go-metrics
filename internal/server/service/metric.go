@@ -5,7 +5,6 @@ import (
 
 	"github.com/Zrossiz/go-metrics/internal/server/dto"
 	"github.com/Zrossiz/go-metrics/internal/server/models"
-	"github.com/jackc/pgx/v4/pgxpool"
 	"go.uber.org/zap"
 )
 
@@ -22,7 +21,7 @@ type Storager interface {
 	Ping() error
 }
 
-func New(stor Storager, logger *zap.Logger, dbConn *pgxpool.Pool) *MetricService {
+func New(stor Storager, logger *zap.Logger) *MetricService {
 	return &MetricService{
 		storage: stor,
 	}

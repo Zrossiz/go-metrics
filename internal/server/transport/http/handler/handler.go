@@ -135,6 +135,7 @@ func (m *MetricHandler) CreateJSONMetric(rw http.ResponseWriter, r *http.Request
 		return
 	}
 	defer r.Body.Close()
+
 	err = m.service.Create(body)
 	if err != nil {
 		m.logger.Error("internal error", zap.Error(err))

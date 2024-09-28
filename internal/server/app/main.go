@@ -39,7 +39,7 @@ func StartServer() {
 	}
 
 	store := storage.New(dbConn, cfg, log.ZapLogger)
-	serv := service.New(store, log.ZapLogger, dbConn)
+	serv := service.New(store, log.ZapLogger)
 	handl := handler.New(serv, log.ZapLogger)
 	r := router.New(&handl, log.ZapLogger)
 
