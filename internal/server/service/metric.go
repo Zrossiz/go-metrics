@@ -5,7 +5,6 @@ import (
 
 	"github.com/Zrossiz/go-metrics/internal/server/dto"
 	"github.com/Zrossiz/go-metrics/internal/server/models"
-	"go.uber.org/zap"
 )
 
 type MetricService struct {
@@ -21,7 +20,7 @@ type Storager interface {
 	Ping() error
 }
 
-func New(stor Storager, logger *zap.Logger) *MetricService {
+func New(stor Storager) *MetricService {
 	return &MetricService{
 		storage: stor,
 	}

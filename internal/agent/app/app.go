@@ -15,7 +15,7 @@ const WorkerCount = 2
 func StartAgent() {
 	cfg, err := config.GetConfig()
 	if err != nil {
-		zap.S().Fatalf("get config error", zap.Error(err))
+		zap.S().Fatal("get config error", zap.Error(err))
 	}
 
 	tickerPoll := time.NewTicker(time.Duration(cfg.PollInterval) * time.Second)
@@ -36,7 +36,7 @@ func StartAgent() {
 		go senderWorker(sendChan, rateLimiter, cfg)
 	}
 
-	var counter int64 = 0
+	var counter int64
 
 	for range tickerPoll.C {
 		metrics := collector.GetMetrics(&counter)

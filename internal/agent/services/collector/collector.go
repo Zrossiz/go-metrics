@@ -14,7 +14,7 @@ import (
 func GetMetrics(counter *int64) []types.Metric {
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
-	*counter += 1
+	*counter++
 
 	vmStat, err := mem.VirtualMemory()
 	if err != nil {
@@ -62,7 +62,7 @@ func GetMetrics(counter *int64) []types.Metric {
 
 	for i, cpuUtil := range cpuPercentages {
 		metrics = append(metrics, types.Metric{
-			Name:  "CPUutilization" + fmt.Sprint(i+1),
+			Name:  fmt.Sprintf("CPUutilization %v", i+1),
 			Type:  "gauge",
 			Value: cpuUtil,
 		})
