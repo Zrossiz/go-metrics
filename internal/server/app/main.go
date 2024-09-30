@@ -9,11 +9,12 @@ import (
 	"time"
 
 	"github.com/Zrossiz/go-metrics/internal/server/config"
-	"github.com/Zrossiz/go-metrics/internal/server/libs/logger"
 	"github.com/Zrossiz/go-metrics/internal/server/service"
 	"github.com/Zrossiz/go-metrics/internal/server/storage"
 	"github.com/Zrossiz/go-metrics/internal/server/storage/dbstorage"
+	"github.com/Zrossiz/go-metrics/internal/server/transport/http/handler"
 	"github.com/Zrossiz/go-metrics/internal/server/transport/http/router"
+	"github.com/Zrossiz/go-metrics/pkg/logger"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"go.uber.org/zap"
 )
@@ -35,16 +36,12 @@ func StartServer() {
 		if err != nil {
 			log.ZapLogger.Fatal("error connect to db", zap.Error(err))
 		}
-
-		err = dbstorage.MigrateSQL(dbConn)
-		if err != nil {
-			log.ZapLogger.Fatal("migrate error", zap.Error(err))
-		}
 	}
 
 	store := storage.New(dbConn, cfg, log.ZapLogger)
-	serv := service.New(store, log.ZapLogger, dbConn)
-	r := router.New(serv, log.ZapLogger)
+	serv := service.New(store)
+	handl := handler.New(serv, log.ZapLogger)
+	r := router.New(&handl, log.ZapLogger)
 
 	srv := &http.Server{
 		Addr:    cfg.ServerAddress,

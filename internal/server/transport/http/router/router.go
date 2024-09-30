@@ -5,14 +5,21 @@ import (
 
 	"github.com/Zrossiz/go-metrics/internal/server/middleware/gzip"
 	"github.com/Zrossiz/go-metrics/internal/server/middleware/logger"
-	"github.com/Zrossiz/go-metrics/internal/server/service"
-	"github.com/Zrossiz/go-metrics/internal/server/transport/http/handler"
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
 )
 
-func New(s *service.MetricService, log *zap.Logger) http.Handler {
-	handl := handler.New(s, log)
+type MetricRouter interface {
+	GetHTML(rw http.ResponseWriter, r *http.Request)
+	CreateParamMetric(rw http.ResponseWriter, r *http.Request)
+	CreateJSONMetric(rw http.ResponseWriter, r *http.Request)
+	GetStringMetric(rw http.ResponseWriter, r *http.Request)
+	GetJSONMetric(rw http.ResponseWriter, r *http.Request)
+	PingDB(rw http.ResponseWriter, _ *http.Request)
+	CreateBatchJSONMetrics(rw http.ResponseWriter, _ *http.Request)
+}
+
+func New(handl MetricRouter, log *zap.Logger) http.Handler {
 
 	r := chi.NewRouter()
 

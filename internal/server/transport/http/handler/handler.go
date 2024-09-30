@@ -8,27 +8,29 @@ import (
 	"strconv"
 	"text/template"
 
+	"github.com/Zrossiz/go-metrics/internal/server/config"
 	"github.com/Zrossiz/go-metrics/internal/server/dto"
+	"github.com/Zrossiz/go-metrics/internal/server/libs/hashgenerator"
 	"github.com/Zrossiz/go-metrics/internal/server/models"
-	"github.com/Zrossiz/go-metrics/internal/server/service"
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
 )
 
 type MetricHandler struct {
-	service *service.MetricService
+	service MetricHandlerer
 	logger  *zap.Logger
 }
 
 type MetricHandlerer interface {
-	GetHTML(rw http.ResponseWriter, r *http.Request)
-	CreateParamMetric(rw http.ResponseWriter, r *http.Request)
-	CreateJSONMetric(rw http.ResponseWriter, r *http.Request)
-	GetStringMetric(rw http.ResponseWriter, r *http.Request)
-	GetJSONMetric(rw http.ResponseWriter, r *http.Request)
+	Create(body dto.PostMetricDto) error
+	Get(name string) (*models.Metric, error)
+	GetAll() (*[]models.Metric, error)
+	GetStringValueMetric(name string) (string, error)
+	PingDB() error
+	SetBatch(body []dto.PostMetricDto) error
 }
 
-func New(s *service.MetricService, logger *zap.Logger) MetricHandler {
+func New(s MetricHandlerer, logger *zap.Logger) MetricHandler {
 	return MetricHandler{
 		service: s,
 		logger:  logger,
@@ -70,7 +72,7 @@ func (m *MetricHandler) CreateParamMetric(rw http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	metric, err := m.service.Get(dto.ID) // предполагается, что метод Get принимает ID
+	metric, err := m.service.Get(dto.ID)
 	if err != nil {
 		m.logger.Error("internal error", zap.Error(err))
 		http.Error(rw, "get created metric error", http.StatusInternalServerError)
@@ -79,9 +81,9 @@ func (m *MetricHandler) CreateParamMetric(rw http.ResponseWriter, r *http.Reques
 
 	var responseString string
 	if dto.MType == models.GaugeType {
-		responseString = fmt.Sprintf("Type: %s, Name: %s, Value: %v", metric.Type, metric.Name, dto.Value)
+		responseString = fmt.Sprintf("Type: %s, Name: %s, Value: %v", metric.Type, metric.Name, *dto.Value)
 	} else if dto.MType == models.CounterType {
-		responseString = fmt.Sprintf("Type: %s, Name: %s, Delta: %v", metric.Type, metric.Name, dto.Delta)
+		responseString = fmt.Sprintf("Type: %s, Name: %s, Delta: %v", metric.Type, metric.Name, *dto.Delta)
 	}
 
 	io.WriteString(rw, responseString)
@@ -101,13 +103,25 @@ func (m *MetricHandler) CreateBatchJSONMetrics(rw http.ResponseWriter, r *http.R
 	if err != nil {
 		m.logger.Error("internal error", zap.Error(err))
 		http.Error(rw, "internal server error", http.StatusInternalServerError)
+		return
 	}
 
 	rw.Header().Set("Content-Type", "application/json")
 	rw.WriteHeader(http.StatusOK)
 
-	response := map[string]string{"success": "true"}
-	err = json.NewEncoder(rw).Encode(response)
+	responseBody := map[string]bool{"success": true}
+
+	responseBodyBytes, err := json.Marshal(responseBody)
+	if err != nil {
+		http.Error(rw, "internal error", http.StatusInternalServerError)
+		return
+	}
+
+	if config.AppConfig.Key != "" {
+		setHashHeader(rw, responseBodyBytes)
+	}
+
+	err = json.NewEncoder(rw).Encode(responseBody)
 	if err != nil {
 		http.Error(rw, "internal error", http.StatusInternalServerError)
 	}
@@ -121,6 +135,7 @@ func (m *MetricHandler) CreateJSONMetric(rw http.ResponseWriter, r *http.Request
 		return
 	}
 	defer r.Body.Close()
+
 	err = m.service.Create(body)
 	if err != nil {
 		m.logger.Error("internal error", zap.Error(err))
@@ -150,6 +165,10 @@ func (m *MetricHandler) CreateJSONMetric(rw http.ResponseWriter, r *http.Request
 		m.logger.Error("internal error", zap.Error(err))
 		http.Error(rw, "failed to marshal response", http.StatusInternalServerError)
 		return
+	}
+
+	if config.AppConfig.Key != "" {
+		setHashHeader(rw, response)
 	}
 
 	rw.Header().Set("Content-Type", "application/json")
@@ -196,17 +215,9 @@ func (m *MetricHandler) GetJSONMetric(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var responseMetric dto.PostMetricDto
-	if metric.Type == models.CounterType || metric.Type == models.GaugeType {
-		responseMetric = dto.PostMetricDto{
-			ID:    metric.Name,
-			MType: metric.Type,
-		}
-	} else {
-		responseMetric = dto.PostMetricDto{
-			ID:    metric.Type,
-			MType: metric.Name,
-		}
+	responseMetric := dto.PostMetricDto{
+		ID:    metric.Name,
+		MType: metric.Type,
 	}
 
 	if metric.Delta != nil {
@@ -289,4 +300,9 @@ func (m *MetricHandler) PingDB(rw http.ResponseWriter, _ *http.Request) {
 	}
 
 	rw.WriteHeader(http.StatusOK)
+}
+
+func setHashHeader(rw http.ResponseWriter, body []byte) {
+	hash := hashgenerator.Generate(body, config.AppConfig.Key)
+	rw.Header().Set("HashSHA256", hash)
 }
