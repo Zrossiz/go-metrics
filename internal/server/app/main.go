@@ -2,7 +2,9 @@ package app
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	_ "net/http/pprof"
 	"os"
 	"os/signal"
 	"syscall"
@@ -22,12 +24,12 @@ import (
 func StartServer() {
 	cfg, err := config.GetConfig()
 	if err != nil {
-		zap.S().Fatalf("get config error", zap.Error(err))
+		fmt.Println("get config error", zap.Error(err))
 	}
 
 	log, err := logger.New(cfg.LogLevel)
 	if err != nil {
-		zap.S().Fatalf("init logger error", zap.Error(err))
+		fmt.Println("init logger error", zap.Error(err))
 	}
 
 	var dbConn *pgxpool.Pool
@@ -52,6 +54,13 @@ func StartServer() {
 		log.ZapLogger.Info("Starting server", zap.String("address", cfg.ServerAddress))
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.ZapLogger.Fatal("Failed to start server", zap.Error(err))
+		}
+	}()
+
+	go func() {
+		log.ZapLogger.Info("Starting pprof server on localhost:6060")
+		if err := http.ListenAndServe(":6060", nil); err != nil {
+			log.ZapLogger.Error("Failed to start pprof server", zap.Error(err))
 		}
 	}()
 
