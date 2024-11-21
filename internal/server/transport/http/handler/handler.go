@@ -256,7 +256,7 @@ func (m *MetricHandler) GetJSONMetric(rw http.ResponseWriter, r *http.Request) {
 }
 
 // GetHTML renders all metrics as an HTML table for visualization.
-func (m *MetricHandler) GetHTML(rw http.ResponseWriter, r *http.Request) {
+func (m *MetricHandler) GetHTML(rw http.ResponseWriter, _ *http.Request) {
 	tmpl := `
 		<!DOCTYPE html>
 		<html>

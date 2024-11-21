@@ -11,12 +11,12 @@ import (
 
 type MemStorage struct {
 	data []models.Metric
-	mu   sync.Mutex
+	mu   sync.RWMutex
 }
 
 func New() *MemStorage {
 	return &MemStorage{
-		data: make([]models.Metric, 0),
+		data: make([]models.Metric, 1000),
 	}
 }
 
@@ -77,7 +77,7 @@ func (m *MemStorage) Get(name string) (*models.Metric, error) {
 }
 
 func (m *MemStorage) GetAll() (*[]models.Metric, error) {
-	m.mu.Lock()
+	m.mu.RLock()
 	defer m.mu.Unlock()
 	return &m.data, nil
 }
