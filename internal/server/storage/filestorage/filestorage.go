@@ -14,13 +14,13 @@ import (
 
 type FileStorage struct {
 	data []models.Metric
-	mu   sync.Mutex
+	mu   sync.RWMutex
 	path string
 }
 
 func New(filePath string) *FileStorage {
 	return &FileStorage{
-		data: make([]models.Metric, 0),
+		data: make([]models.Metric, 1000),
 		path: filePath,
 	}
 }
@@ -82,7 +82,7 @@ func (f *FileStorage) Get(name string) (*models.Metric, error) {
 }
 
 func (f *FileStorage) GetAll() (*[]models.Metric, error) {
-	f.mu.Lock()
+	f.mu.RLock()
 	defer f.mu.Unlock()
 	return &f.data, nil
 }

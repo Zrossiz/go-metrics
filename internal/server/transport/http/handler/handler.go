@@ -1,3 +1,5 @@
+// Package handler provides HTTP handlers for managing metrics,
+// including creation, retrieval, and database connectivity checks.
 package handler
 
 import (
@@ -16,20 +18,30 @@ import (
 	"go.uber.org/zap"
 )
 
+// MetricHandler is responsible for processing HTTP requests
+// related to metric management.
 type MetricHandler struct {
 	service MetricHandlerer
 	logger  *zap.Logger
 }
 
+// MetricHandlerer defines the interface for operations related to metrics.
 type MetricHandlerer interface {
+	// Create saves a single metric based on the provided DTO.
 	Create(body dto.PostMetricDto) error
+	// Get retrieves a metric by its name.
 	Get(name string) (*models.Metric, error)
+	// GetAll retrieves all available metrics.
 	GetAll() (*[]models.Metric, error)
+	// GetStringValueMetric retrieves a metric's value as a string.
 	GetStringValueMetric(name string) (string, error)
+	// PingDB verifies the database connection.
 	PingDB() error
+	// SetBatch creates multiple metrics at once based on the provided DTO array.
 	SetBatch(body []dto.PostMetricDto) error
 }
 
+// New creates a new instance of MetricHandler with the provided service and logger.
 func New(s MetricHandlerer, logger *zap.Logger) MetricHandler {
 	return MetricHandler{
 		service: s,
@@ -37,6 +49,7 @@ func New(s MetricHandlerer, logger *zap.Logger) MetricHandler {
 	}
 }
 
+// CreateParamMetric handles the creation of a metric using URL parameters.
 func (m *MetricHandler) CreateParamMetric(rw http.ResponseWriter, r *http.Request) {
 	dto := dto.PostMetricDto{
 		ID:    chi.URLParam(r, "name"),
@@ -89,6 +102,7 @@ func (m *MetricHandler) CreateParamMetric(rw http.ResponseWriter, r *http.Reques
 	io.WriteString(rw, responseString)
 }
 
+// CreateBatchJSONMetrics handles batch creation of metrics using a JSON payload.
 func (m *MetricHandler) CreateBatchJSONMetrics(rw http.ResponseWriter, r *http.Request) {
 	var body []dto.PostMetricDto
 
@@ -127,6 +141,7 @@ func (m *MetricHandler) CreateBatchJSONMetrics(rw http.ResponseWriter, r *http.R
 	}
 }
 
+// CreateJSONMetric handles the creation of a single metric using a JSON payload.
 func (m *MetricHandler) CreateJSONMetric(rw http.ResponseWriter, r *http.Request) {
 	var body dto.PostMetricDto
 	err := json.NewDecoder(r.Body).Decode(&body)
@@ -176,6 +191,7 @@ func (m *MetricHandler) CreateJSONMetric(rw http.ResponseWriter, r *http.Request
 	rw.Write(response)
 }
 
+// GetStringMetric retrieves a metric's value in string format based on its name.
 func (m *MetricHandler) GetStringMetric(rw http.ResponseWriter, r *http.Request) {
 	nameMetric := chi.URLParam(r, "name")
 
@@ -193,6 +209,7 @@ func (m *MetricHandler) GetStringMetric(rw http.ResponseWriter, r *http.Request)
 	io.WriteString(rw, metric)
 }
 
+// GetJSONMetric retrieves a metric as a JSON response based on its name.
 func (m *MetricHandler) GetJSONMetric(rw http.ResponseWriter, r *http.Request) {
 	var body dto.GetMetricDto
 
@@ -238,7 +255,8 @@ func (m *MetricHandler) GetJSONMetric(rw http.ResponseWriter, r *http.Request) {
 	rw.Write(response)
 }
 
-func (m *MetricHandler) GetHTML(rw http.ResponseWriter, r *http.Request) {
+// GetHTML renders all metrics as an HTML table for visualization.
+func (m *MetricHandler) GetHTML(rw http.ResponseWriter, _ *http.Request) {
 	tmpl := `
 		<!DOCTYPE html>
 		<html>
@@ -291,6 +309,7 @@ func (m *MetricHandler) GetHTML(rw http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// PingDB checks the database connection and returns an HTTP 200 status
 func (m *MetricHandler) PingDB(rw http.ResponseWriter, _ *http.Request) {
 	err := m.service.PingDB()
 	if err != nil {

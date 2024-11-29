@@ -1,0 +1,23 @@
+File: server
+Type: cpu
+Time: Nov 21, 2024 at 3:26pm (MSK)
+Duration: 30.09s, Total samples = 40ms ( 0.13%)
+Showing nodes accounting for 40ms, 100% of 40ms total
+      flat  flat%   sum%        cum   cum%
+      20ms 50.00% 50.00%       20ms 50.00%  runtime.pthread_cond_wait
+      10ms 25.00% 75.00%       10ms 25.00%  runtime.kevent
+      10ms 25.00%   100%       10ms 25.00%  runtime.pthread_cond_signal
+         0     0%   100%       30ms 75.00%  runtime.findRunnable
+         0     0%   100%       20ms 50.00%  runtime.mPark (inline)
+         0     0%   100%       40ms   100%  runtime.mcall
+         0     0%   100%       10ms 25.00%  runtime.netpoll
+         0     0%   100%       20ms 50.00%  runtime.notesleep
+         0     0%   100%       10ms 25.00%  runtime.notewakeup
+         0     0%   100%       40ms   100%  runtime.park_m
+         0     0%   100%       10ms 25.00%  runtime.resetspinning
+         0     0%   100%       40ms   100%  runtime.schedule
+         0     0%   100%       20ms 50.00%  runtime.semasleep
+         0     0%   100%       10ms 25.00%  runtime.semawakeup
+         0     0%   100%       10ms 25.00%  runtime.startm
+         0     0%   100%       20ms 50.00%  runtime.stopm
+         0     0%   100%       10ms 25.00%  runtime.wakep

@@ -30,7 +30,7 @@ func GetConfig() (*Config, error) {
 	}
 
 	if envPollInterval := os.Getenv("POLL_INTERVAL"); envPollInterval != "" {
-		val, err := strconv.ParseInt(envPollInterval, 2, 64)
+		val, err := strconv.ParseInt(envPollInterval, 10, 64)
 
 		if err == nil {
 			cfg.PollInterval = val
@@ -40,7 +40,7 @@ func GetConfig() (*Config, error) {
 	}
 
 	if envReportInterval := os.Getenv("REPORT_INTERVAL"); envReportInterval != "" {
-		val, err := strconv.ParseInt(envReportInterval, 6, 64)
+		val, err := strconv.ParseInt(envReportInterval, 10, 64)
 		if err == nil {
 			cfg.ReportInterval = val
 		} else {

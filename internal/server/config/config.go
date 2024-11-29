@@ -1,3 +1,4 @@
+// Config parser package
 package config
 
 import (
@@ -21,6 +22,7 @@ type Config struct {
 
 var AppConfig Config
 
+// Parsing config
 func GetConfig() (*Config, error) {
 	_ = godotenv.Load()
 
