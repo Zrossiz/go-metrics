@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Zrossiz/go-metrics/internal/agent/config"
 	"github.com/Zrossiz/go-metrics/internal/agent/constants/types"
 	"github.com/Zrossiz/go-metrics/internal/agent/dto"
 )
@@ -57,7 +56,7 @@ func Metrics(metrics []types.Metric, addr string) []types.Metric {
 	return sendedMetrics
 }
 
-func GzipMetrics(metrics []types.Metric, addr string, cfg config.Config) []types.Metric {
+func GzipMetrics(metrics []types.Metric, addr string, key string) []types.Metric {
 	var sendedMetrics []types.Metric
 
 	for i := 0; i < len(metrics); i++ {
@@ -80,7 +79,7 @@ func GzipMetrics(metrics []types.Metric, addr string, cfg config.Config) []types
 
 		gzipWriter.Close()
 
-		hash := computeHash(gzippedData, cfg.Key)
+		hash := computeHash(gzippedData, key)
 
 		request, err := getRequest("POST", reqURL, gzippedData, hash)
 		if err != nil {
@@ -97,7 +96,7 @@ func GzipMetrics(metrics []types.Metric, addr string, cfg config.Config) []types
 	return sendedMetrics
 }
 
-func BatchGzipMetrics(metrics []types.Metric, addr string, cfg *config.Config) {
+func BatchGzipMetrics(metrics []types.Metric, addr string, key string) {
 	reqURL := fmt.Sprintf("http://%s/updates/", addr)
 
 	postDtoMetrics := []dto.MetricDTO{}
@@ -139,7 +138,7 @@ func BatchGzipMetrics(metrics []types.Metric, addr string, cfg *config.Config) {
 
 	gzipWriter.Close()
 
-	hash := computeHash(gzippedData, cfg.Key)
+	hash := computeHash(gzippedData, key)
 
 	request, err := getRequest("POST", reqURL, gzippedData, hash)
 	if err != nil {
@@ -175,7 +174,26 @@ func getBytesMetricDTO(metric types.Metric) ([]byte, error) {
 	return jsonData, nil
 }
 
-func getRequest(method string, reqURL string, data bytes.Buffer, hash string) (*http.Request, error) {
+func getRequest(
+	method string,
+	reqURL string,
+	data bytes.Buffer,
+	hash string,
+) (*http.Request, error) {
+
+	if reqURL == "" {
+		return nil, fmt.Errorf("req url not provided")
+	}
+
+	validMethods := map[string]bool{"GET": true, "POST": true, "DELETE": true}
+	if !validMethods[method] {
+		return nil, fmt.Errorf("invalid http method")
+	}
+
+	if data.Len() == 0 {
+		return nil, fmt.Errorf("data cannot be empty")
+	}
+
 	req, err := http.NewRequest(method, reqURL, &data)
 	if err != nil {
 		return nil, err
