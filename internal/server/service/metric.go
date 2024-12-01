@@ -24,7 +24,7 @@ type Storager interface {
 	// Get retrieves a single metric by name from the storage.
 	Get(name string) (*models.Metric, error)
 	// GetAll retrieves all metrics from the storage.
-	GetAll() (*[]models.Metric, error)
+	GetAll() ([]models.Metric, error)
 	// Ping checks the connectivity of the storage.
 	Ping() error
 }
@@ -123,7 +123,7 @@ func (m *MetricService) GetStringValueMetric(name string) (string, error) {
 }
 
 // GetAll retrieves all metrics from the storage.
-func (m *MetricService) GetAll() (*[]models.Metric, error) {
+func (m *MetricService) GetAll() ([]models.Metric, error) {
 	metrics, err := m.storage.GetAll()
 	if err != nil {
 		return nil, err

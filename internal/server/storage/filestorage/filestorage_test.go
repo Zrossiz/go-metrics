@@ -90,7 +90,7 @@ func TestLoad(t *testing.T) {
 
 	loadedMetrics, err := storage.GetAll()
 	assert.NoError(t, err)
-	assert.Len(t, *loadedMetrics, 2)
+	assert.Len(t, loadedMetrics, 2)
 }
 
 func TestSave(t *testing.T) {

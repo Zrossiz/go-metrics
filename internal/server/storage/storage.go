@@ -28,7 +28,7 @@ type Storage interface {
 	// Get retrieves a single metric by name from the storage.
 	Get(name string) (*models.Metric, error)
 	// GetAll retrieves all metrics from the storage.
-	GetAll() (*[]models.Metric, error)
+	GetAll() ([]models.Metric, error)
 	// Load loads metrics from a file into the storage.
 	Load(filePath string) error
 	// Save persists the current metrics from the storage to a file.
