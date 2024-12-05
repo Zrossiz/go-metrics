@@ -32,7 +32,7 @@ type MetricHandlerer interface {
 	// Get retrieves a metric by its name.
 	Get(name string) (*models.Metric, error)
 	// GetAll retrieves all available metrics.
-	GetAll() (*[]models.Metric, error)
+	GetAll() ([]models.Metric, error)
 	// GetStringValueMetric retrieves a metric's value as a string.
 	GetStringValueMetric(name string) (string, error)
 	// PingDB verifies the database connection.
@@ -304,7 +304,7 @@ func (m *MetricHandler) GetHTML(rw http.ResponseWriter, _ *http.Request) {
 	}
 
 	rw.Header().Set("Content-Type", "text/html; charset=utf-8")
-	if err := t.Execute(rw, *metrics); err != nil {
+	if err := t.Execute(rw, metrics); err != nil {
 		http.Error(rw, "Internal Server Error", http.StatusInternalServerError)
 	}
 }

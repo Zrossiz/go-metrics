@@ -34,9 +34,9 @@ func (m *MockStorager) Get(name string) (*models.Metric, error) {
 	return args.Get(0).(*models.Metric), args.Error(1)
 }
 
-func (m *MockStorager) GetAll() (*[]models.Metric, error) {
+func (m *MockStorager) GetAll() ([]models.Metric, error) {
 	args := m.Called()
-	return args.Get(0).(*[]models.Metric), args.Error(1)
+	return args.Get(0).([]models.Metric), args.Error(1)
 }
 
 func (m *MockStorager) Ping() error {
@@ -178,7 +178,7 @@ func TestMetricService_GetAll(t *testing.T) {
 	mockStorage := new(MockStorager)
 	service := New(mockStorage)
 
-	expectedMetrics := &[]models.Metric{
+	expectedMetrics := []models.Metric{
 		{Name: "metric1", Type: models.GaugeType, Value: float64Ptr(1.23)},
 		{Name: "metric2", Type: models.CounterType, Delta: int64Ptr(10)},
 	}

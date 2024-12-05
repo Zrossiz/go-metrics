@@ -116,8 +116,8 @@ func TestGetAllMetrics(t *testing.T) {
 	storage.SetGauge(metrics[1])
 
 	addedMetrics, _ := storage.GetAll()
-	if len(*addedMetrics) != 2 {
-		t.Errorf("expected 2 metrics, got %v", len(*addedMetrics))
+	if len(addedMetrics) != 2 {
+		t.Errorf("expected 2 metrics, got %v", len(addedMetrics))
 	}
 }
 
@@ -143,7 +143,7 @@ func TestSetBatch(t *testing.T) {
 	_ = storage.SetBatch(metrics)
 
 	addedMetrics, _ := storage.GetAll()
-	if len(*addedMetrics) != 2 {
-		t.Errorf("expected 2 metrics, got %v", len(*addedMetrics))
+	if len(addedMetrics) != 2 {
+		t.Errorf("expected 2 metrics, got %v", len(addedMetrics))
 	}
 }

@@ -102,7 +102,7 @@ func TestDBStorage_GetAll(t *testing.T) {
 
 	allMetrics, err := storage.GetAll()
 	assert.NoError(t, err, "GetAll should retrieve all inserted metrics without error")
-	assert.GreaterOrEqual(t, len(*allMetrics), len(metrics), "Should retrieve at least the metrics we inserted")
+	assert.GreaterOrEqual(t, len(allMetrics), len(metrics), "Should retrieve at least the metrics we inserted")
 }
 
 func TestDBStorage_SetBatch(t *testing.T) {

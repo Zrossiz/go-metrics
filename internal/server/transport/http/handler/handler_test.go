@@ -35,9 +35,9 @@ func (m *MockMetricService) Get(name string) (*models.Metric, error) {
 	return nil, args.Error(1)
 }
 
-func (m *MockMetricService) GetAll() (*[]models.Metric, error) {
+func (m *MockMetricService) GetAll() ([]models.Metric, error) {
 	args := m.Called()
-	if metrics, ok := args.Get(0).(*[]models.Metric); ok {
+	if metrics, ok := args.Get(0).([]models.Metric); ok {
 		return metrics, args.Error(1)
 	}
 	return nil, args.Error(1)

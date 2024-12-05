@@ -106,7 +106,7 @@ func (d *DBStorage) Get(name string) (*models.Metric, error) {
 	return &metric, nil
 }
 
-func (d *DBStorage) GetAll() (*[]models.Metric, error) {
+func (d *DBStorage) GetAll() ([]models.Metric, error) {
 	query := `
 		WITH latest_metrics AS (
 			SELECT name, metric_type, MAX(created_at) as max_created_at
@@ -138,7 +138,7 @@ func (d *DBStorage) GetAll() (*[]models.Metric, error) {
 		metrics = append(metrics, metric)
 	}
 
-	return &metrics, nil
+	return metrics, nil
 }
 
 func (d *DBStorage) SetBatch(body []dto.PostMetricDto) error {
