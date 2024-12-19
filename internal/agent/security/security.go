@@ -1,6 +1,7 @@
 package security
 
 import (
+	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/base64"
@@ -29,10 +30,12 @@ func GetPublicKey(path string) (*rsa.PublicKey, error) {
 }
 
 func EncryptBody(body []byte, pubKey *rsa.PublicKey) (string, error) {
-	encryptedData, err := rsa.EncryptPKCS1v15(nil, pubKey, body)
+	encryptedData, err := rsa.EncryptPKCS1v15(rand.Reader, pubKey, body)
 	if err != nil {
 		return "", err
 	}
 
-	return base64.StdEncoding.EncodeToString(encryptedData), nil
+	result := base64.StdEncoding.EncodeToString(encryptedData)
+
+	return result, nil
 }

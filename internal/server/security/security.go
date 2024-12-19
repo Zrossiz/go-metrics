@@ -2,6 +2,7 @@ package security
 
 import (
 	"context"
+	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/base64"
@@ -53,8 +54,7 @@ func CheckCryptoBody(encryptedBody []byte) ([]byte, error) {
 	if err != nil {
 		return make([]byte, 0), err
 	}
-
-	decryptedMessage, err := rsa.DecryptPKCS1v15(nil, config.AppConfig.PrivateKey, encryptedMessage)
+	decryptedMessage, err := rsa.DecryptPKCS1v15(rand.Reader, config.AppConfig.PrivateKey, encryptedMessage)
 	if err != nil {
 		return make([]byte, 0), err
 	}

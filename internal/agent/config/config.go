@@ -26,7 +26,7 @@ func GetConfig() (*Config, error) {
 
 	flag.StringVar(&cfg.RunAddr, "a", "localhost:8080", "address and port to run server")
 	flag.Int64Var(&cfg.PollInterval, "p", 2, "interval for get metrics")
-	flag.Int64Var(&cfg.ReportInterval, "r", 10, "interval for send metrics")
+	flag.Int64Var(&cfg.ReportInterval, "r", 2, "interval for send metrics")
 
 	if envRunAddr := os.Getenv("ADDRESS"); envRunAddr != "" {
 		cfg.RunAddr = envRunAddr

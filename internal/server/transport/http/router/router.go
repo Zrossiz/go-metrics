@@ -5,6 +5,7 @@ package router
 import (
 	"net/http"
 
+	"github.com/Zrossiz/go-metrics/internal/server/middleware/cryptochecker"
 	"github.com/Zrossiz/go-metrics/internal/server/middleware/gzip"
 	"github.com/Zrossiz/go-metrics/internal/server/middleware/logger"
 	"github.com/go-chi/chi/v5"
@@ -52,7 +53,7 @@ func New(handl MetricRouter, log *zap.Logger) http.Handler {
 		// Update a metric using URL parameters
 		r.Post("/{type}/{name}/{value}", handl.CreateParamMetric)
 		// Update a metric using a JSON payload
-		r.Post("/", handl.CreateJSONMetric)
+		r.With(cryptochecker.DecryptMiddleware).Post("/", handl.CreateJSONMetric)
 	})
 
 	// Route for batch updates of metrics

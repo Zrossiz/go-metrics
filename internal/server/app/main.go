@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/Zrossiz/go-metrics/internal/server/config"
+	"github.com/Zrossiz/go-metrics/internal/server/security"
 	"github.com/Zrossiz/go-metrics/internal/server/service"
 	"github.com/Zrossiz/go-metrics/internal/server/storage"
 	"github.com/Zrossiz/go-metrics/internal/server/storage/dbstorage"
@@ -52,6 +53,14 @@ func StartServer() {
 			log.ZapLogger.Fatal("error connect to db", zap.Error(err))
 		}
 	}
+
+	// Configure crypto key
+	cryptoKey, err := security.GetPrivateKey(cfg.PrivateKeyPath)
+	if err != nil {
+		log.ZapLogger.Fatal("get crypto key error")
+	}
+	cfg.PrivateKey = cryptoKey
+	config.AppConfig.PrivateKey = cryptoKey
 
 	// Initialize the storage layer
 	store := storage.New(dbConn, cfg, log.ZapLogger)

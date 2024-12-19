@@ -60,6 +60,8 @@ func Metrics(metrics []types.Metric, cfg *config.Config) []types.Metric {
 
 		sendedMetrics = append(sendedMetrics, metrics[i])
 		resp.Body.Close()
+
+		fmt.Println(true)
 	}
 	return sendedMetrics
 }
