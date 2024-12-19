@@ -1,6 +1,7 @@
 package config
 
 import (
+	"crypto/rsa"
 	"flag"
 	"os"
 	"strconv"
@@ -9,11 +10,13 @@ import (
 )
 
 type Config struct {
-	RunAddr        string
-	PollInterval   int64
-	ReportInterval int64
-	Key            string
-	RateLimiter    int64
+	RunAddr         string
+	PollInterval    int64
+	ReportInterval  int64
+	Key             string
+	RateLimiter     int64
+	PublicKeyPath   string
+	PublicCryptoKey *rsa.PublicKey
 }
 
 func GetConfig() (*Config, error) {
@@ -61,6 +64,11 @@ func GetConfig() (*Config, error) {
 		} else {
 			return nil, err
 		}
+	}
+
+	flag.StringVar(&cfg.PublicKeyPath, "crypto-key", "/Users/zrossiz/Desktop/GoProjects/praktikum/projects/go-metrics/crypto/public_key.pem", "public key for encrypt request")
+	if envCryptoKey := os.Getenv("CRYPTO_KEY"); envCryptoKey != "" {
+		cfg.PublicKeyPath = envCryptoKey
 	}
 
 	flag.Parse()

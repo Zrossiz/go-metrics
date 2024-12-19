@@ -31,3 +31,5 @@ storage/storage.txt
 internal/server/storage/filestorage/storage
 Makefile
 metricstest
+
+/crypto

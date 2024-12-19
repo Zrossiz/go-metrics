@@ -1,11 +1,13 @@
 package app
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/Zrossiz/go-metrics/internal/agent/config"
 	"github.com/Zrossiz/go-metrics/internal/agent/constants/types"
 	"github.com/Zrossiz/go-metrics/internal/agent/http/send"
+	"github.com/Zrossiz/go-metrics/internal/agent/security"
 	"github.com/Zrossiz/go-metrics/internal/agent/services/collector"
 	"go.uber.org/zap"
 )
@@ -17,6 +19,13 @@ func StartAgent() {
 	if err != nil {
 		zap.S().Fatal("get config error", zap.Error(err))
 	}
+
+	publicCryptoKey, err := security.GetPublicKey(cfg.PublicKeyPath)
+	if err != nil {
+		fmt.Println(err)
+		zap.S().Fatal("get crypto key error", zap.Error(err))
+	}
+	cfg.PublicCryptoKey = publicCryptoKey
 
 	tickerPoll := time.NewTicker(time.Duration(cfg.PollInterval) * time.Second)
 	tickerReport := time.NewTicker(time.Duration(cfg.ReportInterval) * time.Second)
@@ -62,7 +71,7 @@ func senderWorker(sendChan chan []types.Metric, rateLimiter chan struct{}, cfg *
 			defer func() {
 				<-rateLimiter
 			}()
-			send.Metrics(metrics, cfg.RunAddr)
+			send.Metrics(metrics, cfg)
 		}(metrics)
 	}
 }

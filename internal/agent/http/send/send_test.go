@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/Zrossiz/go-metrics/internal/agent/config"
 	"github.com/Zrossiz/go-metrics/internal/agent/constants/types"
 	"github.com/stretchr/testify/assert"
 )
@@ -24,7 +25,11 @@ func TestMetrics(t *testing.T) {
 	}))
 	defer server.Close()
 
-	sendedMetrics := Metrics(metrics, server.Listener.Addr().String())
+	var cfg config.Config
+	cfg.RunAddr = server.Listener.Addr().String()
+	cfg.PublicKeyPath = ""
+
+	sendedMetrics := Metrics(metrics, &cfg)
 
 	if len(sendedMetrics) != len(metrics) {
 		fmt.Print(sendedMetrics[0].Name)

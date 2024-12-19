@@ -2,6 +2,7 @@
 package config
 
 import (
+	"crypto/rsa"
 	"flag"
 	"os"
 	"strconv"
@@ -18,6 +19,8 @@ type Config struct {
 	DBDSN           string
 	LogLevel        string
 	Key             string
+	PrivateKeyPath  string
+	PrivateKey      *rsa.PrivateKey
 }
 
 var AppConfig Config
@@ -69,6 +72,11 @@ func GetConfig() (*Config, error) {
 		cfg.LogLevel = envLogLevel
 	} else {
 		cfg.LogLevel = zapcore.ErrorLevel.String()
+	}
+
+	flag.StringVar(&cfg.PrivateKeyPath, "crypto-key", "/Users/zrossiz/Desktop/GoProjects/praktikum/projects/go-metrics/crypto/private_key.pem", "private key for encrypt request")
+	if envCryptoKey := os.Getenv("CRYPTO_KEY"); envCryptoKey != "" {
+		cfg.PrivateKeyPath = envCryptoKey
 	}
 
 	flag.StringVar(&cfg.Key, "k", "", "key for hash")

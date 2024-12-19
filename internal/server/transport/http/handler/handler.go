@@ -14,6 +14,7 @@ import (
 	"github.com/Zrossiz/go-metrics/internal/server/dto"
 	"github.com/Zrossiz/go-metrics/internal/server/libs/hashgenerator"
 	"github.com/Zrossiz/go-metrics/internal/server/models"
+	"github.com/Zrossiz/go-metrics/internal/server/security"
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
 )
@@ -104,14 +105,18 @@ func (m *MetricHandler) CreateParamMetric(rw http.ResponseWriter, r *http.Reques
 
 // CreateBatchJSONMetrics handles batch creation of metrics using a JSON payload.
 func (m *MetricHandler) CreateBatchJSONMetrics(rw http.ResponseWriter, r *http.Request) {
-	var body []dto.PostMetricDto
+	decrypted := security.DecryptedFromContext(r.Context())
+	if decrypted == nil {
+		http.Error(rw, "failed to decrypt message", http.StatusBadRequest)
+		return
+	}
 
-	err := json.NewDecoder(r.Body).Decode(&body)
+	var body []dto.PostMetricDto
+	err := json.Unmarshal(decrypted, &body)
 	if err != nil {
 		http.Error(rw, "invalid request body", http.StatusBadRequest)
 		return
 	}
-	defer r.Body.Close()
 
 	err = m.service.SetBatch(body)
 	if err != nil {
@@ -143,13 +148,18 @@ func (m *MetricHandler) CreateBatchJSONMetrics(rw http.ResponseWriter, r *http.R
 
 // CreateJSONMetric handles the creation of a single metric using a JSON payload.
 func (m *MetricHandler) CreateJSONMetric(rw http.ResponseWriter, r *http.Request) {
+	decrypted := security.DecryptedFromContext(r.Context())
+	if decrypted == nil {
+		http.Error(rw, "failed to decrypt message", http.StatusBadRequest)
+		return
+	}
+
 	var body dto.PostMetricDto
-	err := json.NewDecoder(r.Body).Decode(&body)
+	err := json.Unmarshal(decrypted, &body)
 	if err != nil {
 		http.Error(rw, "invalid request body", http.StatusBadRequest)
 		return
 	}
-	defer r.Body.Close()
 
 	err = m.service.Create(body)
 	if err != nil {
