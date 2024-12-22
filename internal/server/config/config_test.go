@@ -35,7 +35,7 @@ func TestGetConfig_FlagOverrides(t *testing.T) {
 	assert.Equal(t, "/var/metrics.json", cfg.FileStoragePath)
 	assert.Equal(t, "postgres://user:pass@localhost/dbname", cfg.DBDSN)
 	assert.Equal(t, "error", cfg.LogLevel)
-	assert.Equal(t, "overridekey", cfg.Key)
+	assert.Equal(t, "overridekey", cfg.HashKey)
 }
 
 func TestGetConfig_InvalidEnvValues(t *testing.T) {

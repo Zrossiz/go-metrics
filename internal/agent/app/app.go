@@ -1,7 +1,12 @@
 package app
 
 import (
+	"context"
 	"fmt"
+	"os"
+	"os/signal"
+	"sync"
+	"syscall"
 	"time"
 
 	"github.com/Zrossiz/go-metrics/internal/agent/config"
@@ -20,7 +25,7 @@ func StartAgent() {
 		zap.S().Fatal("get config error", zap.Error(err))
 	}
 
-	fmt.Println("port: ", cfg.RunAddr)
+	var wg sync.WaitGroup
 
 	publicCryptoKey, err := security.GetPublicKey(cfg.PublicKeyPath)
 	if err != nil {
@@ -57,15 +62,28 @@ func StartAgent() {
 		go senderWorker(sendChan, rateLimiter, cfg)
 	}
 
+	ctx, cancel := context.WithCancel(context.Background())
+	go handleSignals(cancel)
+
 	var counter int64
 
-	for range tickerPoll.C {
-		metrics := collector.GetMetrics(&counter)
-		metricsChan <- metrics
-
-		if len(tickerReport.C) > 0 {
-			metrics := <-metricsChan
-			sendChan <- metrics
+	for {
+		select {
+		case <-ctx.Done():
+			zap.S().Info("Shutting down agent...")
+			close(metricsChan)
+			close(sendChan)
+			wg.Wait()
+			return
+		case <-tickerPoll.C:
+			metrics := collector.GetMetrics(&counter)
+			metricsChan <- metrics
+		case <-tickerReport.C:
+			select {
+			case metrics := <-metricsChan:
+				sendChan <- metrics
+			default:
+			}
 		}
 	}
 }
@@ -86,4 +104,11 @@ func senderWorker(sendChan chan []types.Metric, rateLimiter chan struct{}, cfg *
 			send.Metrics(metrics, cfg)
 		}(metrics)
 	}
+}
+
+func handleSignals(cancel context.CancelFunc) {
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+	<-quit
+	cancel()
 }

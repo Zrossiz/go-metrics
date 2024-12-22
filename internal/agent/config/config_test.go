@@ -8,17 +8,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func resetFlags() {
-	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ContinueOnError)
-}
-
 func TestGetConfig_Success(t *testing.T) {
 	resetFlags()
 	os.Args = []string{
 		"cmd",
 		"-a", "192.168.1.1:8080",
-		"-p", "4",
-		"-r", "11",
+		"-p", "4s",
+		"-r", "11s",
 		"-l", "1001",
 		"-k", "hash1",
 	}
@@ -26,9 +22,9 @@ func TestGetConfig_Success(t *testing.T) {
 	cfg, err := GetConfig()
 	assert.NoError(t, err)
 	assert.NotNil(t, cfg)
-	assert.Equal(t, 4, int(cfg.PollInterval))
-	assert.Equal(t, 11, int(cfg.ReportInterval))
-	assert.Equal(t, "hash1", cfg.Key)
+	assert.Equal(t, "4s", cfg.PollInterval)
+	assert.Equal(t, "11s", cfg.ReportInterval)
+	assert.Equal(t, "hash1", cfg.HashKey)
 	assert.Equal(t, "192.168.1.1:8080", cfg.RunAddr)
 	assert.Equal(t, 1001, int(cfg.RateLimiter))
 }
@@ -57,4 +53,33 @@ func TestGetConfig_ValidEnvValues(t *testing.T) {
 	cfg, err := GetConfig()
 	assert.NoError(t, err)
 	assert.NotNil(t, cfg)
+}
+
+func TestGetConfig_ValidJSONConfig(t *testing.T) {
+	resetFlags()
+
+	JSONConfigFilePath, err := createFileWithJSONConfig()
+	if err != nil {
+		t.Errorf("create json config file: %v", err)
+	}
+
+	//init config
+
+	err = deleteFileWithJSONConfig(JSONConfigFilePath)
+	if err != nil {
+		t.Errorf("delete json config file: %v", err)
+	}
+
+}
+
+func createFileWithJSONConfig() (string, error) {
+	return "", nil
+}
+
+func deleteFileWithJSONConfig(string) error {
+	return nil
+}
+
+func resetFlags() {
+	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ContinueOnError)
 }

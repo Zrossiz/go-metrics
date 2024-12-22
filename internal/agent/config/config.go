@@ -50,7 +50,7 @@ func GetConfig() (*Config, error) {
 	if envRunAddr := os.Getenv("ADDRESS"); envRunAddr != "" {
 		cfg.RunAddr = envRunAddr
 	} else {
-		// flag.StringVar(&cfg.RunAddr, "a", "", "address and port to run server")
+		flag.StringVar(&cfg.RunAddr, "a", cfg.RunAddr, "address and port to run server")
 	}
 
 	if envPollInterval := os.Getenv("POLL_INTERVAL"); envPollInterval != "" {

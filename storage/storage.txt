@@ -1,0 +1,39 @@
+{"ID":3812638179211989351,"Name":"PollCount","Type":"counter","Value":null,"Delta":95,"CreatedAt":"0001-01-01T00:00:00Z"}
+{"ID":106976941678315313,"Name":"Alloc","Type":"gauge","Value":3152352,"Delta":null,"CreatedAt":"0001-01-01T00:00:00Z"}
+{"ID":1403302184611699264,"Name":"BuckHashSys","Type":"gauge","Value":3573,"Delta":null,"CreatedAt":"0001-01-01T00:00:00Z"}
+{"ID":867649948573917593,"Name":"Frees","Type":"gauge","Value":46268,"Delta":null,"CreatedAt":"0001-01-01T00:00:00Z"}
+{"ID":8746944124676713302,"Name":"GCCPUFraction","Type":"gauge","Value":0.00000909869700238637,"Delta":null,"CreatedAt":"0001-01-01T00:00:00Z"}
+{"ID":4246677790793934368,"Name":"GCSys","Type":"gauge","Value":2768712,"Delta":null,"CreatedAt":"0001-01-01T00:00:00Z"}
+{"ID":1087870097100084075,"Name":"HeapAlloc","Type":"gauge","Value":3152352,"Delta":null,"CreatedAt":"0001-01-01T00:00:00Z"}
+{"ID":406519965772129914,"Name":"HeapIdle","Type":"gauge","Value":3719168,"Delta":null,"CreatedAt":"0001-01-01T00:00:00Z"}
+{"ID":6534743860862523031,"Name":"HeapInuse","Type":"gauge","Value":4046848,"Delta":null,"CreatedAt":"0001-01-01T00:00:00Z"}
+{"ID":8605333639216786089,"Name":"HeapObjects","Type":"gauge","Value":20758,"Delta":null,"CreatedAt":"0001-01-01T00:00:00Z"}
+{"ID":3479915565668951127,"Name":"HeapReleased","Type":"gauge","Value":2727936,"Delta":null,"CreatedAt":"0001-01-01T00:00:00Z"}
+{"ID":5176744881242059097,"Name":"HeapSys","Type":"gauge","Value":7766016,"Delta":null,"CreatedAt":"0001-01-01T00:00:00Z"}
+{"ID":5956029175780683524,"Name":"LastGC","Type":"gauge","Value":1734875125433264000,"Delta":null,"CreatedAt":"0001-01-01T00:00:00Z"}
+{"ID":3252925369347426176,"Name":"Lookups","Type":"gauge","Value":0,"Delta":null,"CreatedAt":"0001-01-01T00:00:00Z"}
+{"ID":6829542927065255669,"Name":"MCacheInuse","Type":"gauge","Value":9600,"Delta":null,"CreatedAt":"0001-01-01T00:00:00Z"}
+{"ID":5798067479865859744,"Name":"MCacheSys","Type":"gauge","Value":15600,"Delta":null,"CreatedAt":"0001-01-01T00:00:00Z"}
+{"ID":3210804495026082323,"Name":"MSpanInuse","Type":"gauge","Value":136320,"Delta":null,"CreatedAt":"0001-01-01T00:00:00Z"}
+{"ID":1439618508153543461,"Name":"MSpanSys","Type":"gauge","Value":146880,"Delta":null,"CreatedAt":"0001-01-01T00:00:00Z"}
+{"ID":3821449047998362859,"Name":"Mallocs","Type":"gauge","Value":67026,"Delta":null,"CreatedAt":"0001-01-01T00:00:00Z"}
+{"ID":7750511504538012076,"Name":"NextGC","Type":"gauge","Value":4194304,"Delta":null,"CreatedAt":"0001-01-01T00:00:00Z"}
+{"ID":4286067568638998091,"Name":"NumForcedGC","Type":"gauge","Value":0,"Delta":null,"CreatedAt":"0001-01-01T00:00:00Z"}
+{"ID":580262088622155313,"Name":"NumGC","Type":"gauge","Value":2,"Delta":null,"CreatedAt":"0001-01-01T00:00:00Z"}
+{"ID":8842206116831026702,"Name":"OtherSys","Type":"gauge","Value":1016867,"Delta":null,"CreatedAt":"0001-01-01T00:00:00Z"}
+{"ID":6456184788704093004,"Name":"PauseTotalNs","Type":"gauge","Value":294542,"Delta":null,"CreatedAt":"0001-01-01T00:00:00Z"}
+{"ID":2344769914166484041,"Name":"StackInuse","Type":"gauge","Value":622592,"Delta":null,"CreatedAt":"0001-01-01T00:00:00Z"}
+{"ID":7795536541508947529,"Name":"StackSys","Type":"gauge","Value":622592,"Delta":null,"CreatedAt":"0001-01-01T00:00:00Z"}
+{"ID":6395329200068748159,"Name":"Sys","Type":"gauge","Value":12340240,"Delta":null,"CreatedAt":"0001-01-01T00:00:00Z"}
+{"ID":5084290446613647831,"Name":"TotalAlloc","Type":"gauge","Value":9185984,"Delta":null,"CreatedAt":"0001-01-01T00:00:00Z"}
+{"ID":3189049640734126895,"Name":"RandomValue","Type":"gauge","Value":0.9070703971726223,"Delta":null,"CreatedAt":"0001-01-01T00:00:00Z"}
+{"ID":7721284087925348332,"Name":"TotalMemory","Type":"gauge","Value":17179869184,"Delta":null,"CreatedAt":"0001-01-01T00:00:00Z"}
+{"ID":1827046770010708558,"Name":"FreeMemory","Type":"gauge","Value":695894016,"Delta":null,"CreatedAt":"0001-01-01T00:00:00Z"}
+{"ID":4827151519534632197,"Name":"CPUutilization 1","Type":"gauge","Value":25.757575758288432,"Delta":null,"CreatedAt":"0001-01-01T00:00:00Z"}
+{"ID":961631708551654479,"Name":"CPUutilization 2","Type":"gauge","Value":26.26262626226993,"Delta":null,"CreatedAt":"0001-01-01T00:00:00Z"}
+{"ID":166748072827236350,"Name":"CPUutilization 3","Type":"gauge","Value":87.99999999880258,"Delta":null,"CreatedAt":"0001-01-01T00:00:00Z"}
+{"ID":5832539186481707642,"Name":"CPUutilization 4","Type":"gauge","Value":83.99999999840345,"Delta":null,"CreatedAt":"0001-01-01T00:00:00Z"}
+{"ID":2451720738278424816,"Name":"CPUutilization 5","Type":"gauge","Value":7.070707070647682,"Delta":null,"CreatedAt":"0001-01-01T00:00:00Z"}
+{"ID":191067539543859905,"Name":"CPUutilization 6","Type":"gauge","Value":4.020100502383951,"Delta":null,"CreatedAt":"0001-01-01T00:00:00Z"}
+{"ID":834924681491065350,"Name":"CPUutilization 7","Type":"gauge","Value":3.0150753769643455,"Delta":null,"CreatedAt":"0001-01-01T00:00:00Z"}
+{"ID":6494850500776529425,"Name":"CPUutilization 8","Type":"gauge","Value":2.5125628142283607,"Delta":null,"CreatedAt":"0001-01-01T00:00:00Z"}
