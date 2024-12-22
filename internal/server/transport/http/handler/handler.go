@@ -136,7 +136,7 @@ func (m *MetricHandler) CreateBatchJSONMetrics(rw http.ResponseWriter, r *http.R
 		return
 	}
 
-	if config.AppConfig.Key != "" {
+	if config.AppConfig.HashKey != "" {
 		setHashHeader(rw, responseBodyBytes)
 	}
 
@@ -192,7 +192,7 @@ func (m *MetricHandler) CreateJSONMetric(rw http.ResponseWriter, r *http.Request
 		return
 	}
 
-	if config.AppConfig.Key != "" {
+	if config.AppConfig.HashKey != "" {
 		setHashHeader(rw, response)
 	}
 
@@ -332,6 +332,6 @@ func (m *MetricHandler) PingDB(rw http.ResponseWriter, _ *http.Request) {
 }
 
 func setHashHeader(rw http.ResponseWriter, body []byte) {
-	hash := hashgenerator.Generate(body, config.AppConfig.Key)
+	hash := hashgenerator.Generate(body, config.AppConfig.HashKey)
 	rw.Header().Set("HashSHA256", hash)
 }

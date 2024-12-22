@@ -12,10 +12,10 @@ import (
 )
 
 func TestHashCheker_ValidHash(t *testing.T) {
-	config.AppConfig = config.Config{Key: "test_key"}
+	config.AppConfig = config.Config{HashKey: "test_key"}
 	body := []byte("test_body")
 
-	validHash := hashgenerator.Generate(body, config.AppConfig.Key)
+	validHash := hashgenerator.Generate(body, config.AppConfig.HashKey)
 
 	req := httptest.NewRequest(http.MethodGet, "/", bytes.NewBuffer(body))
 	req.Header.Set("HashSHA256", validHash)
@@ -33,7 +33,7 @@ func TestHashCheker_ValidHash(t *testing.T) {
 }
 
 func TestHashCheker_InvalidHash(t *testing.T) {
-	config.AppConfig = config.Config{Key: "test_key"}
+	config.AppConfig = config.Config{HashKey: "test_key"}
 	body := []byte("test_body")
 
 	invalidHash := "invalid_hash"
@@ -55,7 +55,7 @@ func TestHashCheker_InvalidHash(t *testing.T) {
 }
 
 func TestHashCheker_EmptyHashHeader(t *testing.T) {
-	config.AppConfig = config.Config{Key: "test_key"}
+	config.AppConfig = config.Config{HashKey: "test_key"}
 	body := []byte("test_body")
 
 	req := httptest.NewRequest(http.MethodGet, "/", bytes.NewBuffer(body))
@@ -73,7 +73,7 @@ func TestHashCheker_EmptyHashHeader(t *testing.T) {
 }
 
 func TestHashCheker_EmptyConfigKey(t *testing.T) {
-	config.AppConfig = config.Config{Key: ""}
+	config.AppConfig = config.Config{HashKey: ""}
 	body := []byte("test_body")
 
 	req := httptest.NewRequest(http.MethodGet, "/", bytes.NewBuffer(body))

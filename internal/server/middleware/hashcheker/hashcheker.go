@@ -12,7 +12,7 @@ import (
 func HashCheker(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		hash := r.Header.Get("HashSHA256")
-		if hash != "" && config.AppConfig.Key != "" {
+		if hash != "" && config.AppConfig.HashKey != "" {
 			bodyBytes, err := io.ReadAll(r.Body)
 			if err != nil {
 				http.Error(w, "failed to read request body", http.StatusInternalServerError)
@@ -21,7 +21,7 @@ func HashCheker(next http.Handler) http.Handler {
 			defer r.Body.Close()
 			r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 
-			generatedHash := hashgenerator.Generate(bodyBytes, config.AppConfig.Key)
+			generatedHash := hashgenerator.Generate(bodyBytes, config.AppConfig.HashKey)
 
 			if generatedHash == hash {
 				next.ServeHTTP(w, r)

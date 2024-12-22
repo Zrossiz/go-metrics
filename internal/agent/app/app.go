@@ -20,6 +20,8 @@ func StartAgent() {
 		zap.S().Fatal("get config error", zap.Error(err))
 	}
 
+	fmt.Println("port: ", cfg.RunAddr)
+
 	publicCryptoKey, err := security.GetPublicKey(cfg.PublicKeyPath)
 	if err != nil {
 		fmt.Println(err)
@@ -27,8 +29,18 @@ func StartAgent() {
 	}
 	cfg.PublicCryptoKey = publicCryptoKey
 
-	tickerPoll := time.NewTicker(time.Duration(cfg.PollInterval) * time.Second)
-	tickerReport := time.NewTicker(time.Duration(cfg.ReportInterval) * time.Second)
+	pollIntervalDuration, err := time.ParseDuration(cfg.PollInterval)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	reportIntervalDuration, err := time.ParseDuration(cfg.ReportInterval)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	tickerPoll := time.NewTicker(pollIntervalDuration)
+	tickerReport := time.NewTicker(reportIntervalDuration)
 	defer tickerPoll.Stop()
 	defer tickerReport.Stop()
 
