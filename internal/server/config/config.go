@@ -58,15 +58,13 @@ func GetConfig() (*Config, error) {
 		flag.StringVar(&cfg.ServerAddress, "a", cfg.ServerAddress, "address and port to run server")
 	}
 
-	fmt.Println("port server: ", cfg.ServerAddress)
-
 	if envStoreInterval := os.Getenv("STORE_INTERVAL"); envStoreInterval != "" {
 		cfg.StoreInterval = envStoreInterval
 	} else {
-		flag.StringVar(&cfg.StoreInterval, "i", "5s", "interval for save metrics")
+		flag.StringVar(&cfg.StoreInterval, "i", cfg.StoreInterval, "interval for save metrics")
 	}
 
-	flag.BoolVar(&cfg.Restore, "r", false, "get metrics from file")
+	flag.BoolVar(&cfg.Restore, "r", cfg.Restore, "get metrics from file")
 	if envRestore := os.Getenv("RESTORE"); envRestore != "" {
 		value, err := strconv.ParseBool(envRestore)
 		if err != nil {
@@ -78,13 +76,13 @@ func GetConfig() (*Config, error) {
 	if envFileStoragePath := os.Getenv("FILE_STORAGE_PATH"); envFileStoragePath != "" {
 		cfg.FileStoragePath = envFileStoragePath
 	} else {
-		flag.StringVar(&cfg.FileStoragePath, "f", "", "path to storage file")
+		flag.StringVar(&cfg.FileStoragePath, "f", cfg.FileStoragePath, "path to storage file")
 	}
 
 	if envDBConn := os.Getenv("DATABASE_DSN"); envDBConn != "" {
 		cfg.DBDSN = envDBConn
 	} else {
-		flag.StringVar(&cfg.DBDSN, "d", "", "dsn for database")
+		flag.StringVar(&cfg.DBDSN, "d", cfg.DBDSN, "dsn for database")
 	}
 
 	if envLogLevel := os.Getenv("LOG_LEVEL"); envLogLevel != "" {
@@ -93,12 +91,12 @@ func GetConfig() (*Config, error) {
 		cfg.LogLevel = zapcore.ErrorLevel.String()
 	}
 
-	flag.StringVar(&cfg.PrivateKeyPath, "crypto-key", "/Users/zrossiz/Desktop/GoProjects/praktikum/projects/go-metrics/crypto/private_key.pem", "private key for encrypt request")
+	flag.StringVar(&cfg.PrivateKeyPath, "crypto-key", cfg.PrivateKeyPath, "private key for encrypt request")
 	if envCryptoKey := os.Getenv("CRYPTO_KEY"); envCryptoKey != "" {
 		cfg.PrivateKeyPath = envCryptoKey
 	}
 
-	flag.StringVar(&cfg.HashKey, "k", "", "key for hash")
+	flag.StringVar(&cfg.HashKey, "k", cfg.HashKey, "key for hash")
 	if envKey := os.Getenv("KEY"); envKey != "" {
 		cfg.HashKey = envKey
 	}

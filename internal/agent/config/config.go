@@ -44,8 +44,8 @@ func GetConfig() (*Config, error) {
 		cfg = cfgJSON
 	}
 
-	flag.StringVar(&cfg.PollInterval, "p", "2s", "interval for get metrics")
-	flag.StringVar(&cfg.ReportInterval, "r", "4s", "interval for send metrics")
+	flag.StringVar(&cfg.PollInterval, "p", cfg.PollInterval, "interval for get metrics")
+	flag.StringVar(&cfg.ReportInterval, "r", cfg.ReportInterval, "interval for send metrics")
 
 	if envRunAddr := os.Getenv("ADDRESS"); envRunAddr != "" {
 		cfg.RunAddr = envRunAddr
@@ -61,12 +61,12 @@ func GetConfig() (*Config, error) {
 		cfg.ReportInterval = envReportInterval
 	}
 
-	flag.StringVar(&cfg.HashKey, "k", "", "key for hash")
+	flag.StringVar(&cfg.HashKey, "k", cfg.HashKey, "key for hash")
 	if envKey := os.Getenv("KEY"); envKey != "" {
 		cfg.HashKey = envKey
 	}
 
-	flag.Int64Var(&cfg.RateLimiter, "l", 1000, "rate limiter")
+	flag.Int64Var(&cfg.RateLimiter, "l", cfg.RateLimiter, "rate limiter")
 	if envRateLimiter := os.Getenv("RATE_LIMITER"); envRateLimiter != "" {
 		value, err := strconv.Atoi(envRateLimiter)
 		if err == nil {
@@ -76,7 +76,7 @@ func GetConfig() (*Config, error) {
 		}
 	}
 
-	flag.StringVar(&cfg.PublicKeyPath, "crypto-key", "/Users/zrossiz/Desktop/GoProjects/praktikum/projects/go-metrics/crypto/public_key.pem", "public key for encrypt request")
+	flag.StringVar(&cfg.PublicKeyPath, "crypto-key", cfg.PublicKeyPath, "public key for encrypt request")
 	if envCryptoKey := os.Getenv("CRYPTO_KEY"); envCryptoKey != "" {
 		cfg.PublicKeyPath = envCryptoKey
 	}

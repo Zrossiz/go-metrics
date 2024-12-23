@@ -1,6 +1,7 @@
 package config
 
 import (
+	"encoding/json"
 	"flag"
 	"os"
 	"testing"
@@ -44,8 +45,8 @@ func TestGetConfig_InvalidEnvValues(t *testing.T) {
 func TestGetConfig_ValidEnvValues(t *testing.T) {
 	resetFlags()
 
-	os.Setenv("POLL_INTERVAL", "10")
-	os.Setenv("REPORT_INTERVAL", "10")
+	os.Setenv("POLL_INTERVAL", "10s")
+	os.Setenv("REPORT_INTERVAL", "10s")
 	os.Setenv("RATE_LIMITER", "10")
 	os.Setenv("KEY", "hash1")
 	os.Setenv("ADDRESS", "addr")
@@ -57,27 +58,55 @@ func TestGetConfig_ValidEnvValues(t *testing.T) {
 
 func TestGetConfig_ValidJSONConfig(t *testing.T) {
 	resetFlags()
+	os.Clearenv()
 
 	JSONConfigFilePath, err := createFileWithJSONConfig()
 	if err != nil {
 		t.Errorf("create json config file: %v", err)
 	}
+	defer deleteFileWithJSONConfig(JSONConfigFilePath)
 
-	//init config
+	os.Setenv("CONFIG", JSONConfigFilePath)
 
-	err = deleteFileWithJSONConfig(JSONConfigFilePath)
-	if err != nil {
-		t.Errorf("delete json config file: %v", err)
-	}
-
+	cfg, err := GetConfig()
+	assert.NoError(t, err)
+	assert.NotNil(t, cfg)
+	assert.Equal(t, "4s", cfg.PollInterval)
+	// assert.Equal(t, "11s", cfg.ReportInterval)
+	// assert.Equal(t, "hash1", cfg.HashKey)
+	// assert.Equal(t, "192.168.1.1:8080", cfg.RunAddr)
+	// assert.Equal(t, 1001, int(cfg.RateLimiter))
 }
 
 func createFileWithJSONConfig() (string, error) {
-	return "", nil
+	tmpFile, err := os.CreateTemp("", "config_*.json")
+	if err != nil {
+		return "", err
+	}
+	defer tmpFile.Close()
+
+	cfg := &Config{
+		RunAddr:        "192.168.1.1:8080",
+		PollInterval:   "4s",
+		ReportInterval: "11s",
+		HashKey:        "hash1",
+		RateLimiter:    1001,
+	}
+
+	fileContent, err := json.Marshal(cfg)
+	if err != nil {
+		return "", err
+	}
+
+	if _, err := tmpFile.Write(fileContent); err != nil {
+		return "", err
+	}
+
+	return tmpFile.Name(), nil
 }
 
-func deleteFileWithJSONConfig(string) error {
-	return nil
+func deleteFileWithJSONConfig(filePath string) error {
+	return os.Remove(filePath)
 }
 
 func resetFlags() {

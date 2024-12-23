@@ -7,14 +7,16 @@ import (
 	"github.com/Zrossiz/go-metrics/internal/server/security"
 )
 
-func DecryptMiddleware(next http.Handler) http.Handler {
+type CryptoChecker func([]byte) ([]byte, error)
+
+func DecryptMiddleware(next http.Handler, checkCryptoBody CryptoChecker) http.Handler {
 	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		encryptedBody, err := io.ReadAll(r.Body)
 		if err != nil {
 			http.Error(rw, "failed to read request body", http.StatusBadRequest)
 			return
 		}
-		decryptedMessage, err := security.CheckCryptoBody(encryptedBody)
+		decryptedMessage, err := checkCryptoBody(encryptedBody)
 		if err != nil {
 			http.Error(rw, "failed to decrypt body", http.StatusBadRequest)
 			return
