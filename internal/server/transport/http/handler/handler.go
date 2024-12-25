@@ -266,6 +266,7 @@ func (m *MetricHandler) GetJSONMetric(rw http.ResponseWriter, r *http.Request) {
 }
 
 // GetHTML renders all metrics as an HTML table for visualization.
+// GetHTML отображает все метрики в виде HTML-таблицы.
 func (m *MetricHandler) GetHTML(rw http.ResponseWriter, _ *http.Request) {
 	tmpl := `
 		<!DOCTYPE html>
@@ -306,6 +307,7 @@ func (m *MetricHandler) GetHTML(rw http.ResponseWriter, _ *http.Request) {
 		return
 	}
 
+	// Получаем все метрики
 	metrics, err := m.service.GetAll()
 	if err != nil {
 		m.logger.Error("internal error", zap.Error(err))
@@ -313,7 +315,15 @@ func (m *MetricHandler) GetHTML(rw http.ResponseWriter, _ *http.Request) {
 		return
 	}
 
+	// Если метрики отсутствуют, передаём пустой список
+	if len(metrics) == 0 {
+		metrics = []models.Metric{}
+	}
+
+	// Устанавливаем заголовок Content-Type для HTML
 	rw.Header().Set("Content-Type", "text/html; charset=utf-8")
+
+	// Отправляем сгенерированный HTML в ответ
 	if err := t.Execute(rw, metrics); err != nil {
 		http.Error(rw, "Internal Server Error", http.StatusInternalServerError)
 	}

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -154,6 +155,89 @@ func TestGetJSONMetric(t *testing.T) {
 
 		mockService.AssertCalled(t, "Get", "TestMetric")
 	})
+}
+
+func TestCreateParamMetric_InvalidMetricType(t *testing.T) {
+	mockService := new(MockMetricService)
+	logger := zap.NewExample()
+
+	h := handler.New(mockService, logger)
+
+	req := httptest.NewRequest("POST", "/update/invalidMetricType/TestMetric/123.45", nil)
+	rr := httptest.NewRecorder()
+
+	rctx := chi.NewRouteContext()
+	rctx.URLParams.Add("type", "invalidMetricType")
+	rctx.URLParams.Add("name", "TestMetric")
+	rctx.URLParams.Add("value", "123.45")
+	req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
+
+	h.CreateParamMetric(rr, req)
+
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+	expectedBody := "invalid metric type"
+	assert.Equal(t, expectedBody, strings.TrimSpace(rr.Body.String()))
+}
+
+func TestCreateParamMetric_InvalidValue(t *testing.T) {
+	mockService := new(MockMetricService)
+	logger := zap.NewExample()
+
+	h := handler.New(mockService, logger)
+
+	req := httptest.NewRequest("POST", "/update/gauge/TestMetric/invalidValue", nil)
+	rr := httptest.NewRecorder()
+
+	rctx := chi.NewRouteContext()
+	rctx.URLParams.Add("type", "gauge")
+	rctx.URLParams.Add("name", "TestMetric")
+	rctx.URLParams.Add("value", "invalidValue")
+	req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
+
+	h.CreateParamMetric(rr, req)
+
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+	expectedBody := "invalid value metric"
+	assert.Equal(t, expectedBody, strings.TrimSpace(rr.Body.String()))
+}
+
+func TestPingDB_Failure(t *testing.T) {
+	mockService := new(MockMetricService)
+	logger := zap.NewExample()
+	h := handler.New(mockService, logger)
+
+	mockService.On("PingDB").Return(fmt.Errorf("db not available"))
+
+	req := httptest.NewRequest("GET", "/ping", nil)
+	rr := httptest.NewRecorder()
+
+	h.PingDB(rr, req)
+
+	assert.Equal(t, http.StatusInternalServerError, rr.Code)
+	assert.Equal(t, "connection not available", strings.TrimSpace(rr.Body.String()))
+}
+
+func TestCreateParamMetric_ServiceError(t *testing.T) {
+	mockService := new(MockMetricService)
+	logger := zap.NewExample()
+
+	h := handler.New(mockService, logger)
+
+	mockService.On("Create", mock.Anything).Return(fmt.Errorf("service error"))
+
+	req := httptest.NewRequest("POST", "/update/gauge/TestMetric/123.45", nil)
+	rr := httptest.NewRecorder()
+
+	rctx := chi.NewRouteContext()
+	rctx.URLParams.Add("type", "gauge")
+	rctx.URLParams.Add("name", "TestMetric")
+	rctx.URLParams.Add("value", "123.45")
+	req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
+
+	h.CreateParamMetric(rr, req)
+
+	assert.Equal(t, http.StatusInternalServerError, rr.Code)
+	assert.Contains(t, rr.Body.String(), "create metric error")
 }
 
 func floatPtr(f float64) *float64 {

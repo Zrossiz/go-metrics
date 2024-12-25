@@ -46,7 +46,7 @@ func GetConfig() (*Config, error) {
 		fmt.Print("Start parsing config from JSON file...\n")
 		cfgJSON, err := loadJSONConfig(cfg.JSONConfigPath)
 		if err != nil {
-			fmt.Printf("Eror parsing config from JSON: %v\n", err)
+			fmt.Printf("Error parsing config from JSON: %v\n", err)
 		}
 
 		cfg = cfgJSON
@@ -64,13 +64,15 @@ func GetConfig() (*Config, error) {
 		flag.StringVar(&cfg.StoreInterval, "i", cfg.StoreInterval, "interval for save metrics")
 	}
 
-	flag.BoolVar(&cfg.Restore, "r", cfg.Restore, "get metrics from file")
 	if envRestore := os.Getenv("RESTORE"); envRestore != "" {
 		value, err := strconv.ParseBool(envRestore)
 		if err != nil {
 			return nil, err
 		}
 		cfg.Restore = value
+	} else {
+		flag.BoolVar(&cfg.Restore, "r", cfg.Restore, "get metrics from file")
+
 	}
 
 	if envFileStoragePath := os.Getenv("FILE_STORAGE_PATH"); envFileStoragePath != "" {

@@ -20,6 +20,7 @@ require (
 	github.com/gostaticanalysis/analysisutil v0.7.1 // indirect
 	github.com/gostaticanalysis/builtinprint v0.1.0 // indirect
 	github.com/gostaticanalysis/comment v1.4.2 // indirect
+	github.com/pashagolub/pgxmock v1.8.0 // indirect
 	golang.org/x/mod v0.22.0 // indirect
 	golang.org/x/sync v0.9.0 // indirect
 )

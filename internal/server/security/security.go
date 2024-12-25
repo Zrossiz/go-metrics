@@ -16,15 +16,15 @@ import (
 type contextKey string
 
 const (
-	decryptedMessageKey = contextKey("decryptedMessage")
+	DecryptedMessageKey = contextKey("decryptedMessage")
 )
 
 func NewDecryptedContext(ctx context.Context, message []byte) context.Context {
-	return context.WithValue(ctx, decryptedMessageKey, message)
+	return context.WithValue(ctx, DecryptedMessageKey, message)
 }
 
 func DecryptedFromContext(ctx context.Context) []byte {
-	if message, ok := ctx.Value(decryptedMessageKey).([]byte); ok {
+	if message, ok := ctx.Value(DecryptedMessageKey).([]byte); ok {
 		return message
 	}
 	return nil
