@@ -1,0 +1,7 @@
+package other_test
+
+import "os"
+
+func main() {
+	os.Exit(1) // want "you can not use Exit in main function package main"
+}
