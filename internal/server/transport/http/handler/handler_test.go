@@ -19,6 +19,15 @@ import (
 	"go.uber.org/zap"
 )
 
+type MockSecurity struct {
+	mock.Mock
+}
+
+func (m *MockSecurity) DecryptedFromContext(ctx context.Context) []byte {
+	args := m.Called(ctx)
+	return args.Get(0).([]byte)
+}
+
 type MockMetricService struct {
 	mock.Mock
 }
@@ -57,6 +66,23 @@ func (m *MockMetricService) PingDB() error {
 func (m *MockMetricService) SetBatch(body []dto.PostMetricDto) error {
 	args := m.Called(body)
 	return args.Error(0)
+}
+
+func TestGetHTML_Success(t *testing.T) {
+	mockService := new(MockMetricService)
+	logger := zap.NewExample()
+
+	h := handler.New(mockService, logger)
+
+	mockService.On("GetAll").Return(make([]models.Metric, 2), nil)
+
+	req := httptest.NewRequest("GET", "/", nil)
+	rr := httptest.NewRecorder()
+
+	h.GetHTML(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+	assert.Equal(t, "2", rr.Header().Get("Metics-Count"))
 }
 
 func TestCreateParamMetric(t *testing.T) {
@@ -120,6 +146,22 @@ func TestGetStringMetric(t *testing.T) {
 	assert.Equal(t, "123.45", rr.Body.String())
 
 	mockService.AssertCalled(t, "GetStringValueMetric", "TestMetric")
+}
+
+func TestGetStringMetric_NotFound(t *testing.T) {
+	mockService := new(MockMetricService)
+	logger := zap.NewExample()
+
+	h := handler.New(mockService, logger)
+
+	mockService.On("GetStringValueMetric", "").Return("", nil)
+
+	req := httptest.NewRequest(http.MethodGet, "/type/name", nil)
+	rr := httptest.NewRecorder()
+
+	h.GetStringMetric(rr, req)
+
+	assert.Equal(t, http.StatusNotFound, rr.Code)
 }
 
 func TestGetJSONMetric(t *testing.T) {
@@ -217,6 +259,21 @@ func TestPingDB_Failure(t *testing.T) {
 	assert.Equal(t, "connection not available", strings.TrimSpace(rr.Body.String()))
 }
 
+func TestPingDB_Success(t *testing.T) {
+	mockService := new(MockMetricService)
+	logger := zap.NewExample()
+	h := handler.New(mockService, logger)
+
+	mockService.On("PingDB").Return(nil)
+
+	req := httptest.NewRequest("GET", "/ping", nil)
+	rr := httptest.NewRecorder()
+
+	h.PingDB(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+}
+
 func TestCreateParamMetric_ServiceError(t *testing.T) {
 	mockService := new(MockMetricService)
 	logger := zap.NewExample()
@@ -242,4 +299,8 @@ func TestCreateParamMetric_ServiceError(t *testing.T) {
 
 func floatPtr(f float64) *float64 {
 	return &f
+}
+
+func intPtr(i int) *int {
+	return &i
 }

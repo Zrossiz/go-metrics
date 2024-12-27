@@ -322,6 +322,8 @@ func (m *MetricHandler) GetHTML(rw http.ResponseWriter, _ *http.Request) {
 
 	// Устанавливаем заголовок Content-Type для HTML
 	rw.Header().Set("Content-Type", "text/html; charset=utf-8")
+	rw.Header().Set("Metics-Count", fmt.Sprint(len(metrics)))
+	rw.WriteHeader(http.StatusOK)
 
 	// Отправляем сгенерированный HTML в ответ
 	if err := t.Execute(rw, metrics); err != nil {

@@ -15,6 +15,8 @@ import (
 
 type contextKey string
 
+type Securiry struct{}
+
 const (
 	DecryptedMessageKey = contextKey("decryptedMessage")
 )
