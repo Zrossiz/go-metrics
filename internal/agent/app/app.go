@@ -1,11 +1,18 @@
 package app
 
 import (
+	"context"
+	"fmt"
+	"os"
+	"os/signal"
+	"sync"
+	"syscall"
 	"time"
 
 	"github.com/Zrossiz/go-metrics/internal/agent/config"
 	"github.com/Zrossiz/go-metrics/internal/agent/constants/types"
 	"github.com/Zrossiz/go-metrics/internal/agent/http/send"
+	"github.com/Zrossiz/go-metrics/internal/agent/security"
 	"github.com/Zrossiz/go-metrics/internal/agent/services/collector"
 	"go.uber.org/zap"
 )
@@ -18,8 +25,27 @@ func StartAgent() {
 		zap.S().Fatal("get config error", zap.Error(err))
 	}
 
-	tickerPoll := time.NewTicker(time.Duration(cfg.PollInterval) * time.Second)
-	tickerReport := time.NewTicker(time.Duration(cfg.ReportInterval) * time.Second)
+	var wg sync.WaitGroup
+
+	publicCryptoKey, err := security.GetPublicKey(cfg.PublicKeyPath)
+	if err != nil {
+		fmt.Println(err)
+		zap.S().Fatal("get crypto key error", zap.Error(err))
+	}
+	cfg.PublicCryptoKey = publicCryptoKey
+
+	pollIntervalDuration, err := time.ParseDuration(cfg.PollInterval)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	reportIntervalDuration, err := time.ParseDuration(cfg.ReportInterval)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	tickerPoll := time.NewTicker(pollIntervalDuration)
+	tickerReport := time.NewTicker(reportIntervalDuration)
 	defer tickerPoll.Stop()
 	defer tickerReport.Stop()
 
@@ -36,15 +62,28 @@ func StartAgent() {
 		go senderWorker(sendChan, rateLimiter, cfg)
 	}
 
+	ctx, cancel := context.WithCancel(context.Background())
+	go handleSignals(cancel)
+
 	var counter int64
 
-	for range tickerPoll.C {
-		metrics := collector.GetMetrics(&counter)
-		metricsChan <- metrics
-
-		if len(tickerReport.C) > 0 {
-			metrics := <-metricsChan
-			sendChan <- metrics
+	for {
+		select {
+		case <-ctx.Done():
+			zap.S().Info("Shutting down agent...")
+			close(metricsChan)
+			close(sendChan)
+			wg.Wait()
+			return
+		case <-tickerPoll.C:
+			metrics := collector.GetMetrics(&counter)
+			metricsChan <- metrics
+		case <-tickerReport.C:
+			select {
+			case metrics := <-metricsChan:
+				sendChan <- metrics
+			default:
+			}
 		}
 	}
 }
@@ -62,7 +101,14 @@ func senderWorker(sendChan chan []types.Metric, rateLimiter chan struct{}, cfg *
 			defer func() {
 				<-rateLimiter
 			}()
-			send.Metrics(metrics, cfg.RunAddr)
+			send.Metrics(metrics, cfg)
 		}(metrics)
 	}
+}
+
+func handleSignals(cancel context.CancelFunc) {
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+	<-quit
+	cancel()
 }

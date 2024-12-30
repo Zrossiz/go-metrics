@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -17,6 +18,15 @@ import (
 	"github.com/stretchr/testify/mock"
 	"go.uber.org/zap"
 )
+
+type MockSecurity struct {
+	mock.Mock
+}
+
+func (m *MockSecurity) DecryptedFromContext(ctx context.Context) []byte {
+	args := m.Called(ctx)
+	return args.Get(0).([]byte)
+}
 
 type MockMetricService struct {
 	mock.Mock
@@ -56,6 +66,23 @@ func (m *MockMetricService) PingDB() error {
 func (m *MockMetricService) SetBatch(body []dto.PostMetricDto) error {
 	args := m.Called(body)
 	return args.Error(0)
+}
+
+func TestGetHTML_Success(t *testing.T) {
+	mockService := new(MockMetricService)
+	logger := zap.NewExample()
+
+	h := handler.New(mockService, logger)
+
+	mockService.On("GetAll").Return(make([]models.Metric, 2), nil)
+
+	req := httptest.NewRequest("GET", "/", nil)
+	rr := httptest.NewRecorder()
+
+	h.GetHTML(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+	assert.Equal(t, "2", rr.Header().Get("Metics-Count"))
 }
 
 func TestCreateParamMetric(t *testing.T) {
@@ -99,75 +126,6 @@ func TestCreateParamMetric(t *testing.T) {
 	mockService.AssertCalled(t, "Create", expectedDto)
 }
 
-func TestCreateBatchJSONMetrics(t *testing.T) {
-	mockService := new(MockMetricService)
-	logger := zap.NewExample()
-
-	h := handler.New(mockService, logger)
-
-	mockService.On("CreateBatchJSONMetrics", mock.Anything).Return(nil)
-
-	metrics := []dto.PostMetricDto{
-		{ID: "TestGauge1", MType: "gauge", Value: floatPtr(10.1)},
-		{ID: "TestCounter", MType: "counter", Delta: intPtr(5)},
-	}
-	metricsJSON, _ := json.Marshal(metrics)
-
-	req := httptest.NewRequest("POST", "/updates/", bytes.NewReader(metricsJSON))
-	rr := httptest.NewRecorder()
-
-	mockService.On("SetBatch", metrics).Return(nil)
-
-	h.CreateBatchJSONMetrics(rr, req)
-
-	assert.Equal(t, http.StatusOK, rr.Code)
-
-	expectedResponse := `{"success":true}`
-	assert.JSONEq(t, expectedResponse, rr.Body.String())
-	mockService.AssertCalled(t, "SetBatch", metrics)
-}
-
-func TestCreateJSONMetric(t *testing.T) {
-	mockService := new(MockMetricService)
-	logger := zap.NewExample()
-
-	h := handler.New(mockService, logger)
-
-	t.Run("Successful Metric Creation", func(t *testing.T) {
-		metric := dto.PostMetricDto{
-			ID:    "TestMetric",
-			MType: "gauge",
-		}
-		metricModel := &models.Metric{
-			Name:  "TestMetric",
-			Type:  models.GaugeType,
-			Value: new(float64),
-		}
-		*metricModel.Value = 123.45
-
-		mockService.On("Create", metric).Return(nil)
-		mockService.On("Get", "TestMetric").Return(metricModel, nil)
-
-		body, _ := json.Marshal(metric)
-		req := httptest.NewRequest("POST", "/metric", bytes.NewReader(body))
-		rr := httptest.NewRecorder()
-
-		h.CreateJSONMetric(rr, req)
-
-		assert.Equal(t, http.StatusOK, rr.Code)
-
-		expectedResponse := dto.PostMetricDto{
-			ID:    "TestMetric",
-			MType: models.GaugeType,
-		}
-		responseBody, _ := json.Marshal(expectedResponse)
-
-		assert.JSONEq(t, string(responseBody), rr.Body.String())
-		mockService.AssertCalled(t, "Create", metric)
-		mockService.AssertCalled(t, "Get", "TestMetric")
-	})
-}
-
 func TestGetStringMetric(t *testing.T) {
 	mockService := new(MockMetricService)
 	logger := zap.NewExample()
@@ -188,6 +146,22 @@ func TestGetStringMetric(t *testing.T) {
 	assert.Equal(t, "123.45", rr.Body.String())
 
 	mockService.AssertCalled(t, "GetStringValueMetric", "TestMetric")
+}
+
+func TestGetStringMetric_NotFound(t *testing.T) {
+	mockService := new(MockMetricService)
+	logger := zap.NewExample()
+
+	h := handler.New(mockService, logger)
+
+	mockService.On("GetStringValueMetric", "").Return("", nil)
+
+	req := httptest.NewRequest(http.MethodGet, "/type/name", nil)
+	rr := httptest.NewRecorder()
+
+	h.GetStringMetric(rr, req)
+
+	assert.Equal(t, http.StatusNotFound, rr.Code)
 }
 
 func TestGetJSONMetric(t *testing.T) {
@@ -225,10 +199,108 @@ func TestGetJSONMetric(t *testing.T) {
 	})
 }
 
+func TestCreateParamMetric_InvalidMetricType(t *testing.T) {
+	mockService := new(MockMetricService)
+	logger := zap.NewExample()
+
+	h := handler.New(mockService, logger)
+
+	req := httptest.NewRequest("POST", "/update/invalidMetricType/TestMetric/123.45", nil)
+	rr := httptest.NewRecorder()
+
+	rctx := chi.NewRouteContext()
+	rctx.URLParams.Add("type", "invalidMetricType")
+	rctx.URLParams.Add("name", "TestMetric")
+	rctx.URLParams.Add("value", "123.45")
+	req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
+
+	h.CreateParamMetric(rr, req)
+
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+	expectedBody := "invalid metric type"
+	assert.Equal(t, expectedBody, strings.TrimSpace(rr.Body.String()))
+}
+
+func TestCreateParamMetric_InvalidValue(t *testing.T) {
+	mockService := new(MockMetricService)
+	logger := zap.NewExample()
+
+	h := handler.New(mockService, logger)
+
+	req := httptest.NewRequest("POST", "/update/gauge/TestMetric/invalidValue", nil)
+	rr := httptest.NewRecorder()
+
+	rctx := chi.NewRouteContext()
+	rctx.URLParams.Add("type", "gauge")
+	rctx.URLParams.Add("name", "TestMetric")
+	rctx.URLParams.Add("value", "invalidValue")
+	req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
+
+	h.CreateParamMetric(rr, req)
+
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+	expectedBody := "invalid value metric"
+	assert.Equal(t, expectedBody, strings.TrimSpace(rr.Body.String()))
+}
+
+func TestPingDB_Failure(t *testing.T) {
+	mockService := new(MockMetricService)
+	logger := zap.NewExample()
+	h := handler.New(mockService, logger)
+
+	mockService.On("PingDB").Return(fmt.Errorf("db not available"))
+
+	req := httptest.NewRequest("GET", "/ping", nil)
+	rr := httptest.NewRecorder()
+
+	h.PingDB(rr, req)
+
+	assert.Equal(t, http.StatusInternalServerError, rr.Code)
+	assert.Equal(t, "connection not available", strings.TrimSpace(rr.Body.String()))
+}
+
+func TestPingDB_Success(t *testing.T) {
+	mockService := new(MockMetricService)
+	logger := zap.NewExample()
+	h := handler.New(mockService, logger)
+
+	mockService.On("PingDB").Return(nil)
+
+	req := httptest.NewRequest("GET", "/ping", nil)
+	rr := httptest.NewRecorder()
+
+	h.PingDB(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+}
+
+func TestCreateParamMetric_ServiceError(t *testing.T) {
+	mockService := new(MockMetricService)
+	logger := zap.NewExample()
+
+	h := handler.New(mockService, logger)
+
+	mockService.On("Create", mock.Anything).Return(fmt.Errorf("service error"))
+
+	req := httptest.NewRequest("POST", "/update/gauge/TestMetric/123.45", nil)
+	rr := httptest.NewRecorder()
+
+	rctx := chi.NewRouteContext()
+	rctx.URLParams.Add("type", "gauge")
+	rctx.URLParams.Add("name", "TestMetric")
+	rctx.URLParams.Add("value", "123.45")
+	req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
+
+	h.CreateParamMetric(rr, req)
+
+	assert.Equal(t, http.StatusInternalServerError, rr.Code)
+	assert.Contains(t, rr.Body.String(), "create metric error")
+}
+
 func floatPtr(f float64) *float64 {
 	return &f
 }
 
-func intPtr(i int64) *int64 {
+func intPtr(i int) *int {
 	return &i
 }

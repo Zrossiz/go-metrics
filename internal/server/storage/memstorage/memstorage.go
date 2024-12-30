@@ -1,7 +1,6 @@
 package memstorage
 
 import (
-	"fmt"
 	"sync"
 
 	"github.com/Zrossiz/go-metrics/internal/server/dto"
@@ -84,7 +83,6 @@ func (m *MemStorage) GetAll() ([]models.Metric, error) {
 
 func (m *MemStorage) SetBatch(body []dto.PostMetricDto) error {
 	for i := 0; i < len(body); i++ {
-		fmt.Print(body[i])
 		if body[i].MType == models.CounterType {
 			_ = m.SetCounter(body[i])
 			continue

@@ -72,7 +72,12 @@ func New(dbConn *pgxpool.Pool, cfg *config.Config, log *zap.Logger) Storage {
 		}
 
 		// Schedule periodic saving of metrics to the file.
-		ticker := time.NewTicker(time.Duration(cfg.StoreInterval) * time.Second)
+		storeIntervalDuration, err := time.ParseDuration(cfg.StoreInterval)
+		if err != nil {
+			fmt.Println("invalid duration")
+		}
+
+		ticker := time.NewTicker(storeIntervalDuration)
 		stop := make(chan bool)
 
 		go func() {

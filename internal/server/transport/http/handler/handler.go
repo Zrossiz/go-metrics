@@ -14,6 +14,7 @@ import (
 	"github.com/Zrossiz/go-metrics/internal/server/dto"
 	"github.com/Zrossiz/go-metrics/internal/server/libs/hashgenerator"
 	"github.com/Zrossiz/go-metrics/internal/server/models"
+	"github.com/Zrossiz/go-metrics/internal/server/security"
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
 )
@@ -104,14 +105,18 @@ func (m *MetricHandler) CreateParamMetric(rw http.ResponseWriter, r *http.Reques
 
 // CreateBatchJSONMetrics handles batch creation of metrics using a JSON payload.
 func (m *MetricHandler) CreateBatchJSONMetrics(rw http.ResponseWriter, r *http.Request) {
-	var body []dto.PostMetricDto
+	decrypted := security.DecryptedFromContext(r.Context())
+	if decrypted == nil {
+		http.Error(rw, "failed to decrypt message", http.StatusBadRequest)
+		return
+	}
 
-	err := json.NewDecoder(r.Body).Decode(&body)
+	var body []dto.PostMetricDto
+	err := json.Unmarshal(decrypted, &body)
 	if err != nil {
 		http.Error(rw, "invalid request body", http.StatusBadRequest)
 		return
 	}
-	defer r.Body.Close()
 
 	err = m.service.SetBatch(body)
 	if err != nil {
@@ -131,7 +136,7 @@ func (m *MetricHandler) CreateBatchJSONMetrics(rw http.ResponseWriter, r *http.R
 		return
 	}
 
-	if config.AppConfig.Key != "" {
+	if config.AppConfig.HashKey != "" {
 		setHashHeader(rw, responseBodyBytes)
 	}
 
@@ -143,13 +148,18 @@ func (m *MetricHandler) CreateBatchJSONMetrics(rw http.ResponseWriter, r *http.R
 
 // CreateJSONMetric handles the creation of a single metric using a JSON payload.
 func (m *MetricHandler) CreateJSONMetric(rw http.ResponseWriter, r *http.Request) {
+	decrypted := security.DecryptedFromContext(r.Context())
+	if decrypted == nil {
+		http.Error(rw, "failed to decrypt message", http.StatusBadRequest)
+		return
+	}
+
 	var body dto.PostMetricDto
-	err := json.NewDecoder(r.Body).Decode(&body)
+	err := json.Unmarshal(decrypted, &body)
 	if err != nil {
 		http.Error(rw, "invalid request body", http.StatusBadRequest)
 		return
 	}
-	defer r.Body.Close()
 
 	err = m.service.Create(body)
 	if err != nil {
@@ -182,7 +192,7 @@ func (m *MetricHandler) CreateJSONMetric(rw http.ResponseWriter, r *http.Request
 		return
 	}
 
-	if config.AppConfig.Key != "" {
+	if config.AppConfig.HashKey != "" {
 		setHashHeader(rw, response)
 	}
 
@@ -256,6 +266,7 @@ func (m *MetricHandler) GetJSONMetric(rw http.ResponseWriter, r *http.Request) {
 }
 
 // GetHTML renders all metrics as an HTML table for visualization.
+// GetHTML отображает все метрики в виде HTML-таблицы.
 func (m *MetricHandler) GetHTML(rw http.ResponseWriter, _ *http.Request) {
 	tmpl := `
 		<!DOCTYPE html>
@@ -296,6 +307,7 @@ func (m *MetricHandler) GetHTML(rw http.ResponseWriter, _ *http.Request) {
 		return
 	}
 
+	// Получаем все метрики
 	metrics, err := m.service.GetAll()
 	if err != nil {
 		m.logger.Error("internal error", zap.Error(err))
@@ -303,7 +315,17 @@ func (m *MetricHandler) GetHTML(rw http.ResponseWriter, _ *http.Request) {
 		return
 	}
 
+	// Если метрики отсутствуют, передаём пустой список
+	if len(metrics) == 0 {
+		metrics = []models.Metric{}
+	}
+
+	// Устанавливаем заголовок Content-Type для HTML
 	rw.Header().Set("Content-Type", "text/html; charset=utf-8")
+	rw.Header().Set("Metics-Count", fmt.Sprint(len(metrics)))
+	rw.WriteHeader(http.StatusOK)
+
+	// Отправляем сгенерированный HTML в ответ
 	if err := t.Execute(rw, metrics); err != nil {
 		http.Error(rw, "Internal Server Error", http.StatusInternalServerError)
 	}
@@ -322,6 +344,6 @@ func (m *MetricHandler) PingDB(rw http.ResponseWriter, _ *http.Request) {
 }
 
 func setHashHeader(rw http.ResponseWriter, body []byte) {
-	hash := hashgenerator.Generate(body, config.AppConfig.Key)
+	hash := hashgenerator.Generate(body, config.AppConfig.HashKey)
 	rw.Header().Set("HashSHA256", hash)
 }

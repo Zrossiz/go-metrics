@@ -2,12 +2,15 @@ package dbstorage
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/Zrossiz/go-metrics/internal/server/dto"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/testcontainers/testcontainers-go"
+	"github.com/testcontainers/testcontainers-go/wait"
 	"go.uber.org/zap"
 )
 
@@ -19,17 +22,64 @@ func int64Ptr(i int64) *int64 {
 	return &i
 }
 
-// Mock setup for pgxpool and logger for testing purposes
-func setupDB(t *testing.T) (*pgxpool.Pool, *zap.Logger) {
-	db, err := pgxpool.Connect(context.Background(), "postgresql://postgres:root@localhost/metrics")
-	require.NoError(t, err, "Database connection failed")
+func setupDB(t *testing.T) (*pgxpool.Pool, *zap.Logger, func()) {
+	ctx := context.Background()
+
+	req := testcontainers.ContainerRequest{
+		Image:        "postgres:15",
+		ExposedPorts: []string{"5432/tcp"},
+		Env: map[string]string{
+			"POSTGRES_USER":     "testuser",
+			"POSTGRES_PASSWORD": "testpassword",
+			"POSTGRES_DB":       "metrics",
+		},
+		WaitingFor: wait.ForListeningPort("5432/tcp"),
+	}
+
+	container, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
+		ContainerRequest: req,
+		Started:          true,
+	})
+	require.NoError(t, err, "Failed to start PostgreSQL container")
+	t.Cleanup(func() {
+		err := container.Terminate(ctx)
+		require.NoError(t, err, "Failed to stop container")
+	})
+
+	host, err := container.Host(ctx)
+	require.NoError(t, err, "Failed to get container host")
+
+	port, err := container.MappedPort(ctx, "5432")
+	require.NoError(t, err, "Failed to get mapped port")
+
+	dsn := fmt.Sprintf("postgres://testuser:testpassword@%s:%s/metrics?sslmode=disable", host, port.Port())
+
+	db, err := pgxpool.Connect(ctx, dsn)
+	require.NoError(t, err, "Failed to connect to PostgreSQL")
+
+	query := `CREATE TABLE IF NOT EXISTS metrics (
+		id SERIAL PRIMARY KEY,
+		name TEXT NOT NULL,
+		metric_type TEXT NOT NULL,
+		value DOUBLE PRECISION,
+		delta BIGINT,
+		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+	);
+	CREATE INDEX IF NOT EXISTS idx_metrics_name ON metrics (name);`
+
+	db.Exec(ctx, query)
+
 	logger := zap.NewNop()
-	return db, logger
+
+	return db, logger, func() {
+		db.Close()
+	}
 }
 
 func TestDBStorage_Ping(t *testing.T) {
-	db, logger := setupDB(t)
-	defer db.Close()
+	db, logger, cleanup := setupDB(t)
+	defer cleanup()
+
 	storage := New(db, logger)
 
 	err := storage.Ping()
@@ -37,8 +87,9 @@ func TestDBStorage_Ping(t *testing.T) {
 }
 
 func TestDBStorage_SetGauge(t *testing.T) {
-	db, logger := setupDB(t)
-	defer db.Close()
+	db, logger, cleanup := setupDB(t)
+	defer cleanup()
+
 	storage := New(db, logger)
 
 	metric := dto.PostMetricDto{
@@ -51,8 +102,9 @@ func TestDBStorage_SetGauge(t *testing.T) {
 }
 
 func TestDBStorage_SetCounter(t *testing.T) {
-	db, logger := setupDB(t)
-	defer db.Close()
+	db, logger, cleanup := setupDB(t)
+	defer cleanup()
+
 	storage := New(db, logger)
 
 	metric := dto.PostMetricDto{
@@ -65,8 +117,9 @@ func TestDBStorage_SetCounter(t *testing.T) {
 }
 
 func TestDBStorage_Get(t *testing.T) {
-	db, logger := setupDB(t)
-	defer db.Close()
+	db, logger, cleanup := setupDB(t)
+	defer cleanup()
+
 	storage := New(db, logger)
 
 	metric := dto.PostMetricDto{
@@ -87,8 +140,9 @@ func TestDBStorage_Get(t *testing.T) {
 }
 
 func TestDBStorage_GetAll(t *testing.T) {
-	db, logger := setupDB(t)
-	defer db.Close()
+	db, logger, cleanup := setupDB(t)
+	defer cleanup()
+
 	storage := New(db, logger)
 
 	// Insert multiple test metrics
@@ -106,8 +160,9 @@ func TestDBStorage_GetAll(t *testing.T) {
 }
 
 func TestDBStorage_SetBatch(t *testing.T) {
-	db, logger := setupDB(t)
-	defer db.Close()
+	db, logger, cleanup := setupDB(t)
+	defer cleanup()
+
 	storage := New(db, logger)
 
 	batchMetrics := []dto.PostMetricDto{
@@ -120,7 +175,9 @@ func TestDBStorage_SetBatch(t *testing.T) {
 }
 
 func TestDBStorage_Close(t *testing.T) {
-	db, logger := setupDB(t)
+	db, logger, cleanup := setupDB(t)
+	defer cleanup()
+
 	storage := New(db, logger)
 
 	err := storage.Close()

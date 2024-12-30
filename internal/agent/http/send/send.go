@@ -11,18 +11,20 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Zrossiz/go-metrics/internal/agent/config"
 	"github.com/Zrossiz/go-metrics/internal/agent/constants/types"
 	"github.com/Zrossiz/go-metrics/internal/agent/dto"
+	"github.com/Zrossiz/go-metrics/internal/agent/security"
 )
 
 const maxRetries = 3
 const retryDelay = 1 * time.Second
 
-func Metrics(metrics []types.Metric, addr string) []types.Metric {
+func Metrics(metrics []types.Metric, cfg *config.Config) []types.Metric {
 	var sendedMetrics []types.Metric
 
 	for i := 0; i < len(metrics); i++ {
-		reqURL := fmt.Sprintf("http://%s/update/", addr)
+		reqURL := fmt.Sprintf("http://%s/update/", cfg.RunAddr)
 		jsonBody := dto.MetricDTO{
 			ID:    metrics[i].Name,
 			MType: metrics[i].Type,
@@ -44,7 +46,13 @@ func Metrics(metrics []types.Metric, addr string) []types.Metric {
 			continue
 		}
 
-		resp, err := http.Post(reqURL, "application/json", bytes.NewBuffer(jsonData))
+		encryptedMessageBase64, err := security.EncryptBody(jsonData, cfg.PublicCryptoKey)
+		if err != nil {
+			log.Println("Failed to encrypt body")
+			continue
+		}
+
+		resp, err := http.Post(reqURL, "application/json", bytes.NewBuffer([]byte(encryptedMessageBase64)))
 		if err != nil {
 			log.Println("Request:", reqURL, "failed, err:", err)
 			continue

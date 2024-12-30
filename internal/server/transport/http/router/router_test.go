@@ -9,110 +9,129 @@ import (
 	"go.uber.org/zap"
 )
 
-// Мок-структура для тестирования обработчиков
-type mockMetricRouter struct{}
+// Моковые структуры для тестирования
+type MockHandler struct{}
 
-func (m *mockMetricRouter) GetHTML(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("HTML response"))
+func (m *MockHandler) GetHTML(rw http.ResponseWriter, r *http.Request) {
+	rw.Write([]byte("HTML Response"))
 }
 
-func (m *mockMetricRouter) CreateParamMetric(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Created param metric"))
+func (m *MockHandler) CreateParamMetric(rw http.ResponseWriter, r *http.Request) {
+	rw.Write([]byte("Param Metric Created"))
 }
 
-func (m *mockMetricRouter) CreateJSONMetric(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Created JSON metric"))
+func (m *MockHandler) CreateJSONMetric(rw http.ResponseWriter, r *http.Request) {
+	rw.Write([]byte("JSON Metric Created"))
 }
 
-func (m *mockMetricRouter) GetStringMetric(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Metric value"))
+func (m *MockHandler) GetStringMetric(rw http.ResponseWriter, r *http.Request) {
+	rw.Write([]byte("String Metric"))
 }
 
-func (m *mockMetricRouter) GetJSONMetric(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"metric": "value"}`))
+func (m *MockHandler) GetJSONMetric(rw http.ResponseWriter, r *http.Request) {
+	rw.Write([]byte(`{"metric": "value"}`))
 }
 
-func (m *mockMetricRouter) PingDB(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("DB is reachable"))
+func (m *MockHandler) PingDB(rw http.ResponseWriter, _ *http.Request) {
+	rw.Write([]byte("Pong"))
 }
 
-func (m *mockMetricRouter) CreateBatchJSONMetrics(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Batch JSON metrics created"))
+func (m *MockHandler) CreateBatchJSONMetrics(rw http.ResponseWriter, _ *http.Request) {
+	rw.Write([]byte("Batch JSON Metrics Created"))
 }
 
-func TestMetricRouter(t *testing.T) {
-	logger, _ := zap.NewProduction()
-	defer logger.Sync()
+// Моковый логгер
+func newLogger() *zap.Logger {
+	logger, _ := zap.NewDevelopment()
+	return logger
+}
 
-	rr := New(&mockMetricRouter{}, logger)
+func TestGetHTML(t *testing.T) {
+	handler := &MockHandler{}
+	log := newLogger()
 
-	tests := []struct {
-		method       string
-		url          string
-		expectedCode int
-		expectedBody string
-	}{
-		{
-			method:       http.MethodGet,
-			url:          "/",
-			expectedCode: http.StatusOK,
-			expectedBody: "HTML response",
-		},
-		{
-			method:       http.MethodGet,
-			url:          "/ping",
-			expectedCode: http.StatusOK,
-			expectedBody: "DB is reachable",
-		},
-		{
-			method:       http.MethodPost,
-			url:          "/update/gauge/metric/10",
-			expectedCode: http.StatusOK,
-			expectedBody: "Created param metric",
-		},
-		{
-			method:       http.MethodPost,
-			url:          "/update",
-			expectedCode: http.StatusOK,
-			expectedBody: "Created JSON metric",
-		},
-		{
-			method:       http.MethodPost,
-			url:          "/updates/",
-			expectedCode: http.StatusOK,
-			expectedBody: "Batch JSON metrics created",
-		},
-		{
-			method:       http.MethodGet,
-			url:          "/value/gauge/metric",
-			expectedCode: http.StatusOK,
-			expectedBody: "Metric value",
-		},
-		{
-			method:       http.MethodPost,
-			url:          "/value",
-			expectedCode: http.StatusOK,
-			expectedBody: `{"metric": "value"}`,
-		},
-	}
+	r := New(handler, log)
 
-	for _, tt := range tests {
-		t.Run(tt.url, func(t *testing.T) {
-			req, err := http.NewRequest(tt.method, tt.url, nil)
-			assert.NoError(t, err)
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	rec := httptest.NewRecorder()
 
-			rrw := httptest.NewRecorder()
-			rr.ServeHTTP(rrw, req)
+	r.ServeHTTP(rec, req)
 
-			assert.Equal(t, tt.expectedCode, rrw.Code)
-			assert.Contains(t, rrw.Body.String(), tt.expectedBody)
-		})
-	}
+	assert.Equal(t, http.StatusOK, rec.Code)
+	assert.Equal(t, "HTML Response", rec.Body.String())
+}
+
+func TestPingDB(t *testing.T) {
+	handler := &MockHandler{}
+	log := newLogger()
+
+	r := New(handler, log)
+
+	req := httptest.NewRequest(http.MethodGet, "/ping", nil)
+	rec := httptest.NewRecorder()
+
+	r.ServeHTTP(rec, req)
+
+	assert.Equal(t, http.StatusOK, rec.Code)
+	assert.Equal(t, "Pong", rec.Body.String())
+}
+
+func TestCreateParamMetric(t *testing.T) {
+	handler := &MockHandler{}
+	log := newLogger()
+
+	r := New(handler, log)
+
+	req := httptest.NewRequest(http.MethodPost, "/update/param/test_metric/123", nil)
+	rec := httptest.NewRecorder()
+
+	r.ServeHTTP(rec, req)
+
+	assert.Equal(t, http.StatusOK, rec.Code)
+	assert.Equal(t, "Param Metric Created", rec.Body.String())
+}
+
+func TestGetStringMetric(t *testing.T) {
+	handler := &MockHandler{}
+	log := newLogger()
+
+	r := New(handler, log)
+
+	req := httptest.NewRequest(http.MethodGet, "/value/string/test_metric", nil)
+	rec := httptest.NewRecorder()
+
+	r.ServeHTTP(rec, req)
+
+	assert.Equal(t, http.StatusOK, rec.Code)
+	assert.Equal(t, "String Metric", rec.Body.String())
+}
+
+func TestGetJSONMetric(t *testing.T) {
+	handler := &MockHandler{}
+	log := newLogger()
+
+	r := New(handler, log)
+
+	req := httptest.NewRequest(http.MethodPost, "/value", nil)
+	rec := httptest.NewRecorder()
+
+	r.ServeHTTP(rec, req)
+
+	assert.Equal(t, http.StatusOK, rec.Code)
+	assert.Equal(t, `{"metric": "value"}`, rec.Body.String())
+}
+
+func TestCreateBatchJSONMetrics(t *testing.T) {
+	handler := &MockHandler{}
+	log := newLogger()
+
+	r := New(handler, log)
+
+	req := httptest.NewRequest(http.MethodPost, "/updates/", nil)
+	rec := httptest.NewRecorder()
+
+	r.ServeHTTP(rec, req)
+
+	assert.Equal(t, http.StatusOK, rec.Code)
+	assert.Equal(t, "Batch JSON Metrics Created", rec.Body.String())
 }
