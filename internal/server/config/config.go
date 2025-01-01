@@ -23,6 +23,7 @@ type Config struct {
 	LogLevel        string `json:"log_level"`
 	HashKey         string `json:"hash_key"`
 	PrivateKeyPath  string `json:"crypto_key"`
+	TrustedSubnet   string `json:"trusted_subnet"`
 	JSONConfigPath  string
 	PrivateKey      *rsa.PrivateKey
 }
@@ -101,6 +102,11 @@ func GetConfig() (*Config, error) {
 	flag.StringVar(&cfg.HashKey, "k", cfg.HashKey, "key for hash")
 	if envKey := os.Getenv("KEY"); envKey != "" {
 		cfg.HashKey = envKey
+	}
+
+	flag.StringVar(&cfg.TrustedSubnet, "t", cfg.TrustedSubnet, "trusted subnet")
+	if envTrustedSubNet := os.Getenv("TRUSTED_SUBNET"); envTrustedSubNet != "" {
+		cfg.TrustedSubnet = envTrustedSubNet
 	}
 
 	flag.Parse()
