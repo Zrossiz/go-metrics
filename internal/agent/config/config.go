@@ -17,7 +17,7 @@ type Config struct {
 	PollInterval    string `json:"poll_interval"`
 	ReportInterval  string `json:"report_interval"`
 	HashKey         string
-	RateLimiter     int64
+	RateLimiter     int64  `json:"rate_limiter"`
 	PublicKeyPath   string `json:"crypto_key"`
 	JSONConfigPath  string
 	PublicCryptoKey *rsa.PublicKey

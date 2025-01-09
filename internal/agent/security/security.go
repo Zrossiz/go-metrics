@@ -8,6 +8,8 @@ import (
 	"encoding/pem"
 	"fmt"
 	"os"
+
+	"net"
 )
 
 func GetPublicKey(path string) (*rsa.PublicKey, error) {
@@ -38,4 +40,21 @@ func EncryptBody(body []byte, pubKey *rsa.PublicKey) (string, error) {
 	result := base64.StdEncoding.EncodeToString(encryptedData)
 
 	return result, nil
+}
+
+func GetMachineIP() string {
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		return ""
+	}
+
+	for _, addr := range addrs {
+		if ipnet, ok := addr.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+			if ipnet.IP.To4() != nil {
+				return ipnet.IP.String()
+			}
+		}
+	}
+
+	return ""
 }

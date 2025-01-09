@@ -111,6 +111,7 @@ func GetConfig() (*Config, error) {
 
 	flag.Parse()
 
+	AppConfig = *cfg
 	return cfg, nil
 }
 

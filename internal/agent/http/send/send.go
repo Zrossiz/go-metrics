@@ -23,6 +23,8 @@ const retryDelay = 1 * time.Second
 func Metrics(metrics []types.Metric, cfg *config.Config) []types.Metric {
 	var sendedMetrics []types.Metric
 
+	client := &http.Client{}
+
 	for i := 0; i < len(metrics); i++ {
 		reqURL := fmt.Sprintf("http://%s/update/", cfg.RunAddr)
 		jsonBody := dto.MetricDTO{
@@ -48,19 +50,36 @@ func Metrics(metrics []types.Metric, cfg *config.Config) []types.Metric {
 
 		encryptedMessageBase64, err := security.EncryptBody(jsonData, cfg.PublicCryptoKey)
 		if err != nil {
-			log.Println("Failed to encrypt body")
+			log.Println("Failed to encrypt body:", err)
 			continue
 		}
 
-		resp, err := http.Post(reqURL, "application/json", bytes.NewBuffer([]byte(encryptedMessageBase64)))
+		machineIP := security.GetMachineIP()
+
+		req, err := http.NewRequest("POST", reqURL, bytes.NewBuffer([]byte(encryptedMessageBase64)))
 		if err != nil {
-			log.Println("Request:", reqURL, "failed, err:", err)
+			log.Println("Failed to create request:", err)
+			continue
+		}
+
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("X-Real-IP", machineIP)
+
+		resp, err := client.Do(req)
+		if err != nil {
+			log.Println("Failed to send request:", err)
+			continue
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			log.Println("Non-OK response from server:", resp.Status)
 			continue
 		}
 
 		sendedMetrics = append(sendedMetrics, metrics[i])
-		resp.Body.Close()
 	}
+
 	return sendedMetrics
 }
 
