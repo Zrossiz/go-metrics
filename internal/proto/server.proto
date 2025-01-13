@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package grpc;
+
+option go_package="proto/";
+
+message GetMetricRequest {
+  string id = 1;
+  string type = 2;
+}
+
+message GetMetricResponse {
+  string id = 1;
+  string type = 2;
+  double value = 3;
+  int64 delta = 4;
+}
+
+message PostMetricRequest {
+  string id = 1;
+  string type = 2;
+  double value = 3;
+  int64 delta = 4;
+}
+
+message PostMetricResponse {
+  bool success = 1;
+}
+
+message BatchPostMetricResponse {
+  bool success = 1;
+}
+
+message BatchPostMetricRequest {
+  repeated PostMetricRequest metrics = 1;
+}
+
+service Metrics {
+    rpc UpdateParam(PostMetricRequest) returns (PostMetricResponse);
+    rpc UpdateJSON(PostMetricRequest) returns (PostMetricResponse);
+    rpc UpdateBatchJSON(BatchPostMetricRequest) returns (BatchPostMetricResponse);
+}
