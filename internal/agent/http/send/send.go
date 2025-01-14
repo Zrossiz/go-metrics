@@ -3,6 +3,7 @@ package send
 import (
 	"bytes"
 	"compress/gzip"
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -15,6 +16,9 @@ import (
 	"github.com/Zrossiz/go-metrics/internal/agent/constants/types"
 	"github.com/Zrossiz/go-metrics/internal/agent/dto"
 	"github.com/Zrossiz/go-metrics/internal/agent/security"
+	"github.com/Zrossiz/go-metrics/internal/proto"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 const maxRetries = 3
@@ -81,6 +85,89 @@ func Metrics(metrics []types.Metric, cfg *config.Config) []types.Metric {
 	}
 
 	return sendedMetrics
+}
+
+func GrpcMetrics(metrics []types.Metric, cfg *config.Config) []types.Metric {
+	var sendedMetrics []types.Metric
+
+	client, err := grpc.NewClient(cfg.GrpcAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Println("Failed to connect to gRPC server:", err)
+		return nil
+	}
+	defer client.Close()
+
+	grpcClient := proto.NewMetricsClient(client)
+
+	for _, metric := range metrics {
+		req := &proto.PostMetricRequest{
+			Id:   metric.Name,
+			Type: metric.Type,
+		}
+
+		switch v := metric.Value.(type) {
+		case int64:
+			req.Delta = v
+		case float64:
+			req.Value = v
+		default:
+			log.Println("Unsupported metric type for metric:", metric.Name)
+			continue
+		}
+
+		_, err := grpcClient.UpdateJSON(context.Background(), req)
+		if err != nil {
+			log.Println("Failed to send metric to gRPC server:", err)
+			continue
+		}
+
+		sendedMetrics = append(sendedMetrics, metric)
+	}
+
+	return sendedMetrics
+}
+
+func GrpcBatchMetrics(metrics []types.Metric, cfg *config.Config) {
+	clientConn, err := grpc.NewClient(cfg.GrpcAddr, grpc.WithTransportCredentials(insecure.NewCredentials())) // Подключаемся с небезопасным транспортом
+	if err != nil {
+		log.Println("Failed to connect to gRPC server:", err)
+		return
+	}
+	defer clientConn.Close()
+
+	client := proto.NewMetricsClient(clientConn)
+
+	var batchMetrics []*proto.PostMetricRequest
+	for _, metric := range metrics {
+		req := &proto.PostMetricRequest{
+			Id:   metric.Name,
+			Type: metric.Type,
+		}
+
+		switch v := metric.Value.(type) {
+		case int64:
+			req.Delta = v
+		case float64:
+			req.Value = v
+		default:
+			log.Println("Unsupported metric type for metric:", metric.Name)
+			continue
+		}
+
+		batchMetrics = append(batchMetrics, req)
+	}
+
+	batchReq := &proto.BatchPostMetricRequest{
+		Metrics: batchMetrics,
+	}
+
+	_, err = client.UpdateBatchJSON(context.Background(), batchReq)
+	if err != nil {
+		log.Println("Failed to send batch metrics to gRPC server:", err)
+		return
+	}
+
+	log.Println("Batch metrics sent successfully")
 }
 
 func GzipMetrics(metrics []types.Metric, addr string, key string) []types.Metric {

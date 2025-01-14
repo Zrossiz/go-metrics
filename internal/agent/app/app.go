@@ -101,7 +101,8 @@ func senderWorker(sendChan chan []types.Metric, rateLimiter chan struct{}, cfg *
 			defer func() {
 				<-rateLimiter
 			}()
-			send.Metrics(metrics, cfg)
+			// Вместо send.Metrics используем gRPC функцию
+			send.GrpcMetrics(metrics, cfg)
 		}(metrics)
 	}
 }

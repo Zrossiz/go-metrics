@@ -14,6 +14,7 @@ import (
 
 type Config struct {
 	RunAddr         string `json:"address"`
+	GrpcAddr        string `json:"grpc_address"`
 	PollInterval    string `json:"poll_interval"`
 	ReportInterval  string `json:"report_interval"`
 	HashKey         string
@@ -79,6 +80,12 @@ func GetConfig() (*Config, error) {
 	flag.StringVar(&cfg.PublicKeyPath, "crypto-key", cfg.PublicKeyPath, "public key for encrypt request")
 	if envCryptoKey := os.Getenv("CRYPTO_KEY"); envCryptoKey != "" {
 		cfg.PublicKeyPath = envCryptoKey
+	}
+
+	if envGrpcAddress := os.Getenv("GRPC_ADDRESS"); envGrpcAddress != "" {
+		cfg.GrpcAddr = envGrpcAddress
+	} else {
+		cfg.GrpcAddr = "localhost:3200"
 	}
 
 	flag.Parse()
