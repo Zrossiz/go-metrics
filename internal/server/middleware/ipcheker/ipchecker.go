@@ -6,16 +6,16 @@ import (
 	"github.com/Zrossiz/go-metrics/internal/server/config"
 )
 
-func TrustedIpCheckerMiddleware(next http.Handler) http.Handler {
+func TrustedIPCheckerMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		senderIp := r.Header.Get("X-Real-IP")
+		senderIP := r.Header.Get("X-Real-IP")
 		configTrustedSubnet := config.AppConfig.TrustedSubnet
 
 		if configTrustedSubnet == "" {
 			next.ServeHTTP(w, r)
 		}
 
-		if configTrustedSubnet != senderIp {
+		if configTrustedSubnet != senderIP {
 			http.Error(w, "Forbidden", http.StatusForbidden)
 			return
 		} else {

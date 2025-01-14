@@ -22,7 +22,7 @@ func TestIpCheckerMiddleware_Success(t *testing.T) {
 		rw.WriteHeader(http.StatusOK)
 	})
 
-	handler := TrustedIpCheckerMiddleware(nextHandler)
+	handler := TrustedIPCheckerMiddleware(nextHandler)
 
 	handler.ServeHTTP(rr, req)
 
@@ -41,7 +41,7 @@ func TestIpCheckerMiddleware_Fail(t *testing.T) {
 		rw.WriteHeader(http.StatusOK)
 	})
 
-	handler := TrustedIpCheckerMiddleware(nextHandler)
+	handler := TrustedIPCheckerMiddleware(nextHandler)
 
 	handler.ServeHTTP(rr, req)
 

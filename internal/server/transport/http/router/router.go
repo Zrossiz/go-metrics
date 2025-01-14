@@ -60,7 +60,7 @@ func New(handl MetricRouter, log *zap.Logger) http.Handler {
 				return cryptochecker.DecryptMiddleware(next, security.CheckCryptoBody)
 			},
 			func(next http.Handler) http.Handler {
-				return ipchecker.TrustedIpCheckerMiddleware(next)
+				return ipchecker.TrustedIPCheckerMiddleware(next)
 			},
 		).Post("/", handl.CreateJSONMetric)
 	})
