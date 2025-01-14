@@ -1,7 +1,6 @@
 package ipchecker
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/Zrossiz/go-metrics/internal/server/config"
@@ -11,12 +10,6 @@ func TrustedIpCheckerMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		senderIp := r.Header.Get("X-Real-IP")
 		configTrustedSubnet := config.AppConfig.TrustedSubnet
-
-		fmt.Println()
-		fmt.Println()
-		fmt.Println("ip: ", senderIp)
-		fmt.Println()
-		fmt.Println()
 
 		if configTrustedSubnet == "" {
 			next.ServeHTTP(w, r)

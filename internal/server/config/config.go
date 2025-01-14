@@ -16,6 +16,7 @@ import (
 
 type Config struct {
 	ServerAddress   string `json:"address"`
+	GrpcAddress     string `json:"grpc_address"`
 	StoreInterval   string `json:"store_interval"`
 	FileStoragePath string
 	Restore         bool   `json:"restore"`
@@ -107,6 +108,12 @@ func GetConfig() (*Config, error) {
 	flag.StringVar(&cfg.TrustedSubnet, "t", cfg.TrustedSubnet, "trusted subnet")
 	if envTrustedSubNet := os.Getenv("TRUSTED_SUBNET"); envTrustedSubNet != "" {
 		cfg.TrustedSubnet = envTrustedSubNet
+	}
+
+	if envGrpcAddress := os.Getenv("GRPC_ADDRESS"); envGrpcAddress != "" {
+		cfg.GrpcAddress = envGrpcAddress
+	} else {
+		cfg.GrpcAddress = ":3200"
 	}
 
 	flag.Parse()

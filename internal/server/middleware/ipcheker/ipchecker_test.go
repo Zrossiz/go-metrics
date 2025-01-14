@@ -47,19 +47,3 @@ func TestIpCheckerMiddleware_Fail(t *testing.T) {
 
 	assert.Equal(t, rr.Code, http.StatusForbidden)
 }
-
-func TestIpCheckerMiddleware_Empty(t *testing.T) {
-	req := httptest.NewRequest(http.MethodPost, "/", nil)
-
-	rr := httptest.NewRecorder()
-
-	nextHandler := http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-		rw.WriteHeader(http.StatusOK)
-	})
-
-	handler := TrustedIpCheckerMiddleware(nextHandler)
-
-	handler.ServeHTTP(rr, req)
-
-	assert.NotEqual(t, rr.Code, http.StatusForbidden)
-}

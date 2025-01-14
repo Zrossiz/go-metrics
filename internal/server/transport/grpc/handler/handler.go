@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 
+	"github.com/Zrossiz/go-metrics/internal/proto"
 	"github.com/Zrossiz/go-metrics/internal/server/dto"
 	"github.com/Zrossiz/go-metrics/internal/server/models"
-	"github.com/Zrossiz/go-metrics/proto"
 	"go.uber.org/zap"
 )
 
