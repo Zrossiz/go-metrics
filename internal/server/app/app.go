@@ -5,6 +5,7 @@ package app
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/http"
 	_ "net/http/pprof" // For performance profiling
 	"os"
@@ -13,10 +14,15 @@ import (
 	"time"
 
 	"github.com/Zrossiz/go-metrics/internal/server/config"
+	"google.golang.org/grpc"
+
+	pb "github.com/Zrossiz/go-metrics/internal/proto"
 	"github.com/Zrossiz/go-metrics/internal/server/security"
 	"github.com/Zrossiz/go-metrics/internal/server/service"
 	"github.com/Zrossiz/go-metrics/internal/server/storage"
 	"github.com/Zrossiz/go-metrics/internal/server/storage/dbstorage"
+
+	grpcHandler "github.com/Zrossiz/go-metrics/internal/server/transport/grpc/handler"
 	"github.com/Zrossiz/go-metrics/internal/server/transport/http/handler"
 	"github.com/Zrossiz/go-metrics/internal/server/transport/http/router"
 	"github.com/Zrossiz/go-metrics/pkg/logger"
@@ -83,6 +89,28 @@ func StartServer() {
 		log.ZapLogger.Info("Starting server", zap.String("address", cfg.ServerAddress))
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.ZapLogger.Fatal("Failed to start server", zap.Error(err))
+		}
+	}()
+
+	// Start the `grpc` server
+	go func() {
+		fmt.Println("start grpc: ", cfg.GrpcAddress)
+		listener, err := net.Listen("tcp", cfg.GrpcAddress)
+		if err != nil {
+			fmt.Println("listen err: ", err)
+		}
+
+		// Создаем gRPC сервер
+		grpcServer := grpc.NewServer()
+
+		// Initialize the transport layer (Grpc handlers)
+		grpcHandlers := grpcHandler.NewGrpcHandler(serv, log.ZapLogger)
+
+		// Регистрируем наш сервис
+		pb.RegisterMetricsServer(grpcServer, grpcHandlers)
+
+		if err := grpcServer.Serve(listener); err != nil {
+			fmt.Println("serve err: ", err)
 		}
 	}()
 

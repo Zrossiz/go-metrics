@@ -16,6 +16,7 @@ import (
 
 type Config struct {
 	ServerAddress   string `json:"address"`
+	GrpcAddress     string `json:"grpc_address"`
 	StoreInterval   string `json:"store_interval"`
 	FileStoragePath string
 	Restore         bool   `json:"restore"`
@@ -23,6 +24,7 @@ type Config struct {
 	LogLevel        string `json:"log_level"`
 	HashKey         string `json:"hash_key"`
 	PrivateKeyPath  string `json:"crypto_key"`
+	TrustedSubnet   string `json:"trusted_subnet"`
 	JSONConfigPath  string
 	PrivateKey      *rsa.PrivateKey
 }
@@ -103,8 +105,20 @@ func GetConfig() (*Config, error) {
 		cfg.HashKey = envKey
 	}
 
+	flag.StringVar(&cfg.TrustedSubnet, "t", cfg.TrustedSubnet, "trusted subnet")
+	if envTrustedSubNet := os.Getenv("TRUSTED_SUBNET"); envTrustedSubNet != "" {
+		cfg.TrustedSubnet = envTrustedSubNet
+	}
+
+	if envGrpcAddress := os.Getenv("GRPC_ADDRESS"); envGrpcAddress != "" {
+		cfg.GrpcAddress = envGrpcAddress
+	} else {
+		cfg.GrpcAddress = ":3200"
+	}
+
 	flag.Parse()
 
+	AppConfig = *cfg
 	return cfg, nil
 }
 
